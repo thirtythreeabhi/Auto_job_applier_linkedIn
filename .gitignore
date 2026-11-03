@@ -22,3 +22,18 @@ apikeys.py
 user_config.json
 .bot_run.log
 .bot_run.pid
+
+# Candidate information and resume are private to this workspace.
+candidate_context.md
+candidate_answers.json
+unresolved_questions.json
+abhijeet-resume-fixed-project-links.pdf
+
+abhijeet-resume-fulltime.pdf
+
+# Private job application field audit
+application_field_audit.json
+.application-audit-*
+
+# Private generated field mapping snapshot
+candidate_field_mappings.json

@@ -33,6 +33,7 @@ import threading
 import importlib
 
 import config_schema
+from modules.candidate_registry import CandidateRegistry, REGISTRY_PATH, UNRESOLVED_PATH, sync_changed_config
 from config import _overrides
 from modules import updater
 
@@ -161,6 +162,32 @@ _bot_lock = threading.Lock()
 def _bot_command():
     '''The command used to launch the bot. Isolated so tests can monkeypatch it.'''
     return [sys.executable, os.path.join(ROOT, "runAiBot.py")]
+
+
+def _bot_environment():
+    '''Remove GUI toolkit paths injected by the VS Code Snap launcher.
+
+    Those paths make system Chrome load Snap's partial GSettings schemas and
+    abort during startup (for example, missing GNOME antialiasing keys).
+    Preserve display/session variables so Chrome can still open on Wayland.
+    '''
+    env = os.environ.copy()
+    if not sys.platform.startswith('linux') or not any(
+        '/snap/code/' in env.get(name, '')
+        for name in ('GSETTINGS_SCHEMA_DIR', 'GTK_EXE_PREFIX', 'XDG_DATA_DIRS')
+    ):
+        return env
+    for name in (
+        "GSETTINGS_SCHEMA_DIR", "GIO_MODULE_DIR", "GTK_EXE_PREFIX", "GTK_PATH",
+        "GTK_IM_MODULE_FILE", "GTK_MODULES", "XDG_DATA_DIRS",
+    ):
+        env.pop(name, None)
+    env["GSETTINGS_SCHEMA_DIR"] = "/usr/share/glib-2.0/schemas"
+    env["XDG_DATA_DIRS"] = "/usr/local/share:/usr/share/ubuntu:/usr/share/gnome:/usr/share:/var/lib/snapd/desktop"
+    for name in tuple(env):
+        if name.endswith("_VSCODE_SNAP_ORIG"):
+            env.pop(name, None)
+    return env
 
 
 def _is_running() -> bool:
@@ -380,6 +407,8 @@ def api_save_config():
 
     # Read-modify-write user_config.json.
     current = _overrides.load_user_config()
+    previous = copy.deepcopy(current)
+    existed = os.path.exists(USER_CONFIG_PATH)
     for section, values in coerced.items():
         target = current.get(section)
         if not isinstance(target, dict):
@@ -390,10 +419,54 @@ def api_save_config():
     try:
         with open(USER_CONFIG_PATH, "w", encoding="utf-8") as file:
             json.dump(current, file, indent=2, ensure_ascii=False)
-    except OSError as err:
+        if os.name != 'nt': os.chmod(USER_CONFIG_PATH, 0o600)
+        sync_changed_config(coerced, current, path=REGISTRY_PATH, unresolved_path=UNRESOLVED_PATH)
+    except (OSError, ValueError, KeyError, TypeError) as err:
+        try:
+            if existed:
+                with open(USER_CONFIG_PATH, 'w', encoding='utf-8') as file:
+                    json.dump(previous, file, indent=2, ensure_ascii=False)
+            elif os.path.exists(USER_CONFIG_PATH):
+                os.remove(USER_CONFIG_PATH)
+        except OSError:
+            pass
         return jsonify({"error": f"Could not save settings: {err}"}), 500
 
     return jsonify(current)
+
+
+@app.route('/api/unresolved-questions', methods=['GET'])
+def api_unresolved_questions():
+    if not UNRESOLVED_PATH.exists(): return jsonify([])
+    try:
+        with open(UNRESOLVED_PATH, encoding='utf-8') as file:
+            data = json.load(file)
+        return jsonify([{'question': item.get('question', ''), 'count': item.get('count', 1)}
+                        for item in data.get('questions', []) if item.get('status') == 'unresolved'])
+    except (OSError, ValueError):
+        return jsonify({'error': 'Could not read unanswered questions.'}), 500
+
+
+@app.route('/api/candidate-answers', methods=['POST'])
+def api_candidate_answer():
+    payload = request.get_json(silent=True) or {}
+    question = str(payload.get('question', '')).strip()
+    answer = str(payload.get('answer', '')).strip()
+    unit = str(payload.get('unit', '')).strip()
+    if not question or not answer or len(question) > 1000 or len(answer) > 4000 or len(unit) > 80:
+        return jsonify({'error': 'Enter a question and an answer.'}), 400
+    if not REGISTRY_PATH.exists() or not UNRESOLVED_PATH.exists():
+        return jsonify({'error': 'No unanswered question is available to update.'}), 404
+    try:
+        with open(UNRESOLVED_PATH, encoding='utf-8') as file:
+            data = json.load(file)
+        if not any(item.get('question') == question and item.get('status') == 'unresolved'
+                   for item in data.get('questions', [])):
+            return jsonify({'error': 'That question is no longer unresolved.'}), 404
+        CandidateRegistry(REGISTRY_PATH, UNRESOLVED_PATH).save_exact_answer(question, answer, unit)
+        return jsonify({'saved': True})
+    except (OSError, ValueError, KeyError):
+        return jsonify({'error': 'Could not save the verified answer.'}), 500
 
 
 @app.route('/api/run', methods=['POST'])
@@ -411,6 +484,7 @@ def api_run():
                 "cwd": ROOT,
                 "stdout": log_file,
                 "stderr": subprocess.STDOUT,
+                "env": _bot_environment(),
             }
             if os.name == "nt":
                 popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP

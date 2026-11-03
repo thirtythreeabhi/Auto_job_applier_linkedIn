@@ -25,6 +25,8 @@ last_name = "Golla"                # Your last name in quotes Eg: "Last", "Golla
 
 # Phone number (required), make sure it's valid.
 phone_number = "9876543210"        # Enter your 10 digit number in quotes Eg: "9876543210"
+email = ""                         # Resume/contact email, separate from the LinkedIn sign-in email.
+application_email = ""             # Email explicitly authorized for application forms.
 
 # What is your current city?
 current_city = ""                  # Los Angeles, San Francisco, etc.

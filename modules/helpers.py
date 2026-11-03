@@ -282,7 +282,7 @@ def manual_login_retry(is_logged_in: callable, limit: int = 2) -> None:
     '''
     count = 0
     while not is_logged_in():
-        from pyautogui import alert
+        from modules.gui import alert
         print_lg("Seems like you're not logged in!")
         button = "Confirm Login"
         message = 'After you successfully Log In, please click "{}" button below.'.format(button)

@@ -21,13 +21,14 @@ import sys
 import csv
 import re
 import time
-import pyautogui
+from modules.gui import pyautogui
 
 # Raise the CSV field-size cap so very long job descriptions don't trip the writer.
 csv.field_size_limit(1000000)
 
 from random import choice, shuffle
 from datetime import datetime
+from urllib.parse import urlencode
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -46,6 +47,9 @@ from modules.open_chrome import *
 from modules.helpers import *
 from modules.clickers_and_finders import *
 from modules.validator import validate_config
+from modules.linkedin_modern import is_modern_page, open_profile_matched_jobs, run_search as run_modern_search, SubmissionUncertain
+from modules.candidate_registry import CandidateRegistry, REGISTRY_PATH
+from config import _overrides as user_overrides
 
 if use_AI:
     from modules.ai.connections import create_ai_client, extract_skills, answer_question, close_ai_client
@@ -1161,17 +1165,96 @@ def questions_are_stalled(previous_blocked: set | None) -> bool:
 
 # Function to apply to jobs
 def apply_to_jobs(search_terms: list[str]) -> None:
+    from modules.application_audit import previously_attempted_ids, previously_submitted_roles
     applied_jobs = get_applied_job_ids()
+    starting_registry = CandidateRegistry() if REGISTRY_PATH.exists() else None
+    attempted_jobs = previously_attempted_ids(registry=starting_registry)
+    submitted_roles = previously_submitted_roles(file_name)
     rejected_jobs = set()
     blacklisted_companies = set()
     global current_city, failed_count, skip_count, easy_applied_count, external_jobs_count, tabs_count, pause_before_submit, pause_at_failed_question, useNewResume
     current_city = current_city.strip()
 
     if randomize_search_order:  shuffle(search_terms)
-    for searchTerm in search_terms:
-        driver.get(f"https://www.linkedin.com/jobs/search/?keywords={searchTerm}")
-        print_lg("\n________________________________________________________________________________________________________________________\n")
-        print_lg(f'\n>>>> Now searching for "{searchTerm}" <<<<\n\n')
+    for searchTerm in ['__profile_matched_jobs__', *search_terms]:
+        user_settings = user_overrides.load_user_config()
+        profile = user_settings.get('personals', {})
+        questions = dict(user_settings.get('questions', {}))
+        registry = CandidateRegistry() if REGISTRY_PATH.exists() else None
+        if registry is not None:
+            registry.export_field_mappings()
+        if os.path.exists('candidate_context.md') and registry is None:
+            raise RuntimeError('The candidate context exists but the verified-answer registry is missing.')
+        if registry is not None:
+            profile = dict(profile, current_city=registry.value('current_city') or '',
+                           country=registry.value('country') or '')
+        current_pay = questions.get('current_ctc')
+        expected_pay = questions.get('desired_salary')
+        if (registry is None and isinstance(current_pay, (int, float)) and isinstance(expected_pay, (int, float))
+                and expected_pay > 0 and current_pay > expected_pay * 3):
+            # The saved figures differ sharply. Leave salary questions unanswered until
+            # the user confirms them rather than submitting a potentially mistaken value.
+            questions.pop('current_ctc', None)
+            questions.pop('desired_salary', None)
+            print_lg('Salary questions will be skipped until the saved current and expected amounts are confirmed.')
+        profile_search = searchTerm == '__profile_matched_jobs__'
+        if profile_search:
+            print_lg('\n>>>> Checking LinkedIn jobs that match your profile first <<<<\n')
+            if not open_profile_matched_jobs(driver, print_lg): continue
+        else:
+            search_area = search_location.strip() or str(profile.get('country', '')).strip()
+            query = {'keywords': searchTerm}
+            if search_area: query['location'] = search_area
+            driver.get('https://www.linkedin.com/jobs/search/?' + urlencode(query))
+            print_lg("\n________________________________________________________________________________________________________________________\n")
+            print_lg(f'\n>>>> Now searching for "{searchTerm}" <<<<\n\n')
+
+        # LinkedIn's AI-powered search has different cards, filters and dialogs.
+        # Keep the original flow below for accounts that still use the older page.
+        try:
+            WebDriverWait(driver, 15).until(lambda d: is_modern_page(d) or
+                d.find_elements(By.XPATH, "//li[@data-occludable-job-id]"))
+        except Exception as error:
+            logger.warning('LinkedIn did not load a recognizable jobs results page: %s', error)
+            continue
+        if is_modern_page(driver):
+            print_lg('Using LinkedIn\'s current job search. Easy Apply and location are used; unavailable experience and employment filters are left broad.')
+            broad_language_search = searchTerm.strip().casefold() in ('javascript', 'typescript')
+            def record_modern(job_id, title, company, loc, description, experience):
+                global easy_applied_count
+                submitted_jobs(job_id, title, company, loc, 'Unknown', description, experience,
+                    'Unknown', 'Unknown', 'Unknown', os.path.basename(default_resume_path),
+                    False, 'Unknown', datetime.now(), 'https://www.linkedin.com/jobs/view/' + job_id,
+                    'Easy Applied', set(), 'In Development')
+                if job_id not in get_applied_job_ids():
+                    raise RuntimeError('LinkedIn confirmed the submission, but its history entry could not be verified. Stop before retrying.')
+                easy_applied_count += 1
+            try:
+                applied, skipped, reviewed = run_modern_search(
+                    driver, profile=profile, questions=questions, email=username,
+                    resume_path=registry.value('resume_path') if registry else default_resume_path, dry_run=stop_before_submit,
+                    limit=10000 if profile_search else (1000 if broad_language_search else switch_number), applied_ids=applied_jobs,
+                    bad_words=[word for word in bad_words if word.casefold() not in ('.net', 'php', 'ruby', 'embedded programming', 'cnc')],
+                    company_bad_words=about_company_bad_words, company_good_words=about_company_good_words,
+                    max_years=-1,
+                    find_bad_word=find_bad_word, on_submitted=record_modern, log=print_lg, registry=registry,
+                    max_pages=100 if profile_search else (20 if broad_language_search else 10), require_js_or_ts=broad_language_search,
+                    attempted_ids=attempted_jobs, submitted_roles=submitted_roles, profile_matches=profile_search)
+                skip_count += skipped + reviewed
+                if reviewed:
+                    print_lg('Dry run completed at the application review screen.')
+                    return
+            except SubmissionUncertain as error:
+                logger.error('%s Stopping to avoid a duplicate application.', error)
+                raise
+            except Exception as error:
+                logger.error('Could not complete the current LinkedIn search: %s', error, exc_info=True)
+                return
+            continue
+
+        if registry is not None:
+            logger.error('This older LinkedIn layout cannot yet enforce the verified-answer registry. Stopping before applying.')
+            return
 
         apply_filters()
 
@@ -1463,10 +1546,8 @@ def apply_to_jobs(search_terms: list[str]) -> None:
         except Exception as e:
             logger.error("Could not read the job listings.")
             critical_error_log("In Applier", e)
-            try:
-                print_lg(driver.page_source, pretty=True)
-            except Exception as dump_error:
-                logger.warning("Could not capture the page source; the browser may have crashed. %s", dump_error)
+            # LinkedIn page source can contain private profile data and session tokens.
+            # Keep it out of logs; the exception above provides the diagnostic context.
 
         
 def run(total_runs: int) -> int:

@@ -40,10 +40,7 @@ from config.settings import showAiErrorAlerts
 from modules.helpers import print_lg, critical_error_log, logger, convert_to_json
 from modules.ai.prompts import extract_skills_prompt, ai_answer_prompt
 
-try:
-    from pyautogui import confirm
-except Exception:  # pyautogui may be unavailable in headless environments
-    confirm = None
+from modules.gui import confirm
 
 
 # Whether to keep popping up AI error dialogs (disabled once the user asks to pause them).

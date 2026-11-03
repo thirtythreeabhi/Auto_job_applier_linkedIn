@@ -445,7 +445,7 @@
             });
             var isRun = (name === 'Run');
             document.getElementById('savebar').style.display = isRun ? 'none' : 'flex';
-            if (isRun) { refreshStatus(); refreshLogs(); loadAppliedJobs(); }
+            if (isRun) { refreshStatus(); refreshLogs(); loadAppliedJobs(); loadUnresolvedQuestions(); }
         }
 
         // ---- AI master switch + model lists ----
@@ -518,6 +518,13 @@
             panel.appendChild(el('h2', { class: 'section-h', text: 'Activity log' }));
             panel.appendChild(el('pre', { class: 'log', id: 'logPane', text: 'No activity yet.' }));
 
+            panel.appendChild(el('h2', { class: 'section-h', text: 'Questions needing answers' }));
+            panel.appendChild(el('p', { class: 'muted-small', text: 'Questions are listed once. Save an answer only when you know it; the bot reuses it for the same question.' }));
+            var refreshQuestions = el('button', { class: 'btn secondary', type: 'button', text: 'Refresh questions' });
+            refreshQuestions.addEventListener('click', loadUnresolvedQuestions);
+            panel.appendChild(refreshQuestions);
+            panel.appendChild(el('div', { id: 'questionsHolder', style: 'margin-top:12px;' }));
+
             var histWrap = el('div', {});
             histWrap.appendChild(el('h2', { class: 'section-h', text: 'Applied jobs history' }));
             var refresh = el('button', { class: 'btn secondary', type: 'button', text: 'Refresh history' });
@@ -577,14 +584,42 @@
         }
 
         function startBot() {
-            var msgOk = confirm('Start applying now?\n\nA browser window will open and use your LinkedIn account. Keep it in the foreground.');
-            if (!msgOk) return;
             var pane = document.getElementById('logPane');
             pane.textContent = '';
             logOffset = 0;
             fetch('/api/run', { method: 'POST' }).then(function (r) { return r.json(); })
                 .then(function (s) { setRunningUI(s.running, s.pid); refreshLogs(); })
                 .catch(function () {});
+        }
+
+        function loadUnresolvedQuestions() {
+            var holder = document.getElementById('questionsHolder');
+            if (!holder) return;
+            fetch('/api/unresolved-questions').then(function (r) { return r.json(); }).then(function (items) {
+                holder.innerHTML = '';
+                if (!Array.isArray(items) || !items.length) {
+                    holder.appendChild(el('p', { class: 'muted-small', text: 'No unanswered questions recorded.' }));
+                    return;
+                }
+                items.forEach(function (item) {
+                    var row = el('div', { class: 'field' });
+                    row.appendChild(el('p', { text: item.question }));
+                    var answer = el('input', { type: 'text', placeholder: 'Your verified answer', 'aria-label': 'Answer for ' + item.question });
+                    var unit = el('input', { type: 'text', placeholder: 'Unit, if applicable', 'aria-label': 'Unit for ' + item.question });
+                    var save = el('button', { class: 'btn secondary', type: 'button', text: 'Save answer' });
+                    var message = el('span', { class: 'muted-small' });
+                    save.addEventListener('click', function () {
+                        if (!answer.value.trim()) { message.textContent = ' Enter an answer first.'; return; }
+                        save.disabled = true;
+                        fetch('/api/candidate-answers', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ question: item.question, answer: answer.value.trim(), unit: unit.value.trim() }) })
+                            .then(function (r) { if (!r.ok) throw new Error('save'); loadUnresolvedQuestions(); })
+                            .catch(function () { save.disabled = false; message.textContent = ' Could not save the answer.'; });
+                    });
+                    row.appendChild(answer); row.appendChild(unit); row.appendChild(save); row.appendChild(message);
+                    holder.appendChild(row);
+                });
+            }).catch(function () { holder.textContent = 'Could not load unanswered questions.'; });
         }
 
         function stopBot() {

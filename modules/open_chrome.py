@@ -74,6 +74,11 @@ def createChromeSession(isRetry: bool = False):
     make_directories([file_name,failed_file_name,logs_folder_path+"/screenshots",default_resume_path,generated_resume_path+"/temp"])
     # Set up WebDriver with Chrome Profile
     options = uc.ChromeOptions() if auto_manage_driver else Options()
+    # On Ubuntu Wayland sessions, Selenium's child process may not inherit a
+    # usable Xwayland authorization cookie. Force Chrome onto the user's
+    # Wayland socket when it is available instead of falling back to DISPLAY.
+    if os.name != "nt" and os.environ.get("WAYLAND_DISPLAY") and os.environ.get("XDG_RUNTIME_DIR"):
+        options.add_argument("--ozone-platform=wayland")
     # "--headless" is the legacy mode and is trivially detectable, "=new" runs the real browser.
     if run_in_background:   options.add_argument("--headless=new")
     if disable_extensions:  options.add_argument("--disable-extensions")
@@ -112,7 +117,7 @@ except Exception as e:
     if isinstance(e,TimeoutError): msg = "Couldn't download Chrome-driver. Set auto_manage_driver = False in config!"
     logger.error(msg)
     critical_error_log("In Opening Chrome", e)
-    from pyautogui import alert
+    from modules.gui import alert
     alert(msg, "Error in opening chrome")
     try: driver.quit()
     except NameError: exit()

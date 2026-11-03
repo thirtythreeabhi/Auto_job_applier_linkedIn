@@ -26,6 +26,21 @@ default_resume_path = "all resumes/default/resume.pdf"      # (In Development)
 # What do you want to answer for questions that ask about years of experience you have, this is different from current_experience? 
 years_of_experience = "5"          # A number in quotes Eg: "0","1","2","3","4", etc.
 
+# Optional, explicitly provided details for application questions. Empty means unknown.
+additional_experience_months = ""
+nodejs_experience_years = ""
+postgresql_experience_years = ""
+fullstack_experience_years = ""
+reactjs_experience_years = ""
+react_rest_api_experience = ""
+dsa_self_rating = ""
+current_role = ""
+current_employment_type = ""
+education_degree = ""
+graduation_year = ""
+education_percentage = ""
+notice_period_verified = False
+
 # Do you need visa sponsorship now or in future?
 require_visa = "No"               # "Yes" or "No"
 

@@ -1,0 +1,63 @@
+import json
+import stat
+
+from modules.application_audit import ApplicationAudit
+
+
+def test_attempts_record_values_outcomes_and_are_private(tmp_path):
+    path = tmp_path / 'audit.json'
+    first = ApplicationAudit('123', 'Software Engineer', 'Example', path)
+    first.field('Last name', 'Singh Sandal', 'filled', 1)
+    first.field('Email', 'person@example.com', 'verified prefilled', 1)
+    first.field('Password', 'do-not-store', 'filled', 1)
+    first.field('API key', 'also-secret', 'filled', 1)
+    first.finish('submitted', 'LinkedIn confirmed the application was sent.')
+    second = ApplicationAudit('123', 'Software Engineer', 'Example', path)
+    second.finish('skip', 'Already applied')
+    data = json.loads(path.read_text())
+    assert len(data['applications']) == 2
+    assert data['applications'][0]['status'] == 'submitted'
+    assert [(f['label'], f['value'], f['source']) for f in data['applications'][0]['fields']] == [
+        ('Last name', 'Singh Sandal', 'filled'), ('Email', 'person@example.com', 'verified prefilled')]
+    assert 'do-not-store' not in path.read_text()
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+
+def test_pending_submission_is_persisted_before_confirmation(tmp_path):
+    path = tmp_path / 'audit.json'
+    audit = ApplicationAudit('123', 'Engineer', 'Example', path)
+    audit.finish('submitting', 'Confirmation pending')
+    assert json.loads(path.read_text())['applications'][0]['status'] == 'submitting'
+
+
+def test_attempted_jobs_and_duplicate_submitted_roles_are_remembered(tmp_path):
+    from modules.application_audit import previously_attempted_ids, previously_submitted_roles, role_key
+    audit_path = tmp_path / 'audit.json'
+    history = tmp_path / 'history.csv'
+    history.write_text('Job ID,Title,Company\n1,Software Engineer,Example Inc\n', encoding='utf-8')
+    a = ApplicationAudit('2', 'Backend Developer', 'Another Co', audit_path)
+    a.finish('skip', 'Missing an answer')
+    b = ApplicationAudit('3', 'Frontend Developer', 'Example Inc', audit_path)
+    b.finish('submitted', 'Confirmed')
+    c = ApplicationAudit('4', 'Test Job', 'Testing Co', audit_path)
+    c.finish('review', 'Dry run')
+    assert previously_attempted_ids(audit_path) == {'2', '3'}
+    roles = previously_submitted_roles(history, audit_path)
+    assert role_key('EXAMPLE INC', 'Software Engineer') in roles
+    assert role_key('Example Inc', 'Frontend Developer') in roles
+    assert role_key('Another Co', 'Backend Developer') not in roles
+
+
+def test_previously_skipped_job_is_retried_only_when_its_answer_is_now_verified(tmp_path):
+    from modules.application_audit import previously_attempted_ids
+    path = tmp_path / 'audit.json'
+    a = ApplicationAudit('10', 'Engineer', 'Example', path)
+    a.finish('skip', 'No verified answer for required question: Have you used TypeScript in a project?.')
+    b = ApplicationAudit('11', 'Engineer', 'Other', path)
+    b.finish('skip', 'No verified answer for required question: Do you require a visa?.')
+    c = ApplicationAudit('12', 'Engineer', 'Third', path)
+    c.finish('submitted', 'Confirmed')
+    class Registry:
+        def answer(self, question): return 'Yes' if 'TypeScript' in question else None
+    assert previously_attempted_ids(path, Registry()) == {'11', '12'}
+    assert previously_attempted_ids(path) == {'10', '11', '12'}
