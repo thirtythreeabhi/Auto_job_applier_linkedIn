@@ -133,6 +133,22 @@ def test_extract_skills_falls_back_to_json_parsing():
     assert C.extract_skills(client, "Python role")["tech_stack"] == ["Python"]
 
 
+def test_suitability_classifier_preserves_review_even_with_core_skills_match(monkeypatch):
+    monkeypatch.setattr(C, 'record_prompt', lambda *args, **kwargs: None)
+    payload = {
+        'decision': 'REVIEW', 'core_skills_match': True, 'match_score': 75,
+        'confidence': 0.8, 'matched_skills': ['React'], 'missing_skills': ['AWS'],
+        'experience_gap_years': 0, 'hard_blockers': [],
+        'reason': 'Core fit; AWS needs confirmation.',
+    }
+    client = C.AIClient(_StructuredModel(payload), provider='test', model_name='stub')
+    result = C.classify_job_suitability(
+        client, 'Engineer', 'Example', 'New Delhi', 'A sufficiently long job description.',
+        'Candidate has React experience.')
+    assert result['decision'] == 'REVIEW'
+    assert result['model_decision'] == 'REVIEW'
+
+
 # ------------------------------- client lifecycle ---------------------------
 def test_create_ai_client_returns_none_when_ai_disabled(monkeypatch):
     import config.secrets as cfg

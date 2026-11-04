@@ -35,23 +35,30 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, NoSuchWindowException, ElementNotInteractableException, WebDriverException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, NoSuchWindowException, ElementNotInteractableException, TimeoutException, WebDriverException
 
 from config.personals import *
 from config.questions import *
 from config.search import *
-from config.secrets import use_AI, username, password, ai_provider
+from config.secrets import (use_AI, username, password, ai_provider, local_ai_enabled,
+                            local_ai_provider, local_ai_model, local_ai_api_url, local_ai_api_key)
 from config.settings import *
 
 from modules.open_chrome import *
 from modules.helpers import *
 from modules.clickers_and_finders import *
 from modules.validator import validate_config
-from modules.linkedin_modern import is_modern_page, open_profile_matched_jobs, run_search as run_modern_search, SubmissionUncertain
+from modules.linkedin_modern import is_modern_page, open_profile_matched_jobs, run_search as run_modern_search, SubmissionUncertain, EasyApplyLimitReached, _raise_if_limited
+from modules.linkedin_modern import (
+    _generate_application_answer, _generate_application_selections,
+    _is_narrative_question,
+)
 from modules.candidate_registry import CandidateRegistry, REGISTRY_PATH
+from modules.automation_control import PauseController
+from modules.run_diagnostics import RunDiagnostics
 from config import _overrides as user_overrides
 
-if use_AI:
+if use_AI or local_ai_enabled:
     from modules.ai.connections import create_ai_client, extract_skills, answer_question, close_ai_client
 
 from typing import Literal
@@ -70,6 +77,7 @@ if run_in_background == True:
 # so the process hangs forever and reads as "the bot does nothing". Work that out once
 # and degrade every dialog in this file to a log line.
 interactive_session = not run_in_background and bool(getattr(sys.stdout, "isatty", lambda: False)())
+configured_pause_before_submit = pause_before_submit
 if not interactive_session:
     pause_at_failed_question = False
     pause_before_submit = False
@@ -79,6 +87,15 @@ if not interactive_session:
         return None
     pyautogui.alert = _suppressed_dialog
     pyautogui.confirm = _suppressed_dialog
+
+
+def _confirm_modern_submission(title, company):
+    if not interactive_session:
+        print_lg('[Submission paused] No interactive confirmation is available; leaving the application unsubmitted.')
+        return None
+    return pyautogui.confirm(
+        f'Review the completed Easy Apply form for {title} at {company}. Submit only if every answer is correct.',
+        'Confirm application submission', ['Submit Application', 'Keep Draft'])
 
 first_name = first_name.strip()
 middle_name = middle_name.strip()
@@ -127,6 +144,8 @@ notice_period_weeks = str(notice_period//7)
 notice_period = str(notice_period)
 
 aiClient = None
+localAIClient = None
+candidate_context_for_classifier = ''
 about_company_for_ai = None  # filled in later, once we're processing a specific job
 
 # Dry run: fill everything in, reach the Review step, then discard instead of submitting.
@@ -884,6 +903,14 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                             ai_answer = answer_question(aiClient, label_org, question_type="text", job_description=job_description, user_information_all=user_information_all)
                         except Exception as e:
                             logger.warning("Failed to get AI answer! %s", e)
+                    elif local_ai_enabled and localAIClient:
+                        try:
+                            ai_answer = _generate_application_answer(
+                                localAIClient, label_org, "text", None,
+                                candidate_context_for_classifier, job_description,
+                                about_company_for_ai)
+                        except Exception as e:
+                            logger.warning("Failed to get local AI answer! %s", e)
                     if ai_answer and isinstance(ai_answer, str) and ai_answer.strip():
                         answer = ai_answer.strip()
                         print_lg(f'AI answered "{label_org}": "{answer}"')
@@ -913,38 +940,127 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
             label = label_org.lower()
             answer = ""
             prev_answer = text_area.get_attribute("value")
-            if not prev_answer or overwrite_previous_answers:
-                if label_has(label, 'summary'): answer = linkedin_summary
-                elif label_has(label, 'cover'): answer = cover_letter
-                if answer == "":
-                    ai_answer = ""
-                    if use_AI and aiClient:
-                        try:
-                            ai_answer = answer_question(aiClient, label_org, question_type="textarea", job_description=job_description, user_information_all=user_information_all)
-                        except Exception as e:
-                            logger.warning("Failed to get AI answer! %s", e)
-                    if ai_answer and isinstance(ai_answer, str) and ai_answer.strip():
-                        answer = ai_answer.strip()
-                        print_lg(f'AI answered "{label_org}": "{answer}"')
+            is_skill_summary = label.strip().rstrip('*?: ') in {
+                'skill set', 'technical skill set', 'technical skills',
+                'core technical skills', 'primary skills'}
+            is_narrative = _is_narrative_question(label_org, 'textarea')
+            should_enrich = is_skill_summary or (is_narrative and (not prev_answer or len(prev_answer.strip()) < 180))
+            if not prev_answer or overwrite_previous_answers or should_enrich:
+                draft = prev_answer or (linkedin_summary if label_has(label, 'summary') else
+                                        cover_letter if label_has(label, 'cover') else '')
+                if should_enrich:
+                    ai_client = localAIClient if local_ai_enabled and localAIClient else (aiClient if use_AI else None)
+                    enriched_question = label_org
+                    if is_skill_summary:
+                        enriched_question += (
+                            '. Review the full applicant context, including professional work and personal projects. '
+                            'Create a concise but comprehensive skills list across demonstrated frontend, backend, databases, AI, cloud, testing, and integration work. '
+                            'Expand shorthand such as JS to JavaScript. Do not reduce the answer to one keyword or claim unsupported experience.'
+                        )
                     else:
-                        randomly_answered_questions.add((label_org, "textarea"))
+                        enriched_question += (
+                            '. Improve this saved draft using the full applicant context. Preserve its factual meaning, '
+                            'and add only relevant details supported by professional work or projects.'
+                        )
+                    answer_context = candidate_context_for_classifier or user_information_all
+                    if draft:
+                        answer_context += '\n\nSaved draft for this question: ' + draft
+                    ai_answer = _generate_application_answer(
+                        ai_client, enriched_question, 'textarea', None,
+                        answer_context, job_description, about_company_for_ai,
+                        text_area.get_attribute('maxlength'))
+                    if ai_answer:
+                        answer = ai_answer.strip()
+                        print_lg(f'AI enriched "{label_org}": "{answer}"')
+                    elif is_skill_summary:
+                        answer = CandidateRegistry().value('technical_skill_summary') or (
+                            'JavaScript, TypeScript, React, Next.js, Node.js, Express.js, Python, Django/DRF, '
+                            'SQL, PostgreSQL, Neon, MongoDB, Redis, Supabase, Drizzle ORM, Prisma, pgvector, '
+                            'REST APIs, webhooks, OAuth, LLM integrations, AI agents/tool calling, RAG, embeddings, '
+                            'LiveKit/WebRTC, Docker, Git/GitHub Actions, GCP, Vercel, Playwright, Vitest, Sentry, '
+                            'Stripe, Shopify, WooCommerce, GoHighLevel, and Clerk.')
+                    elif draft:
+                        answer = draft
+                    else:
+                        randomly_answered_questions.add((label_org, 'textarea'))
                         unanswered_questions.add(label_org)
+                else:
+                    if label_has(label, 'summary'): answer = linkedin_summary
+                    elif label_has(label, 'cover'): answer = cover_letter
+                    if answer == '':
+                        ai_answer = ''
+                        if use_AI and aiClient:
+                            try:
+                                ai_answer = answer_question(aiClient, label_org, question_type='textarea', job_description=job_description, user_information_all=user_information_all)
+                            except Exception as e:
+                                logger.warning('Failed to get AI answer! %s', e)
+                        elif local_ai_enabled and localAIClient:
+                            try:
+                                ai_answer = _generate_application_answer(
+                                    localAIClient, label_org, 'textarea', None,
+                                    candidate_context_for_classifier or user_information_all,
+                                    job_description, about_company_for_ai,
+                                    text_area.get_attribute('maxlength'))
+                            except Exception as e:
+                                logger.warning('Failed to get local AI answer! %s', e)
+                        if ai_answer and isinstance(ai_answer, str) and ai_answer.strip():
+                            answer = ai_answer.strip()
+                            print_lg(f'AI answered "{label_org}": "{answer}"')
+                        else:
+                            randomly_answered_questions.add((label_org, 'textarea'))
+                            unanswered_questions.add(label_org)
             text_area.clear()
             human_type(text_area, answer)
             questions_list.add((label, text_area.get_attribute("value"), "textarea", prev_answer))
             continue
 
         # Check if it's a checkbox question
-        checkbox = try_xp(Question, ".//input[@type='checkbox']", False)
+        checkboxes = Question.find_elements(By.XPATH, ".//input[@type='checkbox']")
+        checkbox = checkboxes[0] if checkboxes else False
         if checkbox:
             # The "Follow <company>" box is the one benign checkbox on this form, and
             # `follow_company()` already drives it from `follow_companies`. Ticking it here
             # too would fight that setting, so leave it to its one owner.
             if checkbox.get_attribute("id") == "follow-company-checkbox": continue
+            if len(checkboxes) > 1:
+                title_element = try_xp(
+                    Question,
+                    ".//span[@data-test-form-builder-checkbox-form-component__title] | .//legend",
+                    False)
+                question_lines = [line.strip() for line in Question.text.splitlines() if line.strip()]
+                group_label = title_element.text.strip() if title_element else (question_lines[0] if question_lines else "Select applicable options")
+                instruction_lines = [line for line in question_lines
+                                     if line.endswith('*') and line.casefold() not in group_label.casefold()]
+                if instruction_lines:
+                    group_label = ' '.join([group_label, *instruction_lines])
+                option_labels = []
+                option_label_elements = []
+                for option in checkboxes:
+                    option_id = option.get_attribute("id")
+                    option_label = try_xp(Question, f'.//label[@for="{option_id}"]', False) if option_id else False
+                    option_label_elements.append(option_label)
+                    option_labels.append(option_label.text.strip() if option_label else (option.get_attribute("value") or ""))
+                ai_client = localAIClient if local_ai_enabled and localAIClient else (aiClient if use_AI else None)
+                choices = _generate_application_selections(
+                    ai_client, group_label, option_labels,
+                    candidate_context_for_classifier or user_information_all,
+                    job_description, about_company_for_ai)
+                choices_lower = {choice.casefold() for choice in choices}
+                for option, option_label, option_text in zip(checkboxes, option_label_elements, option_labels):
+                    should_select = option_text.casefold() in choices_lower
+                    if option.is_selected() != should_select:
+                        if option_label:
+                            actions.move_to_element(option_label).click().perform()
+                        else:
+                            option.click()
+                selected_labels = [text for option, text in zip(checkboxes, option_labels) if option.is_selected()]
+                questions_list.add((f'{group_label} ([X] {", ".join(selected_labels)})',
+                                    ", ".join(selected_labels), "checkbox_group", None))
+                continue
             label = try_xp(Question, ".//span[@class='visually-hidden']", False)
             label_org = label.text if label else "Unknown"
             label = label_org.lower()
-            answer = try_xp(Question, ".//label[@for]", False)  # Sometimes multiple checkboxes are given for 1 question, Not accounted for that yet
+            answer = try_xp(Question, ".//label[@for]", False)
             answer = answer.text if answer else "Unknown"
             prev_answer = checkbox.is_selected()
             checked = prev_answer
@@ -1164,7 +1280,7 @@ def questions_are_stalled(previous_blocked: set | None) -> bool:
 
 
 # Function to apply to jobs
-def apply_to_jobs(search_terms: list[str]) -> None:
+def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=None) -> None:
     from modules.application_audit import previously_attempted_ids, previously_submitted_roles
     applied_jobs = get_applied_job_ids()
     starting_registry = CandidateRegistry() if REGISTRY_PATH.exists() else None
@@ -1177,6 +1293,8 @@ def apply_to_jobs(search_terms: list[str]) -> None:
 
     if randomize_search_order:  shuffle(search_terms)
     for searchTerm in ['__profile_matched_jobs__', *search_terms]:
+        if diagnostics:
+            diagnostics.begin_stage('search')
         user_settings = user_overrides.load_user_config()
         profile = user_settings.get('personals', {})
         questions = dict(user_settings.get('questions', {}))
@@ -1216,7 +1334,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                 d.find_elements(By.XPATH, "//li[@data-occludable-job-id]"))
         except Exception as error:
             logger.warning('LinkedIn did not load a recognizable jobs results page: %s', error)
-            continue
+            raise
         if is_modern_page(driver):
             print_lg('Using LinkedIn\'s current job search. Easy Apply and location are used; unavailable experience and employment filters are left broad.')
             broad_language_search = searchTerm.strip().casefold() in ('javascript', 'typescript')
@@ -1239,17 +1357,25 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     max_years=-1,
                     find_bad_word=find_bad_word, on_submitted=record_modern, log=print_lg, registry=registry,
                     max_pages=100 if profile_search else (20 if broad_language_search else 10), require_js_or_ts=broad_language_search,
-                    attempted_ids=attempted_jobs, submitted_roles=submitted_roles, profile_matches=profile_search)
+                    attempted_ids=attempted_jobs, submitted_roles=submitted_roles, profile_matches=profile_search,
+                    classifier_enabled=local_ai_enabled, classifier_client=localAIClient,
+                    candidate_context=candidate_context_for_classifier,
+                    classifier_model=local_ai_model,
+                    pause_before_submit=configured_pause_before_submit,
+                    confirm_before_submit=_confirm_modern_submission,
+                    pause_controller=pause_controller, diagnostics=diagnostics)
                 skip_count += skipped + reviewed
+                if diagnostics:
+                    diagnostics.complete_stage('search')
                 if reviewed:
-                    print_lg('Dry run completed at the application review screen.')
+                    print_lg('Stopped at the final application review without submitting.')
                     return
             except SubmissionUncertain as error:
                 logger.error('%s Stopping to avoid a duplicate application.', error)
                 raise
             except Exception as error:
                 logger.error('Could not complete the current LinkedIn search: %s', error, exc_info=True)
-                return
+                raise
             continue
 
         if registry is not None:
@@ -1277,11 +1403,14 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     if job_index >= len(job_listings): break
                     job = job_listings[job_index]
                     job_index += 1
+                    if diagnostics: diagnostics.increment('jobs_inspected')
                     if keep_screen_awake: pyautogui.press('shiftright')
                     if current_count >= switch_number: break
                     print_lg("\n-@-\n")
 
                     job_id,title,company,work_location,work_style,skip = get_job_main_details(job, blacklisted_companies, rejected_jobs)
+                    if diagnostics and job_id:
+                        diagnostics.set_job_url(f'https://www.linkedin.com/jobs/view/{job_id}/')
                     
                     if skip: continue
                     # Redundant fail safe check for applied jobs!
@@ -1379,6 +1508,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     # Is this an Easy Apply job? Try each locator in `easy_apply_locators` in
                     # turn and confirm by the modal opening; a new browser tab means external.
                     is_easy_apply = False
+                    _raise_if_limited(driver, 'before_easy_apply')
                     for how, xpath in easy_apply_locators:
                         apply_button = try_xp(driver, xpath, False)  # detect only, never click
                         if not apply_button: continue
@@ -1386,6 +1516,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             tabs_open = len(driver.window_handles)
                             apply_button.click()
                             buffer(click_gap)
+                            _raise_if_limited(driver, 'after_easy_apply_click')
                             if len(driver.window_handles) > tabs_open:
                                 # A new tab opened -> external apply. Close it and return to LinkedIn.
                                 driver.switch_to.window(driver.window_handles[-1])
@@ -1398,6 +1529,8 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             is_easy_apply = True
                             print_lg(f"Easy Apply detected ({how}).")
                             break
+                        except EasyApplyLimitReached:
+                            raise
                         except Exception as e:
                             print_lg(f"Easy Apply check '{how}' didn't pan out.", e)
                             # Dismiss whatever popped up and let the next strategy try.
@@ -1411,6 +1544,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             try:
                                 errored = ""
                                 modal = find_by_class(driver, "jobs-easy-apply-modal")
+                                _raise_if_limited(driver, 'opening_modal')
                                 wait_xp_click(modal, next_button_xpath, 1)
                                 resume = "Previous resume"
                                 next_button = True
@@ -1418,6 +1552,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                 next_counter = 0
                                 blocked_questions = None
                                 while next_button:
+                                    _raise_if_limited(driver, 'application_form')
                                     next_counter += 1
                                     if next_counter >= 15: 
                                         if pause_at_failed_question:
@@ -1472,7 +1607,10 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                     # try_xp(modal, ".//span[normalize-space(.)='Review']")
                                 if not discard_reason:
                                     follow_company(modal)
-                                    if wait_xp_click(modal, submit_button_xpath, 2, scrollTop=True): 
+                                    _raise_if_limited(driver, 'before_submit')
+                                    if wait_xp_click(modal, submit_button_xpath, 2, scrollTop=True):
+                                        errored = 'submitting'
+                                        _raise_if_limited(driver, 'after_submit', 'unconfirmed')
                                         date_applied = datetime.now()
                                         if not wait_span_click(driver, "Done", 2): actions.send_keys(Keys.ESCAPE).perform()
                                     elif errored != "stuck" and cur_pause_before_submit and "Yes" in pyautogui.confirm("You submitted the application, didn't you 😒?", "Failed to find Submit Application!", ["Yes", "No"]):
@@ -1502,10 +1640,16 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                             discard_job()
                             continue
 
+                        except EasyApplyLimitReached:
+                            raise
+
                         except Exception as e:
+                            _raise_if_limited(driver, 'application_failure',
+                                'unconfirmed' if locals().get('errored') == 'submitting' else 'not_submitted')
                             logger.warning("Failed to Easy apply!")
                             # print_lg(e)
                             critical_error_log("Somewhere in Easy Apply process",e)
+                            if diagnostics: diagnostics.increment('jobs_failed')
                             failed_job(job_id, job_link, resume, date_listed, "Problem in Easy Applying", e, application_link, screenshot_name)
                             failed_count += 1
                             discard_job()
@@ -1525,6 +1669,8 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     current_count += 1
                     if application_link == "Easy Applied": easy_applied_count += 1
                     else:   external_jobs_count += 1
+                    if diagnostics and application_link == "Easy Applied":
+                        diagnostics.increment('jobs_applied')
                     applied_jobs.add(job_id)
 
 
@@ -1540,6 +1686,8 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     print_lg(f"\n>-> Didn't find Page {current_page+1}. Probably at the end page of results!\n")
                     break
 
+        except EasyApplyLimitReached:
+            raise
         except (NoSuchWindowException, WebDriverException) as e:
             logger.error("The browser window was closed or the session became invalid. Stopping.", exc_info=e)
             raise e  # let the outer handler deal with it
@@ -1548,16 +1696,17 @@ def apply_to_jobs(search_terms: list[str]) -> None:
             critical_error_log("In Applier", e)
             # LinkedIn page source can contain private profile data and session tokens.
             # Keep it out of logs; the exception above provides the diagnostic context.
+            raise
 
         
-def run(total_runs: int) -> int:
+def run(total_runs: int, pause_controller=None, diagnostics=None) -> int:
     if dailyEasyApplyLimitReached:
         return total_runs
     print_lg("\n########################################################################################################################\n")
     print_lg(f"Date and Time: {datetime.now()}")
     print_lg(f"Cycle number: {total_runs}")
     print_lg(f"Currently looking for jobs posted within '{date_posted}' and sorting them by '{sort_by}'")
-    apply_to_jobs(search_terms)
+    apply_to_jobs(search_terms, pause_controller=pause_controller, diagnostics=diagnostics)
     print_lg("########################################################################################################################\n")
     # Only wait between cycles when there is actually going to be another cycle. This used
     # to run at the end of every single run, which reads as a 10 minute hang.
@@ -1574,11 +1723,16 @@ def run(total_runs: int) -> int:
 linkedIn_tab = False
 
 def main() -> None:
+    run_id = os.environ.get('BOT_RUN_ID')
+    pause_controller = PauseController(run_id) if run_id else None
+    diagnostics = RunDiagnostics(run_id) if run_id else None
     pyautogui.alert("Please consider sponsoring this project at:\n\nhttps://github.com/sponsors/GodsScion\n\n", "Support the project", "Okay")
     total_runs = 1
+    fatal_error = None
     try:
-        global linkedIn_tab, tabs_count, useNewResume, aiClient
+        global linkedIn_tab, tabs_count, useNewResume, aiClient, localAIClient, candidate_context_for_classifier
         alert_title = "Error Occurred. Closing Browser!"
+        if diagnostics: diagnostics.begin_stage('startup')
         validate_config()
         
         if not os.path.exists(default_resume_path):
@@ -1586,18 +1740,37 @@ def main() -> None:
             useNewResume = False
         
         # Login to LinkedIn
+        if diagnostics: diagnostics.begin_stage('login')
         tabs_count = len(driver.window_handles)
         driver.get("https://www.linkedin.com/login")
         if not is_logged_in_LN(): login_LN()
+        if diagnostics: diagnostics.complete_stage('login')
         
         linkedIn_tab = driver.current_window_handle
+
+        if local_ai_enabled:
+            try:
+                raw_context = open('candidate_context.md', encoding='utf-8').read()
+                relevant_sections = ('education', 'professional experience', 'technical skills',
+                                     'major professional projects', 'personal projects', 'job search preferences')
+                candidate_context_for_classifier = '\n\n'.join(
+                    section.strip() for section in re.split(r'(?m)(?=^## )', raw_context)
+                    if any(name in section.splitlines()[0].casefold() for name in relevant_sections)
+                )
+            except OSError as error:
+                logger.warning('Candidate context unavailable; suitability decisions will be REVIEW: %s', error)
+                candidate_context_for_classifier = ''
+            localAIClient = create_ai_client(
+                model_name=local_ai_model, provider=local_ai_provider,
+                api_url=local_ai_api_url, api_key=local_ai_api_key, force=True)
 
         if use_AI:
             aiClient = create_ai_client()
 
         # Start applying to jobs
         driver.switch_to.window(linkedIn_tab)
-        total_runs = run(total_runs)
+        if diagnostics: diagnostics.complete_stage('startup')
+        total_runs = run(total_runs, pause_controller, diagnostics)
         while(run_non_stop):
             if cycle_date_posted:
                 date_options = ["Any time", "Past month", "Past week", "Past 24 hours"]
@@ -1606,18 +1779,66 @@ def main() -> None:
             if alternate_sortby:
                 global sort_by
                 sort_by = "Most recent" if sort_by == "Most relevant" else "Most relevant"
-                total_runs = run(total_runs)
+                total_runs = run(total_runs, pause_controller, diagnostics)
                 sort_by = "Most recent" if sort_by == "Most relevant" else "Most relevant"
-            total_runs = run(total_runs)
+            total_runs = run(total_runs, pause_controller, diagnostics)
             if dailyEasyApplyLimitReached:
                 break
         
 
-    except (NoSuchWindowException, WebDriverException) as e:
+    except EasyApplyLimitReached as error:
+        print_lg('Easy Apply limit confirmed; stopping without another application attempt.')
+        if diagnostics:
+            try:
+                screenshot_path = None
+                try:
+                    if getattr(driver, 'session_id', None):
+                        screenshot_path = str(RunDiagnostics(run_id).root / run_id / 'easy_apply_limit.png')
+                        driver.save_screenshot(screenshot_path)
+                except Exception:
+                    screenshot_path = None
+                diagnostics.stop_for_easy_apply_limit(
+                    error, getattr(error, 'job_url', '') or getattr(driver, 'current_url', ''), screenshot_path)
+            except Exception as diagnostic_error:
+                logger.error('Could not persist Easy Apply limit diagnostics: %s', diagnostic_error)
+    except InterruptedError as error:
+        print_lg('Automation stopped at a safe checkpoint.')
+        if diagnostics:
+            diagnostics.finish('stopped', 'USER_STOPPED', 'Automation was stopped by the user.')
+    except NoSuchWindowException as e:
         logger.error("The browser window was closed or the session became invalid. Exiting.", exc_info=e)
+        fatal_error = e
+        if diagnostics:
+            diagnostics.fail('BROWSER_SESSION_LOST',
+                'The LinkedIn browser session was lost.', e, driver=driver)
+    except WebDriverException as e:
+        logger.error("A browser automation operation failed. Exiting.", exc_info=e)
+        fatal_error = e
+        if diagnostics:
+            current_stage = (diagnostics.result() or {}).get('current_stage') or 'startup'
+            if current_stage == 'login' and 'login' in str(getattr(driver, 'current_url', '')).casefold():
+                reason = 'LOGIN_EXPIRED'
+            elif any(term in str(e).casefold() for term in
+                     ('invalid session id', 'session deleted', 'no such window')):
+                reason = 'BROWSER_SESSION_LOST'
+            else:
+                reason = 'SELECTOR_FAILED' if current_stage in ('search', 'application') else 'BROWSER_SESSION_LOST'
+            diagnostics.fail(reason, 'Browser automation failed before the current stage completed.',
+                             e, failed_stage=current_stage, driver=driver)
     except Exception as e:
         critical_error_log("In Applier Main", e)
         pyautogui.alert(e,alert_title)
+        fatal_error = e
+        if diagnostics:
+            current_stage = (diagnostics.result() or {}).get('current_stage') or 'startup'
+            if current_stage == 'startup': reason = 'STARTUP_FAILED'
+            elif current_stage == 'login': reason = 'LOGIN_EXPIRED' if 'login' in str(getattr(driver, 'current_url', '')).casefold() else 'BROWSER_SESSION_LOST'
+            elif current_stage == 'search': reason = 'SELECTOR_FAILED' if isinstance(e, TimeoutException) else 'SEARCH_FAILED'
+            elif current_stage == 'model': reason = 'MODEL_FAILED'
+            elif current_stage == 'application': reason = 'APPLICATION_FAILED'
+            else: reason = 'UNKNOWN_FAILURE'
+            diagnostics.fail(reason, 'Automation stopped because an unexpected error occurred.',
+                             e, failed_stage=current_stage, driver=driver)
     finally:
         summary = "Total runs: {}\nJobs Easy Applied: {}\nExternal job links collected: {}\nTotal applied or collected: {}\nFailed jobs: {}\nIrrelevant jobs skipped: {}\n".format(total_runs,easy_applied_count,external_jobs_count,easy_applied_count + external_jobs_count,failed_count,skip_count)
         print_lg(summary)
@@ -1662,6 +1883,12 @@ def main() -> None:
                 print_lg(f"Closed {ai_provider} AI client.")
             except Exception as e:
                 logger.warning("Failed to close AI client: %s", e)
+        if local_ai_enabled and localAIClient:
+            try:
+                close_ai_client(localAIClient)
+                print_lg(f"Closed shared local AI client ({local_ai_model}).")
+            except Exception as e:
+                logger.warning("Failed to close suitability classifier client: %s", e)
         try:
             if driver:
                 driver.quit()
@@ -1669,6 +1896,14 @@ def main() -> None:
             print_lg("Browser already closed.", e)
         except Exception as e: 
             critical_error_log("When quitting...", e)
+        if pause_controller:
+            pause_controller.finish()
+        if diagnostics:
+            current = diagnostics.result() or {}
+            if current.get('status') not in ('completed', 'failed', 'stopped'):
+                diagnostics.finish('completed', 'COMPLETED', 'Automation completed successfully.', 0)
+    if fatal_error is not None:
+        raise fatal_error
 
 
 if __name__ == "__main__":

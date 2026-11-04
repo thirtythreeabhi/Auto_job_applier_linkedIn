@@ -58,6 +58,14 @@ llm_api_url = "https://api.openai.com/v1/"
 # models only allow their default). Set a number like 0 or 0.3 to override it.
 llm_temperature = None
 
+# One local model client is shared by the modern-flow suitability gate and
+# grounded Easy Apply answer drafts. It remains separate from legacy `use_AI`.
+local_ai_enabled = True
+local_ai_provider = "ollama"
+local_ai_model = "qwen3-vl:4b-instruct-8k"
+local_ai_api_url = "http://localhost:11434/v1/"
+local_ai_api_key = "not-needed"
+
 
 
 

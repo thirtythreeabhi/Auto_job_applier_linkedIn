@@ -30,12 +30,23 @@ import copy
 import signal
 import subprocess
 import threading
+import atexit
 import importlib
+import string
+import tempfile
+import uuid
+from urllib.request import urlopen
+from urllib.parse import urlsplit, urlunsplit
 
 import config_schema
 from modules.candidate_registry import CandidateRegistry, REGISTRY_PATH, UNRESOLVED_PATH, sync_changed_config
 from config import _overrides
 from modules import updater
+from modules.ai import prompts as ai_prompts
+from modules.linkedin_comments import add_draft, get_by_url, list_drafts, update_status, refresh_draft
+from modules.ai.request_queue import queued_call
+from modules import automation_control
+from modules import run_diagnostics
 
 app = Flask(__name__)
 CORS(app)
@@ -45,6 +56,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 USER_CONFIG_PATH = _overrides.USER_CONFIG_PATH
 LOG_PATH = os.path.join(ROOT, ".bot_run.log")
 PID_PATH = os.path.join(ROOT, ".bot_run.pid")
+CONTROL_PATH = os.path.join(ROOT, ".bot_control.json")
+DIAGNOSTICS_DIR = os.path.join(ROOT, 'logs', 'runs')
 
 PATH = 'all excels/'
 
@@ -190,17 +203,76 @@ def _bot_environment():
     return env
 
 
+def _copy_worker_output(source, log_path):
+    """Persist streamed worker output after redacting common personal/secret values."""
+    try:
+        with open(log_path, 'a', encoding='utf-8') as log_file:
+            for line in iter(source.readline, ''):
+                log_file.write(run_diagnostics.sanitize_log_line(line))
+                log_file.flush()
+    except (OSError, ValueError):
+        pass
+    finally:
+        try: source.close()
+        except Exception: pass
+
+
 def _is_running() -> bool:
     '''True if the tracked bot subprocess exists and has not exited.'''
     global _bot_proc
     if _bot_proc is None:
-        return False
-    if _bot_proc.poll() is None:
+        return _orphaned_bot_pid() is not None
+    return_code = _bot_proc.poll()
+    if return_code is None:
         return True
-    # Process has exited; clean up tracking + PID file.
+    # Preserve a worker-reported terminal result; otherwise reconcile the exit.
+    run_id = automation_control.status(CONTROL_PATH).get('run_id')
+    if run_id:
+        run_diagnostics.reconcile_exit(run_id, return_code, DIAGNOSTICS_DIR)
+        run_diagnostics.record_exit_code(run_id, return_code, DIAGNOSTICS_DIR)
+        automation_control.set_stopped(run_id, CONTROL_PATH)
     _bot_proc = None
     _remove_pid_file()
     return False
+
+
+def _orphaned_bot_pid():
+    """Find a live bot started by a previous control-panel process."""
+    if os.name == 'nt':
+        return None
+    try:
+        with open(PID_PATH, encoding='utf-8') as pid_file:
+            pid = int(pid_file.read().strip())
+        with open(f'/proc/{pid}/cmdline', 'rb') as cmd_file:
+            command = cmd_file.read().replace(b'\0', b' ').decode(errors='replace')
+        if os.path.join(ROOT, 'runAiBot.py') in command:
+            return pid
+    except (OSError, ValueError):
+        pass
+    _remove_pid_file()
+    return None
+
+
+def _current_bot_pid():
+    if _bot_proc is not None and _bot_proc.poll() is None:
+        return _bot_proc.pid
+    return _orphaned_bot_pid()
+
+
+def _reconcile_missing_run():
+    control = automation_control.status(CONTROL_PATH)
+    run_id = control.get('run_id')
+    if not run_diagnostics.valid_run_id(run_id):
+        return None
+    result = run_diagnostics.get_run(run_id, DIAGNOSTICS_DIR)
+    if result and result.get('status') not in run_diagnostics.TERMINAL:
+        stage = result.get('current_stage') or 'startup'
+        code = 'STARTUP_FAILED' if stage == 'startup' else 'PROCESS_CRASHED'
+        result = run_diagnostics.finish(run_id, 'failed', code,
+            'The worker process is no longer active and did not report a final outcome.',
+            root=DIAGNOSTICS_DIR)
+    automation_control.set_stopped(run_id, CONTROL_PATH)
+    return result
 
 
 def _remove_pid_file():
@@ -244,6 +316,49 @@ def _terminate(proc) -> None:
                 proc.kill()
         except Exception:
             pass
+
+
+def _terminate_orphaned_bot() -> bool:
+    '''Stop a bot recorded by another control-panel process instance.'''
+    pid = _orphaned_bot_pid()
+    if pid is None: return False
+    # Guard against a stale/reused PID: only signal the expected bot executable
+    # from this project, which is launched in its own process group.
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as cmd_file:
+            command = cmd_file.read().replace(b"\0", b" ").decode(errors="replace")
+        expected = os.path.join(ROOT, "runAiBot.py")
+        if expected not in command:
+            return False
+        os.killpg(pid, signal.SIGTERM)
+        for _ in range(50):
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return True
+            threading.Event().wait(0.1)
+        os.killpg(pid, signal.SIGKILL)
+        return True
+    except (OSError, ProcessLookupError):
+        return False
+
+
+def _stop_bot_on_exit(*_args) -> None:
+    """Stop the detached worker whenever the control panel exits."""
+    global _bot_proc
+    with _bot_lock:
+        if _bot_proc is not None:
+            _terminate(_bot_proc)
+            _bot_proc = None
+        else:
+            _terminate_orphaned_bot()
+        _remove_pid_file()
+
+
+def _handle_shutdown_signal(signum, _frame) -> None:
+    """Convert terminal/OS shutdown signals into a clean panel shutdown."""
+    _stop_bot_on_exit()
+    raise SystemExit(128 + signum)
 
 
 # The update bar is appended to the rendered page instead of being written into
@@ -475,30 +590,76 @@ def api_run():
     global _bot_proc
     with _bot_lock:
         if _is_running():
-            return jsonify({"running": True, "pid": _bot_proc.pid,
+            control = automation_control.status(CONTROL_PATH)
+            return jsonify({"running": True, "pid": _current_bot_pid(),
+                            "run_id": control.get('run_id'), "state": control.get('state', 'running'),
                             "message": "The tool is already running."})
         try:
-            # Truncate the log at the start of each run.
-            log_file = open(LOG_PATH, "w", encoding="utf-8")
+            _reconcile_missing_run()
+            run_id = uuid.uuid4().hex
+            run_diagnostics.create_run(run_id, DIAGNOSTICS_DIR)
+            automation_control.create_run(run_id, CONTROL_PATH)
+            run_log = run_diagnostics.run_dir(run_id, DIAGNOSTICS_DIR) / 'worker.log'
+            run_log.touch(exist_ok=True)
             popen_kwargs = {
                 "cwd": ROOT,
-                "stdout": log_file,
+                "stdout": subprocess.PIPE,
                 "stderr": subprocess.STDOUT,
                 "env": _bot_environment(),
+                "text": True,
+                "bufsize": 1,
             }
+            popen_kwargs['env']['BOT_RUN_ID'] = run_id
+            popen_kwargs['env']['PYTHONUNBUFFERED'] = '1'
             if os.name == "nt":
                 popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
             else:
                 popen_kwargs["start_new_session"] = True
             _bot_proc = subprocess.Popen(_bot_command(), **popen_kwargs)
+            if getattr(_bot_proc, 'stdout', None) is not None:
+                threading.Thread(target=_copy_worker_output,
+                    args=(_bot_proc.stdout, str(run_log)), daemon=True).start()
         except Exception as err:
+            if 'run_id' in locals():
+                run_diagnostics.fail(run_id, 'STARTUP_FAILED',
+                                     'The automation worker could not be started.',
+                                     err, failed_stage='startup', exit_code=1,
+                                     root=DIAGNOSTICS_DIR)
+                automation_control.set_stopped(run_id, CONTROL_PATH)
+            if 'log_file' in locals():
+                try: log_file.close()
+                except Exception: pass
             return jsonify({"running": False, "error": str(err)}), 500
         try:
             with open(PID_PATH, "w", encoding="utf-8") as pid_file:
                 pid_file.write(str(_bot_proc.pid))
         except OSError:
             pass
-        return jsonify({"running": True, "pid": _bot_proc.pid})
+        return jsonify({"running": True, "pid": _current_bot_pid(), "run_id": run_id, "state": "running"})
+
+
+@app.route('/api/pause', methods=['POST'])
+def api_pause():
+    with _bot_lock:
+        if not _is_running():
+            return jsonify({'running': False, 'state': 'stopped'}), 409
+        current = automation_control.status(CONTROL_PATH)
+        result = automation_control.request('pause', current.get('run_id'), CONTROL_PATH)
+        if result is None:
+            return jsonify({'error': 'No active automation run.'}), 409
+        return jsonify({'running': True, 'run_id': result['run_id'], 'state': result['state']})
+
+
+@app.route('/api/resume', methods=['POST'])
+def api_resume():
+    with _bot_lock:
+        if not _is_running():
+            return jsonify({'running': False, 'state': 'stopped'}), 409
+        current = automation_control.status(CONTROL_PATH)
+        result = automation_control.request('resume', current.get('run_id'), CONTROL_PATH)
+        if result is None:
+            return jsonify({'error': 'No active automation run.'}), 409
+        return jsonify({'running': True, 'run_id': result['run_id'], 'state': result['state']})
 
 
 @app.route('/api/stop', methods=['POST'])
@@ -506,11 +667,25 @@ def api_stop():
     '''Stops the running bot subprocess (and its children where possible).'''
     global _bot_proc
     with _bot_lock:
-        if _bot_proc is not None:
-            _terminate(_bot_proc)
+        running = _is_running()
+        run_id = automation_control.status(CONTROL_PATH).get('run_id')
+        proc = _bot_proc
+        if running and run_id:
+            run_diagnostics.finish(run_id, 'stopped', 'USER_STOPPED',
+                                   'Automation was stopped by the user.',
+                                   root=DIAGNOSTICS_DIR)
+        if proc is not None:
+            _terminate(proc)
             _bot_proc = None
+        else:
+            _terminate_orphaned_bot()
+        if run_id and proc is not None and getattr(proc, 'returncode', None) is not None:
+            process_code = getattr(proc, 'returncode', None)
+            run_diagnostics.record_exit_code(run_id, process_code, DIAGNOSTICS_DIR)
+        if run_id:
+            automation_control.set_stopped(run_id, CONTROL_PATH)
         _remove_pid_file()
-        return jsonify({"running": False})
+        return jsonify({"running": False, "state": "stopped", "run_id": run_id})
 
 
 @app.route('/api/status', methods=['GET'])
@@ -518,8 +693,390 @@ def api_status():
     '''Reports whether the bot subprocess is currently running.'''
     with _bot_lock:
         running = _is_running()
-        pid = _bot_proc.pid if (running and _bot_proc is not None) else None
-        return jsonify({"running": running, "pid": pid})
+        pid = _current_bot_pid() if running else None
+        control = automation_control.status(CONTROL_PATH)
+        if running:
+            state = control.get('state', 'running')
+        else:
+            state = 'stopped'
+            _reconcile_missing_run()
+        run_id = control.get('run_id')
+        run = None
+        if run_id and run_diagnostics.valid_run_id(run_id):
+            run = run_diagnostics._read_result(run_diagnostics.run_dir(run_id, DIAGNOSTICS_DIR))
+        if not running and run and run.get('status') in run_diagnostics.TERMINAL:
+            state = run['status']
+        if run is None:
+            recent = run_diagnostics.list_runs(DIAGNOSTICS_DIR, limit=1)
+            run = recent[0] if recent else None
+            run_id = run.get('run_id') if run else None
+        return jsonify({"running": running, "pid": pid, "run_id": run_id,
+                        "state": state, "run": run,
+                        "recent_runs": run_diagnostics.list_runs(DIAGNOSTICS_DIR, limit=30)})
+
+
+@app.route('/api/runs', methods=['GET'])
+def api_runs():
+    return jsonify(run_diagnostics.list_runs(DIAGNOSTICS_DIR, limit=30))
+
+
+@app.route('/api/runs/<run_id>', methods=['GET'])
+def api_run_details(run_id):
+    if not run_diagnostics.valid_run_id(run_id):
+        return jsonify({'error': 'Invalid run ID.'}), 400
+    try:
+        result = run_diagnostics.get_run(run_id, DIAGNOSTICS_DIR)
+    except ValueError:
+        return jsonify({'error': 'Invalid run ID.'}), 400
+    if result is None:
+        return jsonify({'error': 'Run not found.'}), 404
+    return jsonify(result)
+
+
+@app.route('/api/runs/<run_id>/log', methods=['GET'])
+def api_run_log(run_id):
+    if not run_diagnostics.valid_run_id(run_id):
+        return jsonify({'error': 'Invalid run ID.'}), 400
+    try:
+        log_path = run_diagnostics.run_dir(run_id, DIAGNOSTICS_DIR) / 'worker.log'
+        offset = max(0, int(request.args.get('offset', 0)))
+        with open(log_path, 'rb') as stream:
+            stream.seek(0, os.SEEK_END)
+            size = stream.tell()
+            if offset > size: offset = 0
+            stream.seek(offset)
+            data = stream.read(1024 * 1024)
+        return jsonify({'content': data.decode('utf-8', errors='replace'),
+                        'next_offset': offset + len(data)})
+    except (OSError, ValueError):
+        return jsonify({'error': 'Run log not found.'}), 404
+
+
+@app.route('/api/comment-drafts', methods=['GET'])
+def api_comment_drafts():
+    """List locally saved comment drafts; this endpoint never accesses LinkedIn."""
+    return jsonify(list_drafts())
+
+
+@app.route('/api/linkedin-feed/scan', methods=['POST'])
+def api_scan_linkedin_feed():
+    """Read feed posts, score them against candidate context, and post relevant replies."""
+    try:
+        from modules.linkedin_feed import scan_feed, post_comment, log_event
+        from modules.ai.connections import create_ai_client, close_ai_client
+        from modules.ai.prompts import linkedin_comment_prompt
+        from modules.ai.prompt_log import record_prompt
+        payload = request.get_json(silent=True) or {}
+        log_event('--- New sequential feed review run started ---')
+        with open(os.path.join(ROOT, 'candidate_context.md'), encoding='utf-8') as handle:
+            context = handle.read()
+        log_event('Candidate context loaded; chars=%d', len(context))
+        user_secrets = _overrides.load_user_config().get('secrets', {})
+        import config.secrets as secrets
+        setting = lambda name: user_secrets.get(name, getattr(secrets, name, None))
+        if setting('local_ai_enabled'):
+            log_event('Creating AI client from configured local provider')
+            client = create_ai_client(model_name=setting('local_ai_model'),
+                provider=setting('local_ai_provider'), api_url=setting('local_ai_api_url'),
+                api_key=setting('local_ai_api_key'), force=True)
+        else:
+            log_event('Creating AI client from configured default provider')
+            client = create_ai_client(force=True)
+        if client is None:
+            log_event('AI client unavailable; no posts evaluated or published')
+            return jsonify({'error': 'The configured AI model is unavailable.'}), 503
+        outcomes = []
+        posted_count = 0
+
+        def review_post(post):
+            nonlocal posted_count
+            post_number = len(outcomes) + 1
+            log_event('AI review started for post %d before feed advances', post_number)
+            existing = get_by_url(post['post_url'])
+            if existing and existing.get('status') == 'posted':
+                log_event('Post skipped: already handled with status=%s', existing.get('status', 'unknown'))
+                outcome = {'post_url': post['post_url'], 'author': post['author'],
+                    'status': 'already handled', 'rationale': existing.get('rationale', '')}
+                outcomes.append(outcome)
+                return outcome
+            if existing:
+                log_event('Rechecking prior unposted record with status=%s', existing.get('status', 'unknown'))
+            prompt = linkedin_comment_prompt.format(candidate_context=context[:12000],
+                author=post['author'] or 'Not provided', post_text=post['post_text'])
+            log_event('Calling AI for current feed post')
+            response = queued_call(client.model.invoke, prompt)
+            log_event('AI response received for current feed post')
+            raw = getattr(response, 'content', str(response))
+            if isinstance(raw, list):
+                raw = ''.join(str(block.get('text', '')) if isinstance(block, dict) else str(block) for block in raw)
+            raw = str(raw).strip()
+            record_prompt('LinkedIn feed relevance and comment', prompt, raw, client.model_name, client.provider)
+            if raw.startswith('```'):
+                raw = raw.strip('`').removeprefix('json').strip()
+            suggestion = json.loads(raw)
+            rationale = str(suggestion.get('rationale', '')).strip()[:500]
+            comment = str(suggestion.get('comment', '')).strip()[:500]
+            if suggestion.get('relevant') is not True or not comment:
+                log_event('AI result: not relevant; rationale_chars=%d', len(rationale))
+                skipped_id = add_draft(post['post_url'], post['post_text'], post['author'], rationale, '')
+                update_status(skipped_id, 'skipped')
+                outcome = {'post_url': post['post_url'], 'author': post['author'],
+                    'status': 'not relevant', 'rationale': rationale}
+                outcomes.append(outcome)
+                return outcome
+
+            if existing:
+                draft_id = existing['id']
+                refresh_draft(draft_id, post['post_url'], post['post_text'], post['author'], rationale, comment)
+            else:
+                draft_id = add_draft(post['post_url'], post['post_text'], post['author'], rationale, comment)
+            log_event('AI result: relevant; comment draft saved as id=%s', draft_id)
+            posted = post_comment(post['post_url'], comment,
+                                  card_ref=post.get('_card_ref'), lock_held=True)
+            if posted['posted']:
+                update_status(draft_id, 'posted')
+                posted_count += 1
+                log_event('Published current post comment; posted_count=%d', posted_count)
+                outcome = {'post_url': post['post_url'], 'author': post['author'],
+                    'status': 'posted', 'rationale': rationale, 'comment': comment}
+            else:
+                log_event('Comment not confirmed as posted: %s', posted.get('error', 'unknown reason'))
+                update_status(draft_id, 'error', posted.get('error', 'Could not confirm posting.'))
+                outcome = {'post_url': post['post_url'], 'author': post['author'],
+                    'status': 'not posted', 'rationale': rationale,
+                    'error': posted.get('error', 'Could not confirm posting.'), 'comment': comment,
+                    '_halt_scan': True}
+            outcomes.append(outcome)
+            return outcome
+
+        try:
+            result = scan_feed(limit=payload.get('limit', 15), scrolls=payload.get('scrolls', 5),
+                               on_post=review_post)
+            if result.get('needs_login'):
+                return jsonify(result)
+            log_event('Sequential feed run complete: scanned=%d posted=%d', len(result['posts']), posted_count)
+            return jsonify({'needs_login': False, 'results': outcomes, 'posted_count': posted_count,
+                            'scanned_count': len(result['posts']), 'halted': result.get('halted', False)})
+        finally:
+            close_ai_client(client)
+    except (TypeError, ValueError) as error:
+        return jsonify({'error': str(error)}), 400
+    except RuntimeError as error:
+        return jsonify({'error': str(error)}), 409
+    except Exception as error:
+        try:
+            from modules.linkedin_feed import log_event
+            log_event('Feed run failed with %s', type(error).__name__)
+        except Exception:
+            pass
+        app.logger.exception('LinkedIn feed scan failed')
+        return jsonify({'error': f'Feed scan failed: {error}'}), 500
+
+
+@app.route('/api/linkedin-feed/logs', methods=['GET'])
+def api_linkedin_feed_logs():
+    from modules.linkedin_feed import read_log_tail
+    return jsonify({'logs': read_log_tail()})
+
+
+@app.route('/api/linkedin-feed/close', methods=['POST'])
+def api_close_linkedin_feed():
+    from modules.linkedin_feed import close_feed_browser
+    close_feed_browser()
+    return jsonify({'closed': True})
+
+
+@app.route('/api/comment-drafts', methods=['POST'])
+def api_create_comment_draft():
+    """Draft a comment from post text the user supplied, without opening LinkedIn."""
+    payload = request.get_json(silent=True) or {}
+    post_url = str(payload.get('post_url', '')).strip()
+    post_text = str(payload.get('post_text', '')).strip()
+    author = str(payload.get('author', '')).strip()[:200]
+    if not post_url.startswith('https://www.linkedin.com/') or len(post_url) > 2000:
+        return jsonify({'error': 'Enter the LinkedIn post URL.'}), 400
+    if not post_text or len(post_text) > 8000:
+        return jsonify({'error': 'Paste the post text (up to 8,000 characters).'}), 400
+    existing = get_by_url(post_url)
+    if existing:
+        return jsonify({'error': 'A draft or skip record already exists for this post.', 'draft': existing}), 409
+    try:
+        with open(os.path.join(ROOT, 'candidate_context.md'), encoding='utf-8') as handle:
+            context = handle.read()
+        user_secrets = _overrides.load_user_config().get('secrets', {})
+        import config.secrets as secrets
+        setting = lambda name: user_secrets.get(name, getattr(secrets, name, None))
+        from modules.ai.connections import create_ai_client, close_ai_client
+        from modules.ai.prompts import linkedin_comment_prompt
+        from modules.ai.prompt_log import record_prompt
+        if setting('local_ai_enabled'):
+            client = create_ai_client(model_name=setting('local_ai_model'),
+                provider=setting('local_ai_provider'), api_url=setting('local_ai_api_url'),
+                api_key=setting('local_ai_api_key'), force=True)
+        else:
+            client = create_ai_client(force=True)
+        if client is None:
+            return jsonify({'error': 'The configured LLM is unavailable.'}), 503
+        prompt = linkedin_comment_prompt.format(candidate_context=context[:12000],
+                                                  author=author or 'Not provided', post_text=post_text)
+        try:
+            response = queued_call(client.model.invoke, prompt)
+            raw = getattr(response, 'content', str(response))
+            if isinstance(raw, list):
+                raw = ''.join(str(block.get('text', '')) if isinstance(block, dict) else str(block) for block in raw)
+            raw = str(raw).strip()
+            record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider)
+            if raw.startswith('```'):
+                raw = raw.strip('`').removeprefix('json').strip()
+            result = json.loads(raw)
+            relevant = result.get('relevant') is True
+            rationale = str(result.get('rationale', '')).strip()[:500]
+            comment = str(result.get('comment', '')).strip()[:500] if relevant else ''
+            if not relevant or not comment:
+                return jsonify({'relevant': False, 'rationale': rationale,
+                                'message': 'No sufficiently grounded comment was generated.'}), 200
+            draft_id = add_draft(post_url, post_text, author, rationale, comment)
+            return jsonify({'relevant': True, 'draft': get_by_url(post_url) or {'id': draft_id}}), 201
+        finally:
+            close_ai_client(client)
+    except (OSError, ValueError, KeyError) as error:
+        return jsonify({'error': f'Could not create a grounded draft: {error}'}), 500
+    except Exception as error:
+        return jsonify({'error': f'LLM request failed: {error}'}), 502
+
+
+@app.route('/api/comment-drafts/<int:draft_id>/skip', methods=['POST'])
+def api_skip_comment_draft(draft_id):
+    if not update_status(draft_id, 'skipped'):
+        return jsonify({'error': 'Draft not found or already handled.'}), 404
+    return jsonify({'skipped': True})
+
+
+@app.route('/api/model-status', methods=['GET'])
+def api_model_status():
+    """Report whether the configured Ollama model is installed and currently loaded."""
+    secrets = importlib.import_module('config.secrets')
+    user_secrets = _overrides.load_user_config().get('secrets', {})
+    def setting(name):
+        return user_secrets.get(name, getattr(secrets, name, None))
+
+    enabled = bool(setting('local_ai_enabled'))
+    model = str(setting('local_ai_model') or '')
+    provider = str(setting('local_ai_provider') or '').lower()
+    api_url = str(setting('local_ai_api_url') or '')
+    result = {"enabled": enabled, "model": model, "provider": provider,
+              "status": "disabled" if not enabled else "unavailable"}
+    if not enabled or provider != 'ollama' or not api_url:
+        return jsonify(result)
+
+    parsed = urlsplit(api_url)
+    base = urlunsplit((parsed.scheme, parsed.netloc, '', '', '')).rstrip('/')
+    try:
+        with urlopen(base + '/api/ps', timeout=1.5) as response:
+            running = json.loads(response.read().decode('utf-8')).get('models', [])
+        with urlopen(base + '/api/tags', timeout=1.5) as response:
+            installed = json.loads(response.read().decode('utf-8')).get('models', [])
+        names = lambda items: [str(item.get('name', item.get('model', ''))) for item in items]
+        result['status'] = ('running' if model in names(running) else
+                            'installed' if model in names(installed) else 'missing')
+    except Exception:
+        result['status'] = 'offline'
+    return jsonify(result)
+
+
+@app.route('/api/ai-prompts', methods=['GET'])
+def api_ai_prompts():
+    """Return the newest local prompt records for the control-panel viewer."""
+    path = os.path.join(ROOT, '.ai_prompt_log.jsonl')
+    try:
+        with open(path, encoding='utf-8') as handle:
+            lines = handle.readlines()[-250:]
+        records = []
+        for line in reversed(lines):
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+        return jsonify(records)
+    except FileNotFoundError:
+        return jsonify([])
+    except OSError:
+        return jsonify({'error': 'Could not read the local AI prompt log.'}), 500
+
+
+def _validate_prompt_template(name, prompt):
+    if not isinstance(prompt, str) or not prompt.strip():
+        return 'Prompt text cannot be empty.'
+    if len(prompt) > 30000:
+        return 'Prompt text must be 30,000 characters or fewer.'
+    try:
+        fields = [field for _, field, _, _ in string.Formatter().parse(prompt) if field is not None]
+        if name == 'extract_skills_prompt':
+            if not any(field == '' for field in fields):
+                return 'Keep the {} placeholder for the job description.'
+            prompt.format('JOB DESCRIPTION')
+        elif name == 'ai_answer_prompt':
+            if sum(field == '' for field in fields) < 2:
+                return 'Keep both {} placeholders for applicant information and the question.'
+            prompt.format('APPLICANT INFORMATION', 'APPLICATION QUESTION')
+        elif name == 'job_suitability_prompt':
+            required = {'candidate_context', 'title', 'company', 'location', 'job_description'}
+            missing = required.difference(fields)
+            if missing:
+                return 'Missing required placeholders: ' + ', '.join('{' + key + '}' for key in sorted(missing))
+            prompt.format(candidate_context='CANDIDATE', title='TITLE', company='COMPANY',
+                          location='LOCATION', job_description='DESCRIPTION')
+    except (ValueError, KeyError, IndexError) as error:
+        return f'Invalid placeholder formatting: {error}'
+    return None
+
+
+@app.route('/api/system-prompts', methods=['GET'])
+def api_get_system_prompts():
+    path = ai_prompts.PROMPT_OVERRIDE_PATH
+    try:
+        saved = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+    except (OSError, ValueError):
+        saved = {}
+    current = {name: saved.get(name, default) for name, default in ai_prompts.PROMPT_DEFAULTS.items()}
+    return jsonify({'prompts': current, 'defaults': ai_prompts.PROMPT_DEFAULTS,
+                    'has_overrides': bool(saved)})
+
+
+@app.route('/api/system-prompts', methods=['POST'])
+def api_save_system_prompts():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({'error': 'Expected a prompts object.'}), 400
+    if payload.get('reset') is True:
+        try:
+            ai_prompts.PROMPT_OVERRIDE_PATH.unlink(missing_ok=True)
+        except OSError as error:
+            return jsonify({'error': f'Could not restore built-in prompts: {error}'}), 500
+        return jsonify({'saved': True, 'reset': True})
+
+    prompts = payload.get('prompts')
+    if not isinstance(prompts, dict) or set(prompts) != set(ai_prompts.PROMPT_DEFAULTS):
+        return jsonify({'error': 'Provide all three prompts: extract_skills_prompt, ai_answer_prompt, and job_suitability_prompt.'}), 400
+    for name, prompt in prompts.items():
+        error = _validate_prompt_template(name, prompt)
+        if error:
+            return jsonify({'error': f'{name}: {error}'}), 400
+
+    path = ai_prompts.PROMPT_OVERRIDE_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_path = tempfile.mkstemp(prefix='.ai-prompts-', dir=path.parent)
+    try:
+        if os.name != 'nt': os.fchmod(fd, 0o600)
+        with os.fdopen(fd, 'w', encoding='utf-8') as handle:
+            json.dump(prompts, handle, ensure_ascii=False, indent=2)
+            handle.write('\n')
+        os.replace(temp_path, path)
+    except OSError as error:
+        try: os.unlink(temp_path)
+        except OSError: pass
+        return jsonify({'error': f'Could not save prompt overrides: {error}'}), 500
+    return jsonify({'saved': True, 'reset': False})
 
 
 @app.route('/api/logs', methods=['GET'])
@@ -534,10 +1091,15 @@ def api_logs():
         offset = 0
     if offset < 0:
         offset = 0
-    if not os.path.exists(LOG_PATH):
+    control = automation_control.status(CONTROL_PATH)
+    run_id = control.get('run_id')
+    log_path = LOG_PATH
+    if run_diagnostics.valid_run_id(run_id):
+        log_path = str(run_diagnostics.run_dir(run_id, DIAGNOSTICS_DIR) / 'worker.log')
+    if not os.path.exists(log_path):
         return jsonify({"content": "", "next_offset": 0})
     try:
-        with open(LOG_PATH, "rb") as log_file:
+        with open(log_path, "rb") as log_file:
             log_file.seek(0, os.SEEK_END)
             size = log_file.tell()
             if offset > size:
@@ -626,6 +1188,14 @@ def _resolve_port(preferred: int = 5000) -> int:
 
 if __name__ == '__main__':
     # SECURITY: localhost only, debug OFF. This app handles credentials.
+    atexit.register(_stop_bot_on_exit)
+    # The bot intentionally runs in its own process session, so forward
+    # terminal and OS shutdown signals to prevent orphaned application runs.
+    for shutdown_signal in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(shutdown_signal, _handle_shutdown_signal)
+    if hasattr(signal, "SIGHUP"):
+        signal.signal(signal.SIGHUP, _handle_shutdown_signal)
+
     port = _resolve_port(5000)
     url = "http://127.0.0.1:%d" % port
     print(

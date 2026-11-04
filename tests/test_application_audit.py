@@ -4,6 +4,29 @@ import stat
 from modules.application_audit import ApplicationAudit
 
 
+def test_suitability_audit_preserves_source_model_final_and_snapshot(tmp_path):
+    from modules.application_audit import record_suitability_decision
+    path = tmp_path / 'audit.json'
+    record_suitability_decision(
+        '123', 'Engineer', 'Example', 'New Delhi', 'qwen-test',
+        {'decision': 'REVIEW', 'reason': 'Core fit; AWS needs confirmation.',
+         'match_score': 75, 'confidence': 0.8, 'matched_skills': ['React'],
+         'missing_skills': ['AWS'], 'hard_blockers': []},
+        path, decision_source='QWEN_CLASSIFIER', model_decision='APPLY',
+        final_decision='REVIEW', override_reason='Hard blocker requires review.',
+        model_called=True, job_description='Full job posting text')
+
+    row = json.loads(path.read_text())['suitability_decisions'][0]
+    assert row['decision'] == row['final_decision'] == 'REVIEW'
+    assert row['model_decision'] == 'APPLY'
+    assert row['decision_source'] == 'QWEN_CLASSIFIER'
+    assert row['override_reason'] == 'Hard blocker requires review.'
+    assert row['model_called'] is True
+    assert row['job_description'] == 'Full job posting text'
+    assert row['matched_skills'] == ['React']
+    assert row['missing_skills'] == ['AWS']
+
+
 def test_attempts_record_values_outcomes_and_are_private(tmp_path):
     path = tmp_path / 'audit.json'
     first = ApplicationAudit('123', 'Software Engineer', 'Example', path)

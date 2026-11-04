@@ -73,6 +73,276 @@ def test_missing_apply_control_is_not_misreported_as_no_easy_apply(monkeypatch):
     assert 'does not offer' not in message
 
 
+def test_city_typeahead_stops_if_existing_value_cannot_be_cleared(monkeypatch):
+    from modules import linkedin_modern as modern
+    from selenium.common.exceptions import TimeoutException
+
+    class Field:
+        value = 'New Delhi, Delhi, India'
+        typed_city = False
+        def click(self): pass
+        def get_attribute(self, name): return self.value
+        def send_keys(self, *keys):
+            if keys == (modern.Keys.CONTROL, 'a') or keys == (modern.Keys.BACKSPACE,):
+                return  # Simulate LinkedIn restoring the value after clear.
+            self.typed_city = True
+
+    class Wait:
+        def __init__(self, *args, **kwargs): pass
+        def until(self, predicate):
+            if predicate(None): return True
+            raise TimeoutException('field stayed populated')
+
+    field = Field()
+    monkeypatch.setattr(modern, 'WebDriverWait', Wait)
+    with pytest.raises(CannotCompleteApplication, match='Could not clear'):
+        modern._fill_city_typeahead(object(), object(), field, {'current_city': 'New Delhi'})
+    assert not field.typed_city
+
+
+def test_pause_during_easy_apply_preserves_modal_and_resumes(monkeypatch, tmp_path):
+    import threading
+    import time
+    from modules import linkedin_modern as modern
+    from modules import automation_control
+
+    class Button:
+        def __init__(self, text, callback=None): self.text, self.callback = text, callback
+        def is_displayed(self): return True
+        def click(self):
+            if self.callback: self.callback()
+
+    class Modal:
+        open = True
+        page = 1
+        text = 'Application review resume.pdf'
+        def find_elements(self, by, query):
+            if query == 'button':
+                return [Button('Next', lambda: setattr(self, 'page', 2))] if self.page == 1 else [Button('Submit application')]
+            return []
+
+    modal = Modal()
+    class Driver:
+        current_url = 'https://www.linkedin.com/jobs/view/job-1/'
+    driver = Driver()
+
+    class Wait:
+        def __init__(self, *args, **kwargs): pass
+        def until(self, predicate):
+            result = predicate(driver)
+            if result: return result
+            raise modern.TimeoutException('condition not met')
+
+    monkeypatch.setattr(modern, 'WebDriverWait', Wait)
+    monkeypatch.setattr(modern, '_visible_apply_buttons', lambda _: [Button('Easy Apply')])
+    monkeypatch.setattr(modern, '_selected_job_id_from_url', lambda _: 'job-1')
+    monkeypatch.setattr(modern, '_click', lambda driver, button: button.click())
+    monkeypatch.setattr(modern, '_modal', lambda _: modal if modal.open else None)
+    monkeypatch.setattr(modern, '_progress', lambda _: modal.page)
+    monkeypatch.setattr(modern, '_verify_work_experience', lambda *args: None)
+    monkeypatch.setattr(modern, '_fill_fields', lambda *args: None)
+    monkeypatch.setattr(modern, '_verify_name_fields', lambda *args: None)
+    monkeypatch.setattr(modern, '_verify_review_name', lambda *args: None)
+    monkeypatch.setattr(modern, '_clear_optional_company_follow', lambda *args: None)
+    monkeypatch.setattr(modern, '_dismiss', lambda _: setattr(modal, 'open', False) or True)
+
+    control_path = tmp_path / '.bot_control.json'
+    automation_control.create_run('easy-apply-run', control_path)
+    automation_control.request('pause', 'easy-apply-run', control_path)
+    controller = automation_control.PauseController('easy-apply-run', control_path, poll_interval=0.005)
+    result = []
+    worker = threading.Thread(target=lambda: result.append(modern._apply_current_job(
+        driver, {}, {}, '', '/tmp/resume.pdf', True, lambda _: None, 'Example', 'job-1',
+        pause_controller=controller)))
+    worker.start()
+
+    deadline = time.time() + 2
+    while time.time() < deadline and automation_control.status(control_path).get('state') != 'paused':
+        time.sleep(0.005)
+    assert automation_control.status(control_path)['state'] == 'paused'
+    assert modal.open is True
+    assert worker.is_alive()
+
+    automation_control.request('resume', 'easy-apply-run', control_path)
+    worker.join(timeout=2)
+    assert not worker.is_alive()
+    assert result == [('review', 'Reached the final review with the configured resume.')]
+    assert modal.open is False
+
+
+def test_skip_classification_never_opens_an_application(monkeypatch):
+    from modules import linkedin_modern as modern
+
+    class Card:
+        text = 'Backend Developer\nExample Inc\nNew Delhi'
+
+    description = 'Backend role requiring Python and PostgreSQL. ' * 4
+    class Heading:
+        def is_displayed(self): return True
+        def find_element(self, *args): return self
+        def get_attribute(self, name): return description
+
+    class Driver:
+        current_url = 'https://www.linkedin.com/jobs/search-results/'
+        def find_elements(self, by, query):
+            if query == modern.CARDS_XPATH: return [Card()]
+            if query == "//h2[normalize-space(.)='About the job']": return [Heading()]
+            return []
+        def execute_script(self, *args): pass
+
+    class ImmediateWait:
+        def __init__(self, driver, *args, **kwargs): self.driver = driver
+        def until(self, predicate): return predicate(self.driver)
+
+    class Registry:
+        def value(self, key): return None
+
+    monkeypatch.setattr(modern, 'WebDriverWait', ImmediateWait)
+    monkeypatch.setattr(modern, '_select_easy_apply', lambda *args: None)
+    monkeypatch.setattr(modern, '_card_details', lambda card: (
+        'Backend Developer', 'Example Inc', 'New Delhi', ['Example Inc', 'New Delhi']))
+    monkeypatch.setattr(modern, '_card_job_id', lambda card: 'job-1')
+    monkeypatch.setattr(modern, '_selected_job_id_from_url', lambda url: None)
+    monkeypatch.setattr(modern, '_resolved_selected_job_id', lambda *args: 'job-1')
+    monkeypatch.setattr(modern, '_within_candidate_location', lambda *args: True)
+    monkeypatch.setattr(modern, '_required_years', lambda description: [])
+    from modules.ai import connections
+    monkeypatch.setattr(connections, 'classify_job_suitability', lambda *args: {
+        'decision': 'SKIP', 'model_decision': 'SKIP', 'reason': 'Core skills do not match', 'match_score': 0,
+        'hard_blockers': [],
+    })
+    monkeypatch.setattr(modern, 'record_suitability_decision', lambda *args, **kwargs: None)
+    monkeypatch.setattr(modern, '_next_results_page', lambda *args: False)
+    monkeypatch.setattr(modern, 'apply_current_job', lambda *args, **kwargs: pytest.fail(
+        'apply_current_job must not run when the classifier returns SKIP'))
+
+    result = modern.run_search(
+        Driver(), profile={}, questions={}, email='', resume_path='', dry_run=True,
+        limit=1, applied_ids=set(), bad_words=[], company_bad_words=[],
+        company_good_words=[], max_years=-1, find_bad_word=lambda *args: None,
+        on_submitted=lambda *args: None, log=lambda _: None, registry=Registry(),
+        classifier_enabled=True, classifier_client=object(), candidate_context='candidate facts')
+
+    assert result == (0, 1, 0)
+
+
+def test_deterministic_company_filter_is_written_to_decision_audit(monkeypatch):
+    from modules import linkedin_modern as modern
+
+    class Card:
+        text = 'Backend Developer\nExcluded Co\nNew Delhi'
+    class Driver:
+        current_url = 'https://www.linkedin.com/jobs/search-results/'
+        def find_elements(self, by, query):
+            return [Card()] if query == modern.CARDS_XPATH else []
+        def execute_script(self, *args): pytest.fail('Excluded company should not be opened')
+    class Wait:
+        def __init__(self, driver, *args, **kwargs): self.driver = driver
+        def until(self, predicate): return predicate(self.driver)
+
+    recorded = []
+    monkeypatch.setattr(modern, 'WebDriverWait', Wait)
+    monkeypatch.setattr(modern, '_select_easy_apply', lambda *args: None)
+    monkeypatch.setattr(modern, '_card_details', lambda card: (
+        'Backend Developer', 'Excluded Co', 'New Delhi', ['Excluded Co', 'New Delhi']))
+    monkeypatch.setattr(modern, '_card_job_id', lambda card: 'job-2')
+    monkeypatch.setattr(modern, 'record_suitability_decision',
+                        lambda *args, **kwargs: recorded.append((args, kwargs)))
+    result = modern.run_search(
+        Driver(), profile={}, questions={}, email='', resume_path='', dry_run=True,
+        limit=1, applied_ids=set(), bad_words=[], company_bad_words=['Excluded'],
+        company_good_words=[], max_years=-1,
+        find_bad_word=lambda text, terms: 'Excluded' if text == 'Excluded Co' and terms else None,
+        on_submitted=lambda *args: None, log=lambda _: None, max_pages=1)
+
+    assert result == (0, 1, 0)
+    assert recorded[0][0][:5] == ('job-2', 'Backend Developer', 'Excluded Co', 'New Delhi', '')
+    assert recorded[0][1]['decision_source'] == 'COMPANY_FILTER'
+    assert recorded[0][1]['final_decision'] == 'SKIP'
+    assert recorded[0][1]['model_called'] is False
+
+
+def test_recoverable_application_failure_counts_and_continues(monkeypatch, tmp_path):
+    from modules import linkedin_modern as modern
+    from modules import run_diagnostics
+
+    class Card:
+        def __init__(self, job_id):
+            self.job_id = job_id
+            self.text = f'Engineer {job_id}\nExample Co\nNew Delhi'
+    cards = [Card('job-1'), Card('job-2')]
+    description = 'Backend software engineer building reliable Python services. ' * 3
+    class Heading:
+        def is_displayed(self): return True
+        def find_element(self, *args): return self
+        def get_attribute(self, name): return description
+    class Driver:
+        current_url = 'https://www.linkedin.com/jobs/search-results/'
+        selected = None
+        def find_elements(self, by, query):
+            if query == modern.CARDS_XPATH: return cards
+            if query == "//h2[normalize-space(.)='About the job']": return [Heading()]
+            return []
+        def execute_script(self, *args): self.selected = args[-1].job_id
+    driver = Driver()
+    class Wait:
+        def __init__(self, driver, *args, **kwargs): self.driver = driver
+        def until(self, predicate): return predicate(self.driver)
+    monkeypatch.setattr(modern, 'WebDriverWait', Wait)
+    monkeypatch.setattr(modern, '_select_easy_apply', lambda *args: None)
+    monkeypatch.setattr(modern, '_card_details', lambda card: (
+        card.text.splitlines()[0], 'Example Co', 'New Delhi', card.text.splitlines()))
+    monkeypatch.setattr(modern, '_card_job_id', lambda card: card.job_id)
+    monkeypatch.setattr(modern, '_selected_job_id_from_url', lambda _: driver.selected)
+    monkeypatch.setattr(modern, '_resolved_selected_job_id', lambda d, hinted, *args: hinted)
+    monkeypatch.setattr(modern, '_required_years', lambda _: [])
+    monkeypatch.setattr(modern, '_next_results_page', lambda *args: False)
+    monkeypatch.setattr(modern, 'apply_current_job', lambda *args, **kwargs:
+                        ('skip', 'recoverable form issue') if args[8] == 'job-1' else ('submitted', 'confirmed'))
+    run_diagnostics.create_run('00000000000000000000000000000008', tmp_path)
+    diag = run_diagnostics.RunDiagnostics('00000000000000000000000000000008', tmp_path)
+
+    result = modern.run_search(
+        driver, profile={}, questions={}, email='', resume_path='', dry_run=True,
+        limit=2, applied_ids=set(), bad_words=[], company_bad_words=[],
+        company_good_words=[], max_years=-1, find_bad_word=lambda *args: None,
+        on_submitted=lambda *args: None, log=lambda _: None, max_pages=1,
+        attempted_ids=set(), submitted_roles=set(), diagnostics=diag)
+
+    state = diag.result()
+    assert result == (1, 1, 0)
+    assert state['stats']['jobs_inspected'] == 2
+    assert state['stats']['jobs_applied'] == 1
+    assert state['stats']['jobs_failed'] == 1
+
+
+def test_browser_session_loss_is_not_downgraded_to_a_job_skip(monkeypatch):
+    from modules import linkedin_modern as modern
+    from selenium.common.exceptions import NoSuchWindowException
+
+    class Card:
+        text = 'Engineer\nExample Co\nNew Delhi'
+    class Driver:
+        current_url = 'https://www.linkedin.com/jobs/search-results/'
+        def find_elements(self, by, query): return [Card()] if query == modern.CARDS_XPATH else []
+        def execute_script(self, *args): raise NoSuchWindowException('window closed')
+    class Wait:
+        def __init__(self, driver, *args, **kwargs): self.driver = driver
+        def until(self, predicate): return predicate(self.driver)
+    monkeypatch.setattr(modern, 'WebDriverWait', Wait)
+    monkeypatch.setattr(modern, '_select_easy_apply', lambda *args: None)
+    monkeypatch.setattr(modern, '_card_details', lambda card: ('Engineer', 'Example Co', 'New Delhi', []))
+    monkeypatch.setattr(modern, '_card_job_id', lambda card: 'job-3')
+    monkeypatch.setattr(modern, '_selected_job_id_from_url', lambda _: None)
+    from selenium.common.exceptions import NoSuchWindowException
+    with pytest.raises(NoSuchWindowException):
+        modern.run_search(
+            Driver(), profile={}, questions={}, email='', resume_path='', dry_run=True,
+            limit=1, applied_ids=set(), bad_words=[], company_bad_words=[],
+            company_good_words=[], max_years=-1, find_bad_word=lambda *args: None,
+            on_submitted=lambda *args: None, log=lambda _: None, max_pages=1)
+
+
 import pytest
 from modules.linkedin_modern import _answer_for, _card_details, _confirmation_matches, _experience_option, _job_status_confirms, _progress, _required_years, _within_candidate_location
 from modules.linkedin_modern import _replace_text, _verify_review_name, CannotCompleteApplication
@@ -408,3 +678,70 @@ def test_optional_company_follow_is_cleared_before_submission(monkeypatch):
     monkeypatch.setattr(modern, '_click', lambda driver, control: setattr(control,'selected',False))
     modern._clear_optional_company_follow(None, Modal())
     assert not field.selected
+
+
+def test_visible_limit_detector_uses_narrow_semantic_messages():
+    import re
+    from pathlib import Path
+    from modules.linkedin_modern import _visible_limit_warning
+    from selenium.webdriver.common.by import By
+
+    fixtures = Path(__file__).parent / 'fixtures' / 'easy_apply_limits'
+
+    class Node:
+        def __init__(self, text, shown=True): self.text, self.shown = text, shown
+        def is_displayed(self): return self.shown
+
+    class Driver:
+        def __init__(self, filename):
+            html = (fixtures / filename).read_text()
+            self.nodes = [Node(re.sub(r'<[^>]+>', ' ', html))]
+        def find_elements(self, by, selector):
+            assert by == By.CSS_SELECTOR
+            assert '[role="alert"]' in selector and 'dialog[open]' in selector
+            return self.nodes
+
+    for name in ('confirmed_limit.html', 'temporary_restriction.html', 'after_possible_submission.html'):
+        assert _visible_limit_warning(Driver(name))
+    for name in ('normal_form.html', 'network_error.html', 'missing_apply_button.html',
+                 'validation_error.html', 'ambiguous_warning.html'):
+        assert _visible_limit_warning(Driver(name)) is None
+
+
+def test_limit_exception_survives_application_audit_handler(monkeypatch, tmp_path):
+    import json
+    from modules import linkedin_modern as modern
+    from modules.application_audit import ApplicationAudit
+
+    limit = modern.EasyApplyLimitReached('You have reached your application limit.', 'after_submit', 'unconfirmed')
+    monkeypatch.setattr(modern, 'ApplicationAudit', lambda *args: ApplicationAudit(*args, path=tmp_path / 'audit.json'))
+    monkeypatch.setattr(modern, '_apply_current_job', lambda *args, **kwargs: (_ for _ in ()).throw(limit))
+    with pytest.raises(modern.EasyApplyLimitReached) as caught:
+        modern.apply_current_job(object(), {}, {}, '', '/tmp/resume.pdf', False, lambda _: None,
+                                 'Example', '123', title='Engineer')
+    assert caught.value is limit
+    record = json.loads((tmp_path / 'audit.json').read_text())['applications'][0]
+    assert record['status'] == 'unconfirmed'
+
+
+def test_limit_stop_diagnostics_are_terminal_and_keep_evidence(tmp_path):
+    import json
+    from modules import run_diagnostics
+    from modules.linkedin_modern import EasyApplyLimitReached
+
+    run_id = 'a' * 32
+    run_diagnostics.create_run(run_id, tmp_path)
+    warning = EasyApplyLimitReached('You have reached your Easy Apply limit.', 'after_submit', 'unconfirmed')
+    screenshot = tmp_path / run_id / 'easy_apply_limit.png'
+    screenshot.write_bytes(b'fake image')
+    result = run_diagnostics.stop_for_easy_apply_limit(
+        run_id, warning, 'https://www.linkedin.com/jobs/search-results/?currentJobId=123', screenshot, tmp_path)
+    assert result['status'] == 'stopped'
+    assert result['reason_code'] == 'EASY_APPLY_LIMIT_REACHED'
+    assert result['stage'] == 'easy_apply'
+    assert result['job_url'] == 'https://www.linkedin.com/jobs/view/123/'
+    assert result['evidence']['visible_message'] == str(warning)
+    assert result['evidence']['submission_state'] == 'unconfirmed'
+    run_diagnostics.reconcile_exit(run_id, 1, tmp_path)
+    persisted = json.loads((tmp_path / run_id / 'result.json').read_text())
+    assert persisted['reason_code'] == 'EASY_APPLY_LIMIT_REACHED'

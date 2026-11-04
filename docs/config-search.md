@@ -54,7 +54,7 @@ select takes anything — the entries do not have to match a fixed list.
 | `bad_words` | Skip a job if any of these words or phrases appear in its **job description**. Case-insensitive, matched as whole words/phrases. Example: `["US Citizen", "No C2C", "PHP", "polygraph", "Security Clearance"]` |
 | `security_clearance` | `False` means "I do not hold a clearance", and jobs mentioning clearance or polygraph are skipped. Matched as whole words, so "clearance sale" and "secretary" do not trigger it |
 | `did_masters` | `True` means you have a Master's degree. Jobs whose description contains the word "master" are then allowed up to `current_experience + 2` years of required experience |
-| `current_experience` | Skip jobs requiring more years than this. Set to `-1` to apply regardless of required experience. This is separate from `years_of_experience` in [`config/questions.py`](config-questions.md), which is only what gets typed into the form |
+| `current_experience` | When AI suitability checking is off, skip jobs requiring more years than this; set to `-1` to ignore the cap. With AI suitability checking on, the classifier checks skill fit before applying the experience cap, and a core skills match proceeds regardless of years requested. This is separate from `years_of_experience` in [`config/questions.py`](config-questions.md), which is what gets typed into the form |
 
 ## Visa sponsorship filtering
 

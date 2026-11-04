@@ -72,6 +72,11 @@ log_level = "INFO"                  # "DEBUG", "INFO", "WARNING" or "ERROR" (cas
 # Set the maximum amount of time allowed to wait between each click in secs
 click_gap = 1                       # Enter max allowed secs to wait approximately. (Only Non Negative Integers Eg: 0,1,2,3,....)
 
+# Extra fixed pause after UI actions so you can observe the automation.
+# Applies to both LinkedIn layouts when observation_mode is enabled.
+observation_mode = True
+observation_delay_seconds = 1
+
 # If you want to see Chrome running then set run_in_background as False (May reduce performance). 
 run_in_background = False           # True or False, Note: True or False are case-sensitive ,   If True, this will make pause_at_failed_question, pause_before_submit and run_in_background as False
 

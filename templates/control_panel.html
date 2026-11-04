@@ -191,7 +191,7 @@
         .dot { width: 12px; height: 12px; border-radius: 50%; background: #cbd2dc; flex: none; }
         .dot.on { background: var(--ok); box-shadow: 0 0 0 4px rgba(22,163,74,.15); }
         .run-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
-        pre.log {
+        .log {
             background: #0f172a;
             color: #e2e8f0;
             border-radius: 10px;
@@ -205,6 +205,28 @@
             word-break: break-word;
             margin: 0;
         }
+        .log-time { color: #94a3b8; }
+        .log-match { background: #facc15; color: #111827; border-radius: 2px; }
+        .log-controls { display: flex; gap: 8px; margin-bottom: 8px; }
+        .log-controls input { flex: 1; min-width: 0; margin: 0; }
+        .log-controls select { width: auto; min-width: 145px; }
+        .log-entry { padding: 3px 0; border-bottom: 1px solid rgba(148,163,184,.16); }
+        .log-entry:last-child { border-bottom: 0; }
+        .log-entry-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 7px; }
+        .log-badge { display: inline-block; border-radius: 4px; padding: 1px 6px; font: 700 11px/1.5 system-ui,sans-serif; }
+        .log-badge.apply, .log-badge.success { color: #bbf7d0; background: #14532d; }
+        .log-badge.review { color: #fde68a; background: #78350f; }
+        .log-badge.skip, .log-badge.error { color: #fecaca; background: #7f1d1d; }
+        .log-badge.action { color: #bfdbfe; background: #1e3a8a; }
+        .log-job { font-weight: 700; color: #f8fafc; }
+        .log-detail { margin: 5px 0 4px 72px; color: #cbd5e1; }
+        .log-detail summary { color: #93c5fd; cursor: pointer; }
+        .log-plain { white-space: pre-wrap; }
+        .ai-prompt-card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:10px 0; }
+        .ai-prompt-card summary { cursor:pointer; font-weight:600; }
+        .ai-prompt-card h3 { font-size:13px; margin:12px 0 4px; }
+        .ai-prompt-card pre { white-space:pre-wrap; overflow-wrap:anywhere; background:#f5f7fa; border-radius:6px; padding:10px; max-height:360px; overflow:auto; font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+        .system-prompt-editor textarea { min-height:190px; font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
         h2.section-h { font-size: 16px; margin: 4px 0 14px; }
         table.jobs { border-collapse: collapse; width: 100%; font-size: 13px; }
         table.jobs th, table.jobs td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
@@ -214,12 +236,17 @@
         table.jobs a:hover { text-decoration: underline; }
         .tick { color: var(--ok); font-weight: 700; }
         .muted-small { color: var(--muted); font-size: 13px; }
+        .header-tools { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; }
+        .model-status { font-size:13px; color:var(--muted); }
+        .model-status strong { color:var(--ink); }
 
         /* --- Responsive --- */
         @media (max-width: 640px) {
             header { padding: 16px 16px; }
             header h1 { font-size: 18px; }
             .wrap { padding: 0 12px; }
+            .log-controls { flex-direction: column; }
+            .log-controls select { width: 100%; }
             /* Tab bar scrolls sideways instead of wrapping into tall rows. */
             nav { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
             nav button { padding: 11px 12px; font-size: 13px; }
@@ -235,7 +262,14 @@
     <header>
         <div class="wrap">
             <h1>Auto Job Applier - Control Panel</h1>
-            <p>Set up everything here, then open the Run tab to start. Nothing is uploaded - your details are saved only on this computer.</p>
+            <p>Nothing is uploaded - your details are saved only on this computer.</p>
+            <div class="header-tools">
+                <div class="model-status">
+                    <div id="botStatus" role="status" aria-live="polite">Automation: checking…</div>
+                    <div id="modelStatus" role="status" aria-live="polite">Local model: checking…</div>
+                </div>
+                <button class="btn" id="quickRunBtn" type="button">Run automation</button>
+            </div>
         </div>
     </header>
 
@@ -265,7 +299,11 @@
         var MODEL_FIELDS = [];  // [{datalistId, models}] for provider-aware model lists
         var activeTab = null;
         var logOffset = 0;
+        var logLines = [];
+        var logPending = '';
+        var expandedLogEntries = {};
         var pollTimer = null;
+        var modelPollAt = 0;
 
         // ---- helpers ----
         function el(tag, attrs, children) {
@@ -428,6 +466,14 @@
             tabs.appendChild(runBtn);
             panels.appendChild(buildRunPanel());
 
+            var aiLogBtn = el('button', { type: 'button', text: 'AI Prompts' });
+            aiLogBtn.dataset.tab = 'AI Prompts';
+            aiLogBtn.addEventListener('click', function () {
+                showTab('AI Prompts'); loadSystemPrompts(); refreshAIPrompts(true);
+            });
+            tabs.appendChild(aiLogBtn);
+            panels.appendChild(buildAIPromptsPanel());
+
             wireAi();
             updateModelLists();
             applyAiState();
@@ -445,7 +491,7 @@
             });
             var isRun = (name === 'Run');
             document.getElementById('savebar').style.display = isRun ? 'none' : 'flex';
-            if (isRun) { refreshStatus(); refreshLogs(); loadAppliedJobs(); loadUnresolvedQuestions(); }
+            if (isRun) { refreshStatus(); refreshLogs(); loadAppliedJobs(); loadUnresolvedQuestions(); loadCommentDrafts(); }
         }
 
         // ---- AI master switch + model lists ----
@@ -502,21 +548,85 @@
             statusLine.appendChild(el('span', { class: 'dot', id: 'statusDot' }));
             statusLine.appendChild(el('span', { id: 'statusText', text: 'Checking status...' }));
             runbox.appendChild(statusLine);
+            runbox.appendChild(el('div', { id: 'easyApplyLimitNotice', class: 'note', style: 'display:none; margin-top:12px; border-left:4px solid #d97706;' }));
 
             var actions = el('div', { class: 'run-actions' });
             var startBtn = el('button', { class: 'btn', id: 'startBtn', type: 'button', text: 'Start' });
+            var pauseBtn = el('button', { class: 'btn secondary', id: 'pauseBtn', type: 'button', text: 'Pause' });
             var stopBtn = el('button', { class: 'btn danger', id: 'stopBtn', type: 'button', text: 'Stop' });
             startBtn.addEventListener('click', startBot);
+            pauseBtn.addEventListener('click', togglePause);
             stopBtn.addEventListener('click', stopBot);
             actions.appendChild(startBtn);
+            actions.appendChild(pauseBtn);
             actions.appendChild(stopBtn);
             runbox.appendChild(actions);
             runbox.appendChild(el('p', { class: 'muted-small',
                 text: 'Tip: save your settings on the other tabs before starting.' }));
             panel.appendChild(runbox);
+            panel.appendChild(el('section', { class: 'runbox', id: 'runDiagnostics' }, [
+                el('h2', { class: 'section-h', text: 'Run diagnostics' }),
+                el('p', { class: 'muted-small', text: 'Waiting for run status…' })
+            ]));
+
+            panel.appendChild(el('h2', { class: 'section-h', text: 'LinkedIn comment drafts' }));
+            panel.appendChild(el('p', { class: 'note', text:
+                'Paste a post you opened yourself. The local model will draft a comment from your candidate context. This tool does not access LinkedIn or publish comments; review and post any draft yourself.' }));
+            var feedScan = el('div', { class: 'field' });
+            var scanActions = el('div', { class: 'run-actions' });
+            var scanBtn = el('button', { class: 'btn secondary', id: 'scanFeedBtn', type: 'button', text: 'Scan feed posts' });
+            scanBtn.addEventListener('click', scanLinkedInFeed);
+            scanActions.appendChild(scanBtn);
+            var closeFeedBtn = el('button', { class: 'btn secondary', type: 'button', text: 'Close feed browser' });
+            closeFeedBtn.addEventListener('click', function () {
+                fetch('/api/linkedin-feed/close', { method: 'POST' }).then(function () {
+                    document.getElementById('feedScanMessage').textContent = 'Feed browser closed.';
+                });
+            });
+            scanActions.appendChild(closeFeedBtn);
+            feedScan.appendChild(scanActions);
+            feedScan.appendChild(el('p', { class: 'muted-small', id: 'feedScanMessage', text:
+                'Opens a visible Chrome window and handles posts one at a time: expand, check with AI, click Comment and post if relevant, then continue. Reviews up to 15 posts per scan.' }));
+            feedScan.appendChild(el('details', { id: 'feedDiagnostics', open: 'open' }, [
+                el('summary', { text: 'Feed automation diagnostics' }),
+                el('pre', { id: 'feedDiagnosticsLog', class: 'log', style: 'max-height:260px; overflow:auto; white-space:pre-wrap;', text: 'No scan log yet.' })
+            ]));
+            feedScan.appendChild(el('div', { id: 'feedScanResults' }));
+            panel.appendChild(feedScan);
+            var commentForm = el('div', { class: 'field' });
+            commentForm.appendChild(el('label', { text: 'Post URL' }));
+            commentForm.appendChild(el('input', { id: 'commentPostUrl', type: 'url', placeholder: 'https://www.linkedin.com/feed/update/…' }));
+            commentForm.appendChild(el('label', { text: 'Author (optional)' }));
+            commentForm.appendChild(el('input', { id: 'commentAuthor', type: 'text', maxlength: 200 }));
+            commentForm.appendChild(el('label', { text: 'Post text' }));
+            commentForm.appendChild(el('textarea', { id: 'commentPostText', rows: 6, maxlength: 8000,
+                placeholder: 'Paste the post text here…' }));
+            var commentActions = el('div', { class: 'run-actions' });
+            var draftBtn = el('button', { class: 'btn', id: 'makeCommentDraftBtn', type: 'button', text: 'Draft comment' });
+            draftBtn.addEventListener('click', createCommentDraft);
+            var refreshDrafts = el('button', { class: 'btn secondary', type: 'button', text: 'Refresh drafts' });
+            refreshDrafts.addEventListener('click', loadCommentDrafts);
+            commentActions.appendChild(draftBtn);
+            commentActions.appendChild(refreshDrafts);
+            commentForm.appendChild(commentActions);
+            commentForm.appendChild(el('p', { class: 'muted-small', id: 'commentDraftMessage', text: '' }));
+            panel.appendChild(commentForm);
+            panel.appendChild(el('div', { id: 'commentDraftsHolder', style: 'margin-top:12px;' }));
 
             panel.appendChild(el('h2', { class: 'section-h', text: 'Activity log' }));
-            panel.appendChild(el('pre', { class: 'log', id: 'logPane', text: 'No activity yet.' }));
+            var logFilter = el('input', { class: 'log-filter', id: 'logFilter', type: 'search', placeholder: 'Filter activity log…', 'aria-label': 'Filter activity log' });
+            logFilter.addEventListener('input', renderLogs);
+            var logKindFilter = el('select', { id: 'logKindFilter', 'aria-label': 'Filter activity type' });
+            [['all', 'All activity'], ['apply', 'Suitability: APPLY'], ['review', 'Suitability: REVIEW'], ['skip', 'Suitability: SKIP'], ['application', 'Application activity'], ['question', 'Question activity'], ['other', 'Other activity']].forEach(function (item) {
+                logKindFilter.appendChild(el('option', { value: item[0], text: item[1] }));
+            });
+            logKindFilter.addEventListener('change', renderLogs);
+            var logControls = el('div', { class: 'log-controls' });
+            logControls.appendChild(logFilter);
+            logControls.appendChild(logKindFilter);
+            panel.appendChild(logControls);
+            panel.appendChild(el('p', { class: 'muted-small', id: 'logFilterCount', text: '' }));
+            panel.appendChild(el('div', { class: 'log', id: 'logPane', role: 'log', 'aria-live': 'polite', text: 'No activity yet.' }));
 
             panel.appendChild(el('h2', { class: 'section-h', text: 'Questions needing answers' }));
             panel.appendChild(el('p', { class: 'muted-small', text: 'Questions are listed once. Save an answer only when you know it; the bot reuses it for the same question.' }));
@@ -538,29 +648,220 @@
             return panel;
         }
 
-        function setRunningUI(running, pid) {
+        function buildAIPromptsPanel() {
+            var panel = el('div', { class: 'panel' });
+            panel.dataset.tab = 'AI Prompts';
+            panel.appendChild(el('h2', { class: 'section-h', text: 'Edit system prompts' }));
+            panel.appendChild(el('p', { class: 'muted-small', text:
+                'Edit the instructions sent to the model. Keep the placeholders shown below. Changes are saved locally and apply when the bot starts its next run.' }));
+            var editor = el('div', { class: 'system-prompt-editor' });
+            [
+                ['ai_answer_prompt', 'Application answer prompt', 'Keep both {} placeholders: applicant information first, then the form question.'],
+                ['job_suitability_prompt', 'Job suitability prompt', 'Keep {candidate_context}, {title}, {company}, {location}, and {job_description}.'],
+                ['extract_skills_prompt', 'Skill extraction prompt', 'Keep the {} placeholder for the job description.']
+            ].forEach(function (item) {
+                var box = el('div', { class: 'field' });
+                box.appendChild(el('label', { text: item[1] }));
+                box.appendChild(el('p', { class: 'muted-small', text: item[2] }));
+                box.appendChild(el('textarea', { id: 'prompt_' + item[0], rows: 12, 'aria-label': item[1] }));
+                editor.appendChild(box);
+            });
+            panel.appendChild(editor);
+            var promptActions = el('div', { class: 'run-actions' });
+            var savePrompts = el('button', { class: 'btn', type: 'button', text: 'Save prompts' });
+            var resetPrompts = el('button', { class: 'btn secondary', type: 'button', text: 'Restore built-in prompts' });
+            savePrompts.addEventListener('click', saveSystemPrompts);
+            resetPrompts.addEventListener('click', restoreSystemPrompts);
+            promptActions.appendChild(savePrompts);
+            promptActions.appendChild(resetPrompts);
+            panel.appendChild(promptActions);
+            panel.appendChild(el('p', { class: 'muted-small', id: 'promptSaveMessage', text: '' }));
+            panel.appendChild(el('p', { class: 'note', text:
+                'Prompts and model responses are stored locally in .ai_prompt_log.jsonl. They may contain your candidate information and job descriptions.' }));
+            var refresh = el('button', { class: 'btn secondary', type: 'button', text: 'Refresh prompt log' });
+            refresh.addEventListener('click', function () { refreshAIPrompts(true); });
+            panel.appendChild(refresh);
+            panel.appendChild(el('div', { id: 'aiPromptsHolder', style: 'margin-top:12px;' }));
+            return panel;
+        }
+
+        var SYSTEM_PROMPT_NAMES = ['ai_answer_prompt', 'job_suitability_prompt', 'extract_skills_prompt'];
+        function loadSystemPrompts() {
+            fetch('/api/system-prompts').then(function (r) { return r.json(); }).then(function (data) {
+                SYSTEM_PROMPT_NAMES.forEach(function (name) {
+                    var field = document.getElementById('prompt_' + name);
+                    if (field) field.value = data.prompts[name] || '';
+                });
+            }).catch(function () {
+                var message = document.getElementById('promptSaveMessage');
+                if (message) message.textContent = 'Could not load system prompts.';
+            });
+        }
+
+        function saveSystemPrompts() {
+            var prompts = {};
+            SYSTEM_PROMPT_NAMES.forEach(function (name) {
+                var field = document.getElementById('prompt_' + name);
+                prompts[name] = field ? field.value : '';
+            });
+            var message = document.getElementById('promptSaveMessage');
+            fetch('/api/system-prompts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompts: prompts }) }).then(function (r) {
+                return r.json().then(function (data) { if (!r.ok) throw new Error(data.error || 'Save failed'); return data; });
+            }).then(function () {
+                message.textContent = 'Prompts saved locally. They will be used on the next bot run.';
+            }).catch(function (error) { message.textContent = error.message; });
+        }
+
+        function restoreSystemPrompts() {
+            var message = document.getElementById('promptSaveMessage');
+            fetch('/api/system-prompts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reset: true }) }).then(function (r) {
+                return r.json().then(function (data) { if (!r.ok) throw new Error(data.error || 'Restore failed'); return data; });
+            }).then(function () {
+                loadSystemPrompts();
+                message.textContent = 'Built-in prompts restored. They will be used on the next bot run.';
+            }).catch(function (error) { message.textContent = error.message; });
+        }
+
+        var aiPromptPollAt = 0;
+        function refreshAIPrompts(force) {
+            var now = Date.now();
+            if (!force && now - aiPromptPollAt < 5000) return;
+            aiPromptPollAt = now;
+            var holder = document.getElementById('aiPromptsHolder');
+            if (!holder) return;
+            fetch('/api/ai-prompts').then(function (r) { return r.json(); }).then(function (items) {
+                holder.innerHTML = '';
+                if (!Array.isArray(items) || !items.length) {
+                    holder.appendChild(el('p', { class: 'muted-small', text: 'No AI prompt calls recorded yet.' }));
+                    return;
+                }
+                items.forEach(function (item, index) {
+                    var card = el('details', { class: 'ai-prompt-card' });
+                    if (index === 0) card.open = true;
+                    var time = item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Unknown time';
+                    var status = item.error ? ' · error' : '';
+                    card.appendChild(el('summary', { text: time + ' · ' + (item.category || 'AI call') +
+                        ' · ' + (item.provider || 'provider unknown') + '/' + (item.model || 'model unknown') + status }));
+                    card.appendChild(el('h3', { text: 'Prompt sent' }));
+                    card.appendChild(el('pre', { text: item.prompt || '' }));
+                    card.appendChild(el('h3', { text: item.error ? 'Error' : 'Model response' }));
+                    card.appendChild(el('pre', { text: item.error || item.response || '' }));
+                    holder.appendChild(card);
+                });
+            }).catch(function () {
+                holder.textContent = 'Could not load the AI prompt log.';
+            });
+        }
+
+        function setRunningUI(running, pid, state) {
+            state = running ? (state || 'running') : 'stopped';
+            var quickRunBtn = document.getElementById('quickRunBtn');
+            var botStatus = document.getElementById('botStatus');
             var dot = document.getElementById('statusDot');
             var text = document.getElementById('statusText');
             var startBtn = document.getElementById('startBtn');
+            var pauseBtn = document.getElementById('pauseBtn');
             var stopBtn = document.getElementById('stopBtn');
+            if (quickRunBtn) {
+                quickRunBtn.disabled = running;
+                quickRunBtn.textContent = running ? 'Automation running' : 'Run automation';
+            }
+            if (botStatus) botStatus.textContent = 'Automation: ' + state +
+                (running && pid ? ' · process ' + pid : '');
             if (!dot) return;
             if (running) {
                 dot.classList.add('on');
-                text.textContent = 'Running' + (pid ? ' (process ' + pid + ')' : '') + '...';
+                text.textContent = (state === 'pausing' ? 'Pausing…' : state === 'paused' ? 'Paused' : 'Running') +
+                    (pid ? ' (process ' + pid + ')' : '');
                 if (startBtn) startBtn.disabled = true;
+                if (pauseBtn) {
+                    pauseBtn.disabled = state === 'pausing' || state === 'resuming';
+                    pauseBtn.textContent = state === 'paused' ? 'Resume' : state === 'pausing' ? 'Pausing…' :
+                        state === 'resuming' ? 'Resuming…' : 'Pause';
+                }
                 if (stopBtn) stopBtn.disabled = false;
             } else {
                 dot.classList.remove('on');
                 text.textContent = 'Not running';
                 if (startBtn) startBtn.disabled = false;
+                if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.textContent = 'Pause'; }
                 if (stopBtn) stopBtn.disabled = true;
             }
         }
 
         function refreshStatus() {
             fetch('/api/status').then(function (r) { return r.json(); })
-                .then(function (s) { setRunningUI(s.running, s.pid); })
+                .then(function (s) {
+                    setRunningUI(s.running, s.pid, s.state);
+                    renderRunDiagnostics(s);
+                    var notice = document.getElementById('easyApplyLimitNotice');
+                    var run = s.run || {};
+                    if (!notice) return;
+                    if (run.reason_code !== 'EASY_APPLY_LIMIT_REACHED') { notice.style.display = 'none'; return; }
+                    notice.style.display = 'block';
+                    notice.textContent = '';
+                    notice.appendChild(el('strong', { text: 'Easy Apply limit reached — LinkedIn is not accepting further Easy Apply applications.' }));
+                    var stats = run.stats || {};
+                    var job = run.job_url ? ' Last job: ' + run.job_url + '.' : ' Last job URL unavailable.';
+                    var count = Number(stats.jobs_applied || 0);
+                    var details = ' Detected: ' + (run.detected_at ? new Date(run.detected_at).toLocaleString() : 'time unavailable') + '.' + job +
+                        ' Applications confirmed before restriction: ' + count + '.';
+                    notice.appendChild(document.createTextNode(details));
+                    var evidence = run.evidence || {};
+                    if (evidence.visible_message) notice.appendChild(el('p', { text: 'LinkedIn warning: ' + evidence.visible_message }));
+                    notice.appendChild(el('p', { class: 'muted-small', text: evidence.screenshot ? 'Screenshot: logs/runs/' + run.run_id + '/' + evidence.screenshot : 'Reference: this run’s worker log.' }));
+                })
                 .catch(function () {});
+        }
+
+        function renderRunDiagnostics(status) {
+            var holder = document.getElementById('runDiagnostics');
+            if (!holder) return;
+            holder.textContent = '';
+            holder.appendChild(el('h2', { class: 'section-h', text: 'Run diagnostics' }));
+            var run = status.run;
+            if (!run) {
+                holder.appendChild(el('p', { class: 'muted-small', text: 'No automation runs recorded yet.' }));
+                return;
+            }
+            var title = (run.status || status.state || 'unknown') +
+                (run.reason_code ? ' · ' + run.reason_code : '');
+            holder.appendChild(el('p', { text: title + (run.explanation ? ' — ' + run.explanation : '') }));
+            var stats = run.stats || {};
+            var facts = [
+                'Started: ' + (run.started_at || 'Not available'),
+                'Ended: ' + (run.ended_at || 'In progress'),
+                'Last successful stage: ' + (run.last_successful_stage || 'Not recorded'),
+                'Failed stage: ' + (run.failed_stage || 'None'),
+                'Process exit code: ' + (run.process_exit_code == null ? 'Not available' : run.process_exit_code),
+                'Jobs inspected: ' + (stats.jobs_inspected || 0) + ' · applied: ' + (stats.jobs_applied || 0) +
+                    ' · skipped: ' + (stats.jobs_skipped || 0) + ' · failed: ' + (stats.jobs_failed || 0)
+            ];
+            holder.appendChild(el('p', { class: 'muted-small', text: facts.join('\n') }));
+            if (run.run_id) holder.appendChild(el('a', {
+                href: '/api/runs/' + encodeURIComponent(run.run_id) + '/log', target: '_blank', rel: 'noopener',
+                text: 'Open saved worker log'
+            }));
+            if (run.traceback) holder.appendChild(el('details', {}, [
+                el('summary', { text: 'Exception details' }),
+                el('pre', { class: 'log', text: run.traceback })
+            ]));
+            var recent = status.recent_runs || [];
+            if (recent.length) {
+                holder.appendChild(el('h3', { text: 'Recent runs' }));
+                var list = el('ul', {});
+                recent.forEach(function (item) {
+                    var label = (item.started_at || 'Unknown start') + ' · ' + item.status +
+                        (item.reason_code ? ' · ' + item.reason_code : '');
+                    list.appendChild(el('li', {}, [el('a', {
+                        href: '/api/runs/' + encodeURIComponent(item.run_id),
+                        target: '_blank', rel: 'noopener', text: label
+                    })]));
+                });
+                holder.appendChild(list);
+            }
         }
 
         function refreshLogs() {
@@ -569,27 +870,182 @@
                     if (typeof data.next_offset === 'number' && data.next_offset < logOffset) {
                         // Log was truncated; reset the pane.
                         logOffset = 0;
-                        document.getElementById('logPane').textContent = '';
+                        logLines = [];
+                        logPending = '';
+                        expandedLogEntries = {};
                     }
                     if (data.content) {
-                        var pane = document.getElementById('logPane');
-                        if (pane.textContent === 'No activity yet.') pane.textContent = '';
-                        var atBottom = pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 20;
-                        pane.textContent += data.content;
-                        if (atBottom) pane.scrollTop = pane.scrollHeight;
+                        appendLogContent(data.content);
+                        renderLogs();
                     }
                     if (typeof data.next_offset === 'number') logOffset = data.next_offset;
                 })
                 .catch(function () {});
         }
 
-        function startBot() {
+        function appendLogContent(content) {
+            var parts = (logPending + content).split(/\r?\n/);
+            logPending = parts.pop();
+            parts.forEach(function (line) {
+                logLines.push({ time: new Date(), text: line });
+            });
+            // Keep the in-page view bounded during long runs.
+            if (logLines.length > 10000) logLines.splice(0, logLines.length - 10000);
+        }
+
+        function appendHighlightedText(container, text, query) {
+            if (!query) {
+                container.appendChild(document.createTextNode(text));
+                return;
+            }
+            var lowerText = text.toLowerCase();
+            var lowerQuery = query.toLowerCase();
+            var from = 0;
+            var found = lowerText.indexOf(lowerQuery, from);
+            while (found !== -1) {
+                container.appendChild(document.createTextNode(text.slice(from, found)));
+                var mark = document.createElement('mark');
+                mark.className = 'log-match';
+                mark.textContent = text.slice(found, found + query.length);
+                container.appendChild(mark);
+                from = found + query.length;
+                found = lowerText.indexOf(lowerQuery, from);
+            }
+            container.appendChild(document.createTextNode(text.slice(from)));
+        }
+
+        function logEntryKind(text) {
+            var decision = text.match(/^Suitability (APPLY|REVIEW|SKIP)(?:\s|\()/i);
+            if (decision) return decision[1].toLowerCase();
+            if (/application was sent|confirmed the application|submitted application|opening easy apply/i.test(text)) return 'application';
+            if (/question|saved answer|no verified answer|draft saved/i.test(text)) return 'question';
+            return 'other';
+        }
+
+        function appendLogEntry(fragment, line, index, query) {
+            var row = document.createElement('div');
+            row.className = 'log-entry';
+            var head = document.createElement('div');
+            head.className = 'log-entry-head';
+            var timestamp = document.createElement('span');
+            timestamp.className = 'log-time';
+            timestamp.textContent = '[' + line.time.toLocaleTimeString() + ']';
+            head.appendChild(timestamp);
+
+            var decision = line.text.match(/^Suitability (APPLY|REVIEW|SKIP)(?: \((\d+)\/100\))?:\s*(.*)$/i);
+            if (decision) {
+                var badge = document.createElement('span');
+                badge.className = 'log-badge ' + decision[1].toLowerCase();
+                badge.textContent = decision[1].toUpperCase() + (decision[2] ? ' · ' + decision[2] + '/100' : '');
+                head.appendChild(badge);
+                var job = document.createElement('span');
+                job.className = 'log-job';
+                var description = decision[3];
+                var reasonStart = description.indexOf(':');
+                appendHighlightedText(job, reasonStart < 0 ? description : description.slice(0, reasonStart), query);
+                head.appendChild(job);
+                row.appendChild(head);
+                var reasonText = reasonStart < 0 ? '' : description.slice(reasonStart + 1).trim();
+                if (reasonText) {
+                    var details = document.createElement('details');
+                    details.className = 'log-detail';
+                    details.open = !!expandedLogEntries[index];
+                    details.addEventListener('toggle', function () { expandedLogEntries[index] = details.open; });
+                    var summary = document.createElement('summary');
+                    summary.textContent = 'Decision rationale';
+                    details.appendChild(summary);
+                    var reason = document.createElement('div');
+                    reason.style.marginTop = '4px';
+                    appendHighlightedText(reason, reasonText, query);
+                    details.appendChild(reason);
+                    row.appendChild(details);
+                }
+                fragment.appendChild(row);
+                return;
+            }
+
+            var kind = logEntryKind(line.text);
+            if (kind === 'application' || kind === 'question') {
+                var actionBadge = document.createElement('span');
+                actionBadge.className = 'log-badge ' + (kind === 'application' ? 'success' : 'action');
+                actionBadge.textContent = kind === 'application' ? 'APPLICATION' : 'QUESTION';
+                head.appendChild(actionBadge);
+            }
+            var content = document.createElement('span');
+            content.className = 'log-plain';
+            appendHighlightedText(content, line.text, query);
+            head.appendChild(content);
+            row.appendChild(head);
+            fragment.appendChild(row);
+        }
+
+        function renderLogs() {
             var pane = document.getElementById('logPane');
+            if (!pane) return;
+            var filter = (document.getElementById('logFilter').value || '').trim().toLowerCase();
+            var kindFilter = document.getElementById('logKindFilter').value;
+            var lines = logLines.slice();
+            if (logPending) lines.push({ time: new Date(), text: logPending });
+            var matches = lines.map(function (line, index) { return { line: line, index: index }; }).filter(function (entry) {
+                var matchesText = !filter || entry.line.text.toLowerCase().indexOf(filter) !== -1;
+                var kind = logEntryKind(entry.line.text);
+                return matchesText && (kindFilter === 'all' || kind === kindFilter);
+            });
+            var atBottom = pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 20;
             pane.textContent = '';
+            if (!matches.length) {
+                pane.textContent = (filter || kindFilter !== 'all') ? 'No matching activity.' : 'No activity yet.';
+            } else {
+                var fragment = document.createDocumentFragment();
+                matches.forEach(function (entry) {
+                    appendLogEntry(fragment, entry.line, entry.index, filter);
+                });
+                pane.appendChild(fragment);
+            }
+            var count = document.getElementById('logFilterCount');
+            if (count) count.textContent = (filter || kindFilter !== 'all') ? (matches.length + ' matching entries · ' + lines.length + ' total') : '';
+            if (atBottom) pane.scrollTop = pane.scrollHeight;
+        }
+
+        function startBot() {
+            showTab('Run');
+            var pane = document.getElementById('logPane');
+            logLines = [];
+            logPending = '';
+            expandedLogEntries = {};
+            if (pane) pane.textContent = '';
             logOffset = 0;
             fetch('/api/run', { method: 'POST' }).then(function (r) { return r.json(); })
-                .then(function (s) { setRunningUI(s.running, s.pid); refreshLogs(); })
+                .then(function (s) { setRunningUI(s.running, s.pid, s.state); refreshLogs(); })
                 .catch(function () {});
+        }
+
+        function togglePause() {
+            var pauseBtn = document.getElementById('pauseBtn');
+            var command = pauseBtn && pauseBtn.textContent === 'Resume' ? 'resume' : 'pause';
+            if (pauseBtn) pauseBtn.disabled = true;
+            fetch('/api/' + command, { method: 'POST' }).then(function (r) { return r.json(); })
+                .then(function (s) { setRunningUI(s.running, s.pid, s.state); })
+                .catch(function () { if (pauseBtn) pauseBtn.disabled = false; });
+        }
+
+        function refreshModelStatus() {
+            var now = Date.now();
+            if (now - modelPollAt < 5000) return;
+            modelPollAt = now;
+            fetch('/api/model-status').then(function (r) { return r.json(); }).then(function (s) {
+                var node = document.getElementById('modelStatus');
+                if (!node) return;
+                var label = s.status === 'running' ? 'running now' :
+                    s.status === 'installed' ? 'installed · idle' :
+                    s.status === 'missing' ? 'not installed' :
+                    s.status === 'offline' ? 'Ollama is offline' :
+                    s.status === 'disabled' ? 'disabled' : 'unavailable';
+                node.textContent = 'Local model: ' + label + (s.model ? ' · ' + s.model : '');
+            }).catch(function () {
+                var node = document.getElementById('modelStatus');
+                if (node) node.textContent = 'Local model: status unavailable';
+            });
         }
 
         function loadUnresolvedQuestions() {
@@ -624,13 +1080,122 @@
 
         function stopBot() {
             fetch('/api/stop', { method: 'POST' }).then(function (r) { return r.json(); })
-                .then(function (s) { setRunningUI(s.running, s.pid); })
+                .then(function (s) { setRunningUI(s.running, s.pid, s.state); })
                 .catch(function () {});
         }
 
         function pollLoop() {
-            if (activeTab === 'Run') { refreshStatus(); refreshLogs(); }
+            refreshStatus();
+            refreshModelStatus();
+            if (activeTab === 'Run') refreshLogs();
+            if (activeTab === 'AI Prompts') refreshAIPrompts(false);
             pollTimer = setTimeout(pollLoop, 1500);
+        }
+
+        document.getElementById('quickRunBtn').addEventListener('click', startBot);
+
+        function loadCommentDrafts() {
+            var holder = document.getElementById('commentDraftsHolder');
+            if (!holder) return;
+            fetch('/api/comment-drafts').then(function (r) { return r.json(); }).then(function (drafts) {
+                holder.textContent = '';
+                if (!Array.isArray(drafts) || !drafts.length) {
+                    holder.appendChild(el('p', { class: 'muted-small', text: 'No comment drafts yet.' }));
+                    return;
+                }
+                drafts.forEach(function (draft) {
+                    var card = el('article', { class: 'panel' });
+                    if (String(draft.post_url || '').startsWith('local-linkedin-post:')) {
+                        card.appendChild(el('span', { text: (draft.author ? draft.author + ' · ' : '') +
+                            'Feed post (local reference; open it in the LinkedIn feed)' }));
+                    } else {
+                        var link = el('a', { href: draft.post_url, target: '_blank', rel: 'noopener',
+                            text: (draft.author ? draft.author + ' · ' : '') + 'Open LinkedIn post' });
+                        card.appendChild(link);
+                    }
+                    card.appendChild(el('p', { class: 'muted-small', text: draft.rationale || '' }));
+                    card.appendChild(el('pre', { text: draft.comment || '' }));
+                    var actions = el('div', { class: 'run-actions' });
+                    var copy = el('button', { class: 'btn secondary', type: 'button', text: 'Copy comment' });
+                    copy.addEventListener('click', function () {
+                        navigator.clipboard.writeText(draft.comment).then(function () {
+                            copy.textContent = 'Copied';
+                        }).catch(function () { copy.textContent = 'Clipboard unavailable'; });
+                    });
+                    var skip = el('button', { class: 'btn danger', type: 'button', text: 'Skip draft' });
+                    skip.addEventListener('click', function () {
+                        fetch('/api/comment-drafts/' + draft.id + '/skip', { method: 'POST' })
+                            .then(function (r) { if (!r.ok) throw new Error('Could not skip draft'); loadCommentDrafts(); })
+                            .catch(function () { skip.textContent = 'Try again'; });
+                    });
+                    actions.appendChild(copy);
+                    actions.appendChild(skip);
+                    card.appendChild(actions);
+                    holder.appendChild(card);
+                });
+            }).catch(function () { holder.textContent = 'Could not load comment drafts.'; });
+        }
+
+        function createCommentDraft() {
+            var button = document.getElementById('makeCommentDraftBtn');
+            var message = document.getElementById('commentDraftMessage');
+            button.disabled = true;
+            message.textContent = 'Asking the configured model for a grounded draft…';
+            fetch('/api/comment-drafts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ post_url: document.getElementById('commentPostUrl').value,
+                    author: document.getElementById('commentAuthor').value,
+                    post_text: document.getElementById('commentPostText').value })
+            }).then(function (r) {
+                return r.json().then(function (data) { if (!r.ok) throw new Error(data.error || 'Draft failed'); return data; });
+            }).then(function (data) {
+                message.textContent = data.relevant === false ? (data.message || data.rationale || 'No grounded comment suggested.') : 'Draft saved. Review and post it yourself if it looks right.';
+                loadCommentDrafts();
+            }).catch(function (error) { message.textContent = error.message; })
+                .finally(function () { button.disabled = false; });
+        }
+
+        function scanLinkedInFeed() {
+            var button = document.getElementById('scanFeedBtn');
+            var message = document.getElementById('feedScanMessage');
+            var results = document.getElementById('feedScanResults');
+            button.disabled = true;
+            message.textContent = 'Opening LinkedIn. For each post: expand it, check relevance with AI, comment if relevant, then continue (up to 15 posts). Complete any verification prompt in Chrome…';
+            results.textContent = '';
+            refreshFeedDiagnostics();
+            var diagnosticsTimer = setInterval(refreshFeedDiagnostics, 1200);
+            fetch('/api/linkedin-feed/scan', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ limit: 15, scrolls: 5 })
+            }).then(function (r) {
+                return r.json().then(function (data) { if (!r.ok) throw new Error(data.error || 'Feed scan failed'); return data; });
+            }).then(function (data) {
+                if (data.needs_login) {
+                    message.textContent = 'Sign-in did not finish within 3 minutes. Complete it in the Chrome window, then click Scan feed posts to try again.';
+                    return;
+                }
+                message.textContent = data.scanned_count ? ('Checked ' + data.scanned_count + ' posts; posted ' + data.posted_count + ' comments.' + (data.halted ? ' Stopped because a relevant comment could not be completed; no later posts were processed.' : '') + ' Review each result below.') : 'No readable posts found. LinkedIn may have changed its feed layout.';
+                (data.results || []).forEach(function (post) {
+                    var card = el('article', { class: 'panel' });
+                    if (String(post.post_url || '').startsWith('local-linkedin-post:')) {
+                        card.appendChild(el('span', { text: (post.author || 'LinkedIn post') +
+                            ' · ' + post.status + ' (local feed reference)' }));
+                    } else {
+                        var postLink = el('a', { href: post.post_url, target: '_blank', rel: 'noopener',
+                            text: (post.author || 'LinkedIn post') + ' · ' + post.status });
+                        card.appendChild(postLink);
+                    }
+                    card.appendChild(el('p', { class: 'muted-small', text: post.rationale || post.error || '' }));
+                    if (post.comment) card.appendChild(el('pre', { text: post.comment }));
+                    results.appendChild(card);
+                });
+            }).catch(function (error) { message.textContent = error.message; })
+                .finally(function () { button.disabled = false; clearInterval(diagnosticsTimer); refreshFeedDiagnostics(); });
+        }
+
+        function refreshFeedDiagnostics() {
+            fetch('/api/linkedin-feed/logs').then(function (r) { return r.json(); }).then(function (data) {
+                var log = document.getElementById('feedDiagnosticsLog');
+                if (log && data.logs) { log.textContent = data.logs; log.scrollTop = log.scrollHeight; }
+            }).catch(function () {});
         }
 
         // ---- applied jobs history ----

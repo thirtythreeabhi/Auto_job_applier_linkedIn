@@ -72,6 +72,60 @@ def _now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def record_suitability_decision(job_id, title, company, location, model, result, path=AUDIT_PATH,
+                                *, decision_source='QWEN_CLASSIFIER', model_decision=None,
+                                final_decision=None, override_reason='', model_called=True,
+                                job_description=''):
+    """Persist a classifier result or deterministic filter decision."""
+    path = Path(path)
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+    except FileNotFoundError:
+        data = {'version': 1, 'applications': [], 'suitability_decisions': []}
+    if data.get('version') != 1 or not isinstance(data.get('applications'), list):
+        raise ValueError('Invalid application audit file; refusing to overwrite it.')
+    decisions = data.setdefault('suitability_decisions', [])
+    if not isinstance(decisions, list):
+        raise ValueError('Invalid suitability decision log; refusing to overwrite it.')
+    final_decision = final_decision or result.get('final_decision') or result.get('decision', 'REVIEW')
+    model_decision = model_decision if model_decision is not None else result.get('model_decision')
+    decisions.append({
+        'decision_id': uuid.uuid4().hex,
+        'job_id': str(job_id),
+        'job_title': str(title),
+        'company': str(company),
+        'location': str(location),
+        'model': str(model),
+        'decision': final_decision,
+        'decision_source': decision_source,
+        'model_decision': model_decision,
+        'final_decision': final_decision,
+        'override_reason': str(override_reason or result.get('override_reason') or ''),
+        'model_called': bool(model_called),
+        'classifier_failure': result.get('failure_kind'),
+        'core_skills_match': result.get('core_skills_match', False),
+        'match_score': result.get('match_score'),
+        'confidence': result.get('confidence'),
+        'matched_skills': result.get('matched_skills', []),
+        'missing_skills': result.get('missing_skills', []),
+        'experience_gap_years': result.get('experience_gap_years'),
+        'hard_blockers': result.get('hard_blockers', []),
+        'reason': result.get('reason', ''),
+        'job_description': str(job_description or ''),
+        'recorded_at': _now(),
+    })
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix='.application-audit-', dir=path.parent)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, 'w', encoding='utf-8') as stream:
+            json.dump(data, stream, ensure_ascii=False, indent=2)
+            stream.write('\n')
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp): os.unlink(tmp)
+
+
 class ApplicationAudit:
     def __init__(self, job_id, title, company, path=AUDIT_PATH):
         self.path = Path(path)

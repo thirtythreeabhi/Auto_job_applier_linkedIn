@@ -100,7 +100,9 @@ class CandidateRegistry:
         has_duration = any(x in name for x in ('year', 'month', 'tenure'))
         has_experience = any(x in name for x in ('experience', 'work', 'using', 'used', 'tenure'))
         if has_duration and has_experience:
-            if re.search(r'\b(?:and|or)\b|[,/]', str(question).casefold()): return None
+            if re.search(r'\b(?:and|or)\b|[,/]', str(question).casefold()):
+                if 'nextjs' in compact and 'react' in name: return 'nextjs_experience_years'
+                return None
             # A combined stack question requires evidence for that combination,
             # not just the user's general full-stack duration.
             if (('fullstack' in compact or 'full stack' in name) and
@@ -108,11 +110,13 @@ class CandidateRegistry:
                      or re.search(r'\bc\s*sharp\b|c\s*#|\.net', str(question).casefold()))):
                 return None
             if re.search(r'\bnode(?:\s*js)?\b', name): return 'nodejs_experience_years'
+            if 'nextjs' in compact: return 'nextjs_experience_years'
             if re.search(r'\bpython\b', name): return 'python_experience_years'
             if re.search(r'\bmongo\s*db\b', name): return 'mongodb_experience_years'
             if re.search(r'\bangular\s*js\b', name): return 'angularjs_experience_years'
             if re.search(r'\bssis\b|\bsql server integration services\b', name): return 'ssis_experience_years'
-            if re.search(r'\bgen\s*ai\b|\bgenerative ai\b|\bgenerative artificial intelligence\b', name): return 'generative_ai_experience_years'
+            if re.search(r'\bcursor\b|\bclaude\b|ai assisted coding|ai driven development|ai coding assistant', name): return 'ai_coding_assistant_experience_years'
+            if re.search(r'\bgen\s*ai\b|\bgenerative ai\b|\bgenerative artificial intelligence\b|\bllm\b|\brag\b|\bretrieval augmented generation\b', name): return 'generative_ai_experience_years'
             if 'postgresql' in compact or re.search(r'\bpostgres\b', name): return 'postgresql_experience_years'
             if 'fullstack' in compact or 'full stack' in name: return 'fullstack_experience_years'
             if ('reactjs' in compact or re.search(r'\breact\b', name)) and 'native' not in name:
@@ -232,7 +236,12 @@ class CandidateRegistry:
 
     def update(self, key, answer, source, verified=True, persist=True):
         record = self.records.get(key)
-        if not record: return
+        if not record:
+            aliases = ALIASES.get(key, [])
+            if not aliases: return
+            record = {'key': key, 'normalized_question': normalize_question(aliases[0])}
+            self.payload['records'].append(record)
+            self.records[key] = record
         record.update(answer=answer if verified else None, source=source,
                       verification_status='verified' if verified else 'unverified', last_updated=_today())
         if persist: _write_private(self.path, self.payload)
@@ -275,6 +284,8 @@ CONFIG_KEYS = {
     ('questions', 'postgresql_experience_years'): 'postgresql_experience_years',
     ('questions', 'fullstack_experience_years'): 'fullstack_experience_years',
     ('questions', 'reactjs_experience_years'): 'reactjs_experience_years',
+    ('questions', 'nextjs_experience_years'): 'nextjs_experience_years',
+    ('questions', 'ai_coding_assistant_experience_years'): 'ai_coding_assistant_experience_years',
     ('questions', 'react_rest_api_experience'): 'react_rest_api_experience',
     ('questions', 'dsa_self_rating'): 'dsa_self_rating', ('questions', 'current_role'): 'current_role',
     ('questions', 'current_employment_type'): 'current_employment_type',

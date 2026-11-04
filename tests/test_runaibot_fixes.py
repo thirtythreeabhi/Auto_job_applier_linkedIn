@@ -178,3 +178,38 @@ def test_easy_apply_detection_is_an_ordered_fallback_list(bot):
 # ------------------------------- M: the no-submit flag -----------------------------
 def test_stop_before_submit_setting_is_always_defined(bot):
     assert isinstance(bot.stop_before_submit, bool)
+
+
+def test_pause_controller_reaches_modern_search_from_apply_to_jobs(bot, monkeypatch, tmp_path):
+    import modules.application_audit as audit
+
+    class Driver:
+        current_url = 'https://www.linkedin.com/jobs/search-results/'
+        def get(self, url): self.current_url = url
+        def find_elements(self, *args): return []
+    class Wait:
+        def __init__(self, driver, *args, **kwargs): self.driver = driver
+        def until(self, predicate): return predicate(self.driver)
+    controller = object()
+    seen = {}
+    monkeypatch.setattr(bot, 'driver', Driver())
+    monkeypatch.setattr(bot, 'WebDriverWait', Wait)
+    monkeypatch.setattr(bot, 'is_modern_page', lambda driver: True)
+    monkeypatch.setattr(bot, 'open_profile_matched_jobs', lambda *args: True)
+    monkeypatch.setattr(bot, 'run_modern_search', lambda *args, **kwargs: (
+        seen.update(kwargs) or (0, 0, 0)))
+    monkeypatch.setattr(bot, 'get_applied_job_ids', lambda: set())
+    monkeypatch.setattr(bot, 'REGISTRY_PATH', tmp_path / 'missing-registry.json')
+    monkeypatch.setattr(bot, 'file_name', str(tmp_path / 'history.csv'))
+    monkeypatch.setattr(audit, 'previously_attempted_ids', lambda **kwargs: set())
+    monkeypatch.setattr(audit, 'previously_submitted_roles', lambda *args: set())
+    monkeypatch.setattr(bot.user_overrides, 'load_user_config', lambda: {})
+    monkeypatch.setattr(bot, 'local_ai_enabled', False)
+    monkeypatch.setattr(bot, 'search_terms', [])
+    monkeypatch.setattr(bot, 'print_lg', lambda *args, **kwargs: None)
+    monkeypatch.setattr(bot, 'cycle_date_posted', False)
+    original_exists = bot.os.path.exists
+    monkeypatch.setattr(bot.os.path, 'exists', lambda path: False if path == 'candidate_context.md' else original_exists(path))
+    bot.apply_to_jobs([], pause_controller=controller)
+
+    assert seen['pause_controller'] is controller

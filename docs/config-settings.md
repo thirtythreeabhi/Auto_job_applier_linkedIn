@@ -33,6 +33,8 @@ Behaviour of the tool itself, rather than what it says in an application. Mostly
 | Setting | Default | What it does |
 |---|---|---|
 | `click_gap` | `1` | Maximum seconds to wait between clicks. Non-negative whole numbers only |
+| `observation_mode` | `true` | Adds an extra fixed pause after visible UI actions so you can watch the automation. Turn off to disable the observation pause. Applies to both LinkedIn layouts. |
+| `observation_delay_seconds` | `1` | Number of seconds to pause after each visible action while observation mode is on. Set to `0` for no extra pause. |
 | `run_in_background` | `False` | Hide the Chrome window. May reduce performance. **Turning this on forces `pause_before_submit`, `pause_at_failed_question` and `run_non_stop` to `False`** — the safety pauses cannot work with no window to look at |
 | `disable_extensions` | `False` | Disable browser extensions. Better for performance |
 | `safe_mode` | `True` | Open Chrome in a clean **guest profile**. Turn this on if Chrome takes too long to open, or if you have several browser profiles |

@@ -22,6 +22,13 @@ apikeys.py
 user_config.json
 .bot_run.log
 .bot_run.pid
+.bot_control.json
+.bot_control.json.lock
+.linkedin_feed.log
+.linkedin_feed_debug.html
+.linkedin_feed_comment_debug.html
+.linkedin_feed_comment_debug.png
+.linkedin_feed_chrome_profile/
 
 # Candidate information and resume are private to this workspace.
 candidate_context.md
@@ -37,3 +44,10 @@ application_field_audit.json
 
 # Private generated field mapping snapshot
 candidate_field_mappings.json
+
+# Local AI prompt settings and runtime artifacts
+ai_prompt_overrides.json
+.ai_prompt_log.jsonl
+.llm_request.lock
+.panel_server.log
+linkedin_comment_drafts.sqlite3
