@@ -527,8 +527,15 @@ def _verify_name_fields(modal, registry, audit=None, page=None):
         if audit: audit.field(label, actual, 'verified after form update', page)
 
 
+def _application_answer_cache_key(label, options=()):
+    normalize = lambda value: re.sub(r'\s+', ' ', str(value or '')).strip().casefold()
+    return normalize(label), tuple(normalize(option) for option in options)
+
+
 def _fill_fields(driver, modal, profile, questions, email, log, registry=None, audit=None, page=None, job_id=None,
-                 ai_client=None, candidate_context='', job_description='', about_company='', ai_model=''):
+                 ai_client=None, candidate_context='', job_description='', about_company='', ai_model='', company=None,
+                 answer_cache=None):
+    answer_cache = answer_cache if answer_cache is not None else {}
     # A LinkedIn city typeahead does not always carry HTML's required attribute.
     for field in modal.find_elements(By.CSS_SELECTOR, 'input[data-testid="typeahead-input"]'):
         if 'city' in (field.get_attribute('placeholder') or '').lower():
@@ -546,9 +553,12 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
             selected = Select(field).first_selected_option.text.strip()
             has_value = bool(selected and selected.lower() not in ('select an option', 'select', 'choose an option'))
             existing = selected if has_value else ''
+            cache_options = [option.text.strip() for option in Select(field).options
+                             if option.text.strip().casefold() not in ('select an option', 'select', 'choose an option')]
         else:
             existing = (field.get_attribute('value') or '').strip()
             has_value = bool(existing)
+            cache_options = ()
         key = registry.classify(label) if registry is not None else None
         if registry is not None and registry.unverified(label) and (required or has_value):
             can_infer_answer = (required and
@@ -557,6 +567,9 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 registry.record_missing(label)
                 raise CannotCompleteApplication(f'Unverified application question: {label or "unlabelled field"}.')
         answer = _answer_for(label, profile, questions, email, registry)
+        cache_key = _application_answer_cache_key(label, cache_options)
+        if answer is None and cache_key in answer_cache:
+            answer = answer_cache[cache_key]
         answer_source = 'verified candidate data' if answer is not None else 'saved profile/configuration'
         nonnumeric_hint = None
         if answer is not None and (kind == 'number' or _question_expects_numeric_answer(label)) and not re.search(r'\d', str(answer)):
@@ -605,6 +618,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 about_company, field.get_attribute('maxlength'))
             if answer is not None:
                 answer_source = f'AI generated ({ai_model})'
+                answer_cache[cache_key] = answer
         if registry is not None and required and answer is None:
             registry.record_missing(label or 'Unlabelled required field')
             raise CannotCompleteApplication(f'No verified answer for required question: {label or "unlabelled field"}.')
@@ -640,12 +654,6 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 matches = [o for o in options if str(answer) in o.text]
                 if len(matches) == 1: match = matches[0]
             if not match:
-                fallback_options = [o for o in options if o.text.strip().casefold() not in
-                                    ('select an option', 'select', 'choose an option')]
-                if required and fallback_options:
-                    match = fallback_options[0]
-                    log(f'Using first available option as best-effort fallback for: {label}.')
-            if not match:
                 if required or has_value:
                     if registry is not None: registry.record_missing(label or 'Unlabelled required field')
                     raise CannotCompleteApplication(f'No unambiguous option for required question: {label}.')
@@ -667,6 +675,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
         log(f'Filled {"an AI drafted" if answer_source.startswith("AI") else "a saved"} answer for: {label}')
 
     # Handle radio groups and AI-selected checkbox groups separately from scalar fields.
+    grouped_checkbox_ids = set()
     for group in modal.find_elements(By.XPATH, './/fieldset|.//*[@role="radiogroup"]'):
         options = group.find_elements(By.XPATH, './/input[@type="radio" or @type="checkbox"]')
         if not options: continue
@@ -683,10 +692,12 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
         selected = [option for option in options if option.is_selected()]
         if 'resume' in label.lower(): continue  # verified separately by _ensure_resume
         is_checkbox_group = any(option.get_attribute('type') == 'checkbox' for option in options)
+        if is_checkbox_group:
+            grouped_checkbox_ids.update(option.get_attribute('id') for option in options if option.get_attribute('id'))
         option_labels = [_radio_option_text(group, option, label) for option in options]
         if registry is not None and registry.unverified(label) and (required or selected):
-            can_infer_choice = (required and (is_checkbox_group or
-                                _ai_answer_allowed(label, 'single_select', option_labels)))
+            can_infer_choice = (required and not is_checkbox_group and
+                                _ai_answer_allowed(label, 'single_select', option_labels))
             if not can_infer_choice:
                 registry.record_missing(label)
                 raise CannotCompleteApplication('Unverified application question: ' + label)
@@ -695,9 +706,14 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 instruction_lines = [line.strip() for line in lines
                                      if line.strip().endswith('*') and line.strip() != label]
                 selection_question = ' '.join([label, *instruction_lines]).strip()
-                chosen = _generate_application_selections(
-                    ai_client, selection_question, option_labels, candidate_context,
-                    job_description, about_company)
+                verified_choice = registry.answer(selection_question, job_id=job_id, company=company) if registry is not None else None
+                if not verified_choice:
+                    if registry is not None: registry.record_missing(label)
+                    raise CannotCompleteApplication('A required checkbox group needs a verified answer: ' + label[:180])
+                chosen = [item.strip() for item in str(verified_choice).split(',') if item.strip()]
+                if not chosen or any(not any(item.casefold() == option.casefold() for option in option_labels) for item in chosen):
+                    if registry is not None: registry.record_missing(label)
+                    raise CannotCompleteApplication('No unambiguous verified options for: ' + label[:180])
                 chosen_set = {item.casefold() for item in chosen}
                 for option, option_label in zip(options, option_labels):
                     if option.is_selected() == (option_label.casefold() in chosen_set):
@@ -710,15 +726,29 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                                    if option.is_selected()]
                 if not selected_labels:
                     raise CannotCompleteApplication('Could not select any options for: ' + label[:180])
-                if audit: audit.field(label, ', '.join(selected_labels), f'AI generated ({ai_model})', page)
+                if audit: audit.field(label, ', '.join(selected_labels), 'verified candidate data', page)
             continue
-        answer = registry.answer(label, job_id=job_id) if registry is not None and required else None
+        if registry is not None and required:
+            try:
+                answer = registry.answer(label, job_id=job_id, company=company)
+            except TypeError:
+                try:
+                    answer = registry.answer(label, job_id=job_id)
+                except TypeError:
+                    answer = registry.answer(label)
+        else:
+            answer = None
+        cache_key = _application_answer_cache_key(label, option_labels)
+        if answer is None:
+            answer = answer_cache.get(cache_key)
         answer_source = 'verified candidate data'
-        if required and not selected and (answer is None or not str(answer).strip()) and not is_checkbox_group:
+        if required and (answer is None or not str(answer).strip()) and not is_checkbox_group:
             answer = _generate_application_answer(
                 ai_client, label, 'single_select', option_labels, candidate_context,
                 job_description, about_company)
-            if answer is not None: answer_source = f'AI generated ({ai_model})'
+            if answer is not None:
+                answer_source = f'AI generated ({ai_model})'
+                answer_cache[cache_key] = answer
         if required and answer is None and registry is not None:
             registry.record_missing(label)
             raise CannotCompleteApplication('No verified answer for required choice: ' + label[:180])
@@ -742,18 +772,17 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
             if answer is None:
                 raise CannotCompleteApplication('A required choice needs an answer: ' + label[:180])
     for field in modal.find_elements(By.XPATH, './/input[@required and @type="checkbox"]'):
+        field_id = field.get_attribute('id') if hasattr(field, 'get_attribute') else None
+        if field_id in grouped_checkbox_ids:
+            continue
+        label = _field_label(modal, field) or 'Required checkbox or choice'
         if not field.is_selected():
-            label = _field_label(modal, field) or 'Required checkbox or choice'
-            answer = registry.answer(label) if registry is not None else None
-            selected_answer = 'Yes'
-            answer_source = ('AI estimate' if str(answer or '').strip().casefold() == 'yes'
-                             else 'completion fallback')
-            field_id = field.get_attribute('id')
-            labels = [x for x in modal.find_elements(By.TAG_NAME, 'label') if x.get_attribute('for') == field_id] if field_id else []
-            _click(driver, labels[0] if labels else field)
-            if not field.is_selected():
-                raise CannotCompleteApplication('Could not verify the selected checkbox: ' + label)
-            if audit: audit.field(label, selected_answer, answer_source, page)
+            if registry is not None: registry.record_missing(label)
+            raise CannotCompleteApplication('A required checkbox needs your explicit review: ' + label)
+        answer = registry.answer(label, job_id=job_id, company=company) if registry is not None else None
+        if str(answer or '').strip().casefold() not in {'yes', 'true', 'agree', 'accepted'}:
+            if registry is not None: registry.record_missing(label)
+            raise CannotCompleteApplication('The selected required checkbox has no verified affirmative answer: ' + label)
     required_radios = modal.find_elements(By.XPATH, './/input[@required and @type="radio"]')
     all_radios = modal.find_elements(By.XPATH, './/input[@type="radio"]') if required_radios else []
     for field in required_radios:
@@ -795,16 +824,9 @@ def _repair_invalid_fields(driver, modal, ai_client, candidate_context,
                 ai_client, question, kind, options, candidate_context,
                 job_description, about_company, field.get_attribute('maxlength'))
             if kind == 'checkbox':
-                if not field.is_selected():
-                    field.click()
-                repaired += 1
+                continue
             elif field.tag_name == 'select':
                 match = _matching_choice(Select(field).options, answer, 'experience' in label.lower())
-                if match is None:
-                    fallback_options = [option for option in Select(field).options
-                                        if option.text.strip().casefold() not in
-                                        ('select an option', 'select', 'choose an option')]
-                    match = fallback_options[0] if fallback_options else None
                 if match is not None:
                     Select(field).select_by_visible_text(match.text)
                     repaired += 1
@@ -964,7 +986,37 @@ def _apply_current_job(driver, profile, questions, email, resume_path, dry_run, 
     _raise_if_limited(driver, 'after_easy_apply_click')
     try:
         _raise_if_limited(driver, 'opening_modal')
-        WebDriverWait(driver, 12).until(lambda d: _modal(d) and _progress(_modal(d)))
+        def application_ready(d):
+            # Normal Easy Apply form
+            modal = _modal(d)
+            if modal and _progress(modal):
+                return True
+            # LinkedIn job search safety reminder
+            dialogs = d.find_elements(
+                By.CSS_SELECTOR, 'dialog[open], [role="dialog"]'
+            )
+            for dialog in dialogs:
+                if not dialog.is_displayed():
+                    continue
+                if 'job search safety reminder' not in dialog.text.casefold():
+                    continue
+                buttons = [
+                    b for b in dialog.find_elements(By.TAG_NAME, 'button')
+                    if b.is_displayed()
+                    and b.is_enabled()
+                    and b.text.strip().casefold() == 'continue applying'
+                ]
+                if len(buttons) == 1:
+                    _click(d, buttons[0])
+                    log('Dismissed LinkedIn job search safety reminder.')
+                    return False
+            return False
+        WebDriverWait(
+            driver,
+            15,
+            ignored_exceptions=(StaleElementReferenceException,)
+        ).until(application_ready)
+        application_answer_cache = {}
         for _ in range(15):
             _raise_if_limited(driver, 'application_form')
             _pause_checkpoint(pause_controller, validate=lambda: bool(_modal(driver)))
@@ -982,8 +1034,10 @@ def _apply_current_job(driver, profile, questions, email, resume_path, dry_run, 
                     modal = _modal(driver)
                     if not modal:
                         raise CannotCompleteApplication('The application dialog closed unexpectedly.')
+                    answer_cache = application_answer_cache
                     _fill_fields(driver, modal, profile, questions, email, log, registry, audit, page, job_id,
-                                 ai_client, candidate_context, job_description, about_company, ai_model)
+                                 ai_client, candidate_context, job_description, about_company, ai_model,
+                                 company=company, answer_cache=answer_cache)
                     modal = _modal(driver)
                     _verify_name_fields(modal, registry, audit, page)
                     break
@@ -1174,6 +1228,25 @@ def _card_job_id(card):
     return None
 
 
+def _trace_job_iteration(log, message):
+    """Temporary positional-list diagnostic; enable with JOB_ITERATION_TRACE=1."""
+    if os.environ.get('JOB_ITERATION_TRACE', '').strip().lower() in {'1', 'true', 'yes', 'on'}:
+        log('[JOB_ITERATION_TRACE] ' + message)
+
+
+def _visible_card_ids(cards):
+    """Return visible result-card IDs with their positions in the current DOM list."""
+    result = []
+    for position, card in enumerate(cards):
+        try:
+            is_displayed = getattr(card, 'is_displayed', None)
+            if is_displayed is None or is_displayed():
+                result.append((position, _card_job_id(card) or '?'))
+        except StaleElementReferenceException:
+            result.append((position, '<stale>'))
+    return result
+
+
 def _required_years(description):
     pattern = r'\b(\d{1,2})\s*(?:\+|[-–]\s*\d+)?\s*years?\s*(?:of\s+)?(?:[\w-]+\s+){0,4}experience\b'
     return [int(n) for n in re.findall(pattern, description, re.I) if int(n) <= 12]
@@ -1217,6 +1290,7 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
                applied_ids, bad_words, company_bad_words, company_good_words, max_years,
                find_bad_word, on_submitted, log, registry=None, max_pages=5, require_js_or_ts=False,
                attempted_ids=None, submitted_roles=None, profile_matches=False,
+               attempted_reasons=None,
                classifier_enabled=False, classifier_client=None, candidate_context='',
                classifier_model='qwen3-vl:4b-instruct', pause_before_submit=False,
                confirm_before_submit=None, pause_controller=None, diagnostics=None):
@@ -1224,6 +1298,7 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
     submitted = skipped = reviewed = 0
     if attempted_ids is None: attempted_ids = set()
     if submitted_roles is None: submitted_roles = set()
+    if attempted_reasons is None: attempted_reasons = {}
 
     def record_rejection(title, company, location, source, reason, job_id=None, description=''):
         nonlocal skipped
@@ -1235,7 +1310,11 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
              'missing_skills': [], 'hard_blockers': []},
             decision_source=source, model_decision=None, final_decision='SKIP',
             override_reason='', model_called=False, job_description=description)
-        log(f'Skipping {title}: {reason}')
+        if source in ('ALREADY_SUBMITTED', 'PREVIOUS_ATTEMPT', 'SUBMISSION_UNCERTAIN', 'IN_PROGRESS', 'REVIEW'):
+            log(f'{source}: Skipping {title}: {reason}')
+        else:
+            log(f'Skipping {title}: {reason}')
+        _trace_job_iteration(log, f'FILTER job={job_id or stable_id} source={source} reason={reason}')
         skipped += 1
         if diagnostics:
             diagnostics.increment('jobs_skipped')
@@ -1245,24 +1324,55 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
         diagnostics.begin_stage('search')
     WebDriverWait(driver, 15).until(lambda d: d.find_elements(By.XPATH, CARDS_XPATH))
     seen = set()
+    previous_trace = None
     for page in range(1, max_pages + 1):
         for index in range(100):
             if submitted >= limit: break
             _pause_checkpoint(pause_controller, validate=lambda: bool(driver.current_url))
             try:
                 cards = WebDriverWait(driver, 10).until(lambda d: d.find_elements(By.XPATH, CARDS_XPATH))
-                if index >= len(cards): break
+                current_visible_ids = _visible_card_ids(cards)
+                if previous_trace is not None:
+                    _trace_job_iteration(
+                        log, f"AFTER page={page} processed_index={previous_trace['index']} "
+                        f"processed_job={previous_trace['job_id']} visible={current_visible_ids}"
+                    )
+                if index >= len(cards):
+                    _trace_job_iteration(log, f'END page={page} next_index={index} visible={current_visible_ids}')
+                    break
                 card = cards[index]
+                _trace_job_iteration(
+                    log, f'BEFORE page={page} visible={current_visible_ids}; '
+                    f'NEXT index={index} job={_card_job_id(card) or "?"} reason=positional index'
+                )
                 title, company, location, lines = _card_details(card)
                 hinted_id = _card_job_id(card)
                 identity = hinted_id or (title.casefold(), company.casefold(), location.casefold())
-                if not title or identity in seen: continue
+                previous_trace = {'index': index, 'job_id': hinted_id or '?'}
+                if not title:
+                    _trace_job_iteration(log, f'FILTER index={index} job={hinted_id or "?"} source=INVALID_CARD reason=missing title')
+                    continue
+                if identity in seen:
+                    _trace_job_iteration(log, f'FILTER index={index} job={hinted_id or "?"} source=DEDUPLICATION reason=identity already seen')
+                    continue
                 seen.add(identity)
                 if diagnostics:
                     diagnostics.increment('jobs_inspected')
-                if hinted_id in applied_ids or hinted_id in attempted_ids or any(line.strip().lower() == 'applied' for line in lines):
-                    record_rejection(title, company, location, 'ALREADY_APPLIED',
-                                     'This job is already applied to or already attempted.', hinted_id)
+                if hinted_id in applied_ids or any(line.strip().lower() == 'applied' for line in lines):
+                    record_rejection(title, company, location, 'ALREADY_SUBMITTED',
+                                     'A prior application is confirmed as submitted.', hinted_id)
+                    continue
+                if hinted_id in attempted_ids:
+                    block_source = attempted_reasons.get(hinted_id, 'PREVIOUS_ATTEMPT')
+                    if block_source not in ('ALREADY_SUBMITTED', 'SUBMISSION_UNCERTAIN', 'IN_PROGRESS', 'REVIEW'):
+                        block_source = 'PREVIOUS_ATTEMPT'
+                    block_message = {
+                        'ALREADY_SUBMITTED': 'A prior application is confirmed as submitted.',
+                        'SUBMISSION_UNCERTAIN': 'A prior submit may have reached LinkedIn; verify Applied jobs before retrying.',
+                        'IN_PROGRESS': 'A previous application attempt is still marked in progress.',
+                        'REVIEW': 'A previous attempt is held for manual review.',
+                    }.get(block_source, 'A prior attempt is blocked by the retry policy.')
+                    record_rejection(title, company, location, block_source, block_message, hinted_id)
                     continue
                 if profile_matches and find_bad_word(title, ['marketing', 'sales', 'recruiter', 'account manager', 'business development', 'talent acquisition']):
                     record_rejection(title, company, location, 'ROLE_FILTER',
@@ -1291,9 +1401,23 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
                         lambda d: _resolved_selected_job_id(d, hinted_id, previous_job_id, was_selected))
                 except TimeoutException as error:
                     raise CannotCompleteApplication(f'Could not verify the selected job details for {title}.') from error
-                if job_id in applied_ids or job_id in attempted_ids:
-                    record_rejection(title, company, location, 'ALREADY_APPLIED',
-                                     'This job is already applied to or already attempted.', job_id)
+                previous_trace = {'index': index, 'job_id': job_id}
+                _trace_job_iteration(log, f'SELECTED index={index} hinted_job={hinted_id or "?"} actual_job={job_id}')
+                if job_id in applied_ids:
+                    record_rejection(title, company, location, 'ALREADY_SUBMITTED',
+                                     'A prior application is confirmed as submitted.', job_id)
+                    continue
+                if job_id in attempted_ids:
+                    block_source = attempted_reasons.get(job_id, 'PREVIOUS_ATTEMPT')
+                    if block_source not in ('ALREADY_SUBMITTED', 'SUBMISSION_UNCERTAIN', 'IN_PROGRESS', 'REVIEW'):
+                        block_source = 'PREVIOUS_ATTEMPT'
+                    block_message = {
+                        'ALREADY_SUBMITTED': 'A prior application is confirmed as submitted.',
+                        'SUBMISSION_UNCERTAIN': 'A prior submit may have reached LinkedIn; verify Applied jobs before retrying.',
+                        'IN_PROGRESS': 'A previous application attempt is still marked in progress.',
+                        'REVIEW': 'A previous attempt is held for manual review.',
+                    }.get(block_source, 'A prior attempt is blocked by the retry policy.')
+                    record_rejection(title, company, location, block_source, block_message, job_id)
                     continue
                 try:
                     heading = WebDriverWait(driver, 10).until(lambda d: next(
@@ -1368,6 +1492,7 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
                         log(f'Decision override: {model_decision} → {final_decision}: {override_reason}')
                     if decision != 'APPLY':
                         log(f'Skipping {title}: classifier returned {decision}')
+                        _trace_job_iteration(log, f'FILTER job={job_id} source=SUITABILITY_CLASSIFIER decision={decision} reason={reason}')
                         skipped += 1
                         if diagnostics: diagnostics.increment('jobs_skipped')
                         continue

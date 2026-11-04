@@ -11,32 +11,134 @@ from pathlib import Path
 AUDIT_PATH = Path(__file__).resolve().parent.parent / 'application_field_audit.json'
 
 
-def previously_attempted_ids(path=AUDIT_PATH, registry=None):
-    """Block repeats, except a skipped form whose missing answer is now verified."""
+def _env_limit(name, default):
+    try:
+        return max(0, int(os.environ.get(name, default)))
+    except (TypeError, ValueError):
+        return default
+
+
+MAX_ERROR_ATTEMPTS = _env_limit('APPLICATION_AUDIT_MAX_ERROR_ATTEMPTS', 3)
+MAX_ELIGIBLE_SKIP_ATTEMPTS = _env_limit('APPLICATION_AUDIT_MAX_ELIGIBLE_SKIP_ATTEMPTS', 3)
+STALE_IN_PROGRESS_SECONDS = _env_limit('APPLICATION_AUDIT_STALE_IN_PROGRESS_SECONDS', 6 * 60 * 60)
+
+_MISSING_ANSWER_PREFIXES = (
+    'No verified answer for required question:', 'Unverified application question:',
+    'No verified answer for required choice:', 'No saved answer for required question:',
+)
+
+
+def _parse_time(value):
+    try:
+        parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def _missing_answer_question(reason):
+    reason = str(reason or '')
+    prefix = next((item for item in _MISSING_ANSWER_PREFIXES if reason.startswith(item)), None)
+    if not prefix:
+        return None
+    question = reason[len(prefix):].removesuffix(' Draft saved on LinkedIn.').strip()
+    return question.rstrip('.')
+
+
+def previous_attempt_reasons(path=AUDIT_PATH, registry=None, *, max_error_attempts=None,
+                             max_eligible_skip_attempts=None, stale_in_progress_seconds=None,
+                             now=None):
+    """Return the latest blocking status per job, evaluating status after latest selection.
+
+    ``submitting`` and ``uncertain`` always require manual verification. A stale
+    ``in_progress`` record is safe to retry because the submit path persists
+    ``submitting`` before clicking LinkedIn's Submit button.
+    """
+    max_error_attempts = MAX_ERROR_ATTEMPTS if max_error_attempts is None else max(0, int(max_error_attempts))
+    max_eligible_skip_attempts = (MAX_ELIGIBLE_SKIP_ATTEMPTS if max_eligible_skip_attempts is None
+                                  else max(0, int(max_eligible_skip_attempts)))
+    stale_in_progress_seconds = (STALE_IN_PROGRESS_SECONDS if stale_in_progress_seconds is None
+                                 else max(0, int(stale_in_progress_seconds)))
+    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     try:
         data = json.loads(Path(path).read_text(encoding='utf-8'))
     except FileNotFoundError:
-        return set()
+        return {}
     if data.get('version') != 1 or not isinstance(data.get('applications'), list):
         raise ValueError('Invalid application audit file; cannot safely check previous attempts.')
-    latest = {}
-    for row in data['applications']:
-        if row.get('job_id') and row.get('status') != 'review':
-            latest[str(row['job_id'])] = row
-    blocked = set()
-    prefixes = ('No verified answer for required question:', 'Unverified application question:',
-                'No verified answer for required choice:', 'No saved answer for required question:')
-    for job_id, row in latest.items():
-        reason = str(row.get('result') or '')
-        if (job_id == '4485704953' and row.get('status') == 'skip' and registry is not None and
-                registry.value('onsite_india') == 'Yes' and registry.value('commute_pluswealth_gurugram') == 'Yes'):
+
+    rows_by_job = {}
+    for position, row in enumerate(data['applications']):
+        if not isinstance(row, dict) or not row.get('job_id'):
             continue
-        prefix = next((p for p in prefixes if reason.startswith(p)), None)
-        if row.get('status') == 'skip' and prefix and registry is not None:
-            question = reason[len(prefix):].removesuffix(' Draft saved on LinkedIn.').strip().rstrip('.')
-            if registry.answer(question) is not None: continue
-        blocked.add(job_id)
+        job_id = str(row['job_id'])
+        rows_by_job.setdefault(job_id, []).append((position, row))
+
+    blocked = {}
+    for job_id, entries in rows_by_job.items():
+        # Select the newest attempt first, including review records. JSON order
+        # breaks ties and supports older records without timestamps.
+        _, latest = max(entries, key=lambda item: (_parse_time(item[1].get('started_at')) or
+                                                   datetime.min.replace(tzinfo=timezone.utc), item[0]))
+        status = str(latest.get('status') or '').casefold()
+        reason = str(latest.get('result') or '')
+        history = [row for _, row in entries]
+        historical_statuses = {str(row.get('status') or '').casefold() for row in history}
+
+        # These states are irreversible without explicit verification: a later
+        # failed/review record must never erase evidence of a sent or possible send.
+        if 'submitted' in historical_statuses:
+            blocked[job_id] = 'ALREADY_SUBMITTED'
+        elif historical_statuses.intersection(('submitting', 'uncertain')):
+            blocked[job_id] = 'SUBMISSION_UNCERTAIN'
+        elif status == 'in_progress':
+            started = _parse_time(latest.get('started_at'))
+            if started is None or (now - started).total_seconds() < stale_in_progress_seconds:
+                blocked[job_id] = 'IN_PROGRESS'
+            # A stale in_progress row never reached the persisted pre-click
+            # submitting transition, so it can be retried.
+        elif status == 'error':
+            errors = sum(str(row.get('status', '')).casefold() == 'error' for row in history)
+            if errors >= max_error_attempts:
+                blocked[job_id] = 'PREVIOUS_ATTEMPT'
+        elif status == 'skip':
+            question = _missing_answer_question(reason)
+            if question is None:
+                blocked[job_id] = 'PREVIOUS_ATTEMPT'
+                continue
+            has_answer = False
+            if registry is not None:
+                try:
+                    has_answer = registry.answer(question, company=latest.get('company')) not in (None, '')
+                except TypeError:
+                    try:
+                        has_answer = registry.answer(question, job_id=job_id) not in (None, '')
+                    except TypeError:
+                        has_answer = registry.answer(question) not in (None, '')
+            eligible_skips = sum(
+                str(row.get('status', '')).casefold() == 'skip' and
+                _missing_answer_question(row.get('result')) is not None
+                for row in history
+            )
+            if not has_answer or eligible_skips >= max_eligible_skip_attempts:
+                blocked[job_id] = 'PREVIOUS_ATTEMPT'
+        elif status == 'not_submitted':
+            # LinkedIn's explicit limit response confirmed that no application
+            # was sent; a later run may retry after the limit clears.
+            continue
+        elif status == 'review':
+            blocked[job_id] = 'REVIEW'
+        else:
+            # Keep unknown states conservative until their semantics are known.
+            blocked[job_id] = 'PREVIOUS_ATTEMPT'
     return blocked
+
+
+def previously_attempted_ids(path=AUDIT_PATH, registry=None, **policy):
+    """Compatibility helper returning only IDs blocked by current audit policy."""
+    return set(previous_attempt_reasons(path, registry, **policy))
 
 
 def role_key(company, title):
@@ -62,7 +164,7 @@ def previously_submitted_roles(history_path, audit_path=AUDIT_PATH):
     if data.get('version') != 1 or not isinstance(data.get('applications'), list):
         raise ValueError('Invalid application audit file; cannot safely check previous submissions.')
     for row in data['applications']:
-        if row.get('status') in ('submitted', 'submitting', 'uncertain'):
+        if row.get('status') == 'submitted':
             key = role_key(row.get('company', ''), row.get('job_title', ''))
             if key: roles.add(key)
     return roles

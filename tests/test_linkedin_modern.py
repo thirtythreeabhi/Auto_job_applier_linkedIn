@@ -140,7 +140,7 @@ def test_pause_during_easy_apply_preserves_modal_and_resumes(monkeypatch, tmp_pa
     monkeypatch.setattr(modern, '_modal', lambda _: modal if modal.open else None)
     monkeypatch.setattr(modern, '_progress', lambda _: modal.page)
     monkeypatch.setattr(modern, '_verify_work_experience', lambda *args: None)
-    monkeypatch.setattr(modern, '_fill_fields', lambda *args: None)
+    monkeypatch.setattr(modern, '_fill_fields', lambda *args, **kwargs: None)
     monkeypatch.setattr(modern, '_verify_name_fields', lambda *args: None)
     monkeypatch.setattr(modern, '_verify_review_name', lambda *args: None)
     monkeypatch.setattr(modern, '_clear_optional_company_follow', lambda *args: None)
@@ -657,11 +657,78 @@ def test_linkedin_radio_group_without_required_attribute_uses_question_and_optio
             return []
     class Registry:
         def unverified(self, label): return False
-        def answer(self, label, job_id=None): return 'Yes' if job_id == '4485704953' else None
+        def answer(self, label, job_id=None, company=None): return 'Yes' if company == 'Pluswealth' else None
         def classify(self, label): return None
     monkeypatch.setattr(modern, '_click', lambda driver, option: setattr(option,'selected',True))
-    modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None, Registry(), job_id='4485704953')
+    modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None, Registry(), company='Pluswealth')
     assert yes.selected and not no.selected
+
+
+def test_application_answer_cache_key_normalizes_question_and_keeps_options_distinct():
+    from modules.linkedin_modern import _application_answer_cache_key
+    assert _application_answer_cache_key('  Work  location? ', ['Remote', 'Hybrid']) == \
+           _application_answer_cache_key('work location?', ['Remote', 'Hybrid'])
+    assert _application_answer_cache_key('Work location?', ['Remote']) != \
+           _application_answer_cache_key('Work location?', ['Hybrid'])
+
+
+def test_rerendered_radio_reuses_cached_answer_and_corrects_mismatch(monkeypatch):
+    from modules import linkedin_modern as modern
+    question = 'Are you comfortable commuting to this job location?'
+    radios = []
+    class Radio:
+        tag_name = 'input'
+        def __init__(self, value, selected=False): self.value, self.selected = value, selected
+        def get_attribute(self, key):
+            return {'type': 'radio', 'aria-label': question, 'id': self.value, 'name': 'commute'}.get(key)
+        def is_selected(self): return self.selected
+        def find_element(self, by, selector):
+            class Parent: pass
+            parent = Parent(); parent.text = self.value; return parent
+    class Group:
+        text = 'Yes\nNo'
+        def get_attribute(self, key): return None
+        def find_element(self, *args):
+            class Parent: text = question + '*\nYes\nNo'
+            return Parent()
+        def find_elements(self, by, selector): return radios if 'input[' in selector else []
+    group = Group()
+    class Modal:
+        def find_elements(self, by, selector):
+            if selector == './/input|.//select|.//textarea': return radios
+            if selector == './/fieldset|.//*[@role="radiogroup"]': return [group]
+            return []
+    calls = []
+    monkeypatch.setattr(modern, '_ai_answer_allowed', lambda *args: True)
+    monkeypatch.setattr(modern, '_generate_application_answer', lambda *args: calls.append(1) or 'Yes')
+    def click_radio(driver, radio):
+        for item in radios: item.selected = item is radio
+    monkeypatch.setattr(modern, '_click', click_radio)
+    cache = {}
+    radios[:] = [Radio('Yes'), Radio('No')]
+    modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None, answer_cache=cache)
+    assert radios[0].selected
+    radios[:] = [Radio('Yes'), Radio('No', selected=True)]
+    modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None, answer_cache=cache)
+    assert radios[0].selected and not radios[1].selected
+    assert len(calls) == 1
+
+
+def test_required_nonconsent_checkbox_is_not_automatically_selected(monkeypatch):
+    import pytest
+    from modules import linkedin_modern as modern
+    class Field:
+        selected = False
+        def is_selected(self): return self.selected
+        def get_attribute(self, key): return {'type': 'checkbox', 'id': 'relocate', 'required': 'true'}.get(key)
+    field = Field()
+    class Modal:
+        def find_elements(self, by, query):
+            return [field] if query == './/input[@required and @type="checkbox"]' else []
+    monkeypatch.setattr(modern, '_field_label', lambda modal, item: 'I can relocate')
+    monkeypatch.setattr(modern, '_click', lambda *args: pytest.fail('Required checkbox must not be auto-selected'))
+    with pytest.raises(modern.CannotCompleteApplication, match='explicit review'):
+        modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None)
 
 
 def test_optional_company_follow_is_cleared_before_submission(monkeypatch):

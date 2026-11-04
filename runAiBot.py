@@ -67,6 +67,25 @@ from typing import Literal
 pyautogui.FAILSAFE = False
 
 
+def _trace_job_iteration(message: str) -> None:
+    """Temporary positional-list diagnostic; enable with JOB_ITERATION_TRACE=1."""
+    if os.environ.get('JOB_ITERATION_TRACE', '').strip().lower() in {'1', 'true', 'yes', 'on'}:
+        print_lg('[JOB_ITERATION_TRACE] ' + message)
+
+
+def _legacy_visible_job_ids(driver, cards=None) -> list[tuple[int, str]]:
+    """Return current visible legacy result IDs with their live DOM positions."""
+    result = []
+    cards = cards if cards is not None else driver.find_elements(By.XPATH, "//li[@data-occludable-job-id]")
+    for position, card in enumerate(cards):
+        try:
+            if card.is_displayed():
+                result.append((position, card.get_dom_attribute('data-occludable-job-id') or '?'))
+        except Exception:
+            result.append((position, '<stale>'))
+    return result
+
+
 #< Global Variables and logics
 
 if run_in_background == True:
@@ -1281,10 +1300,11 @@ def questions_are_stalled(previous_blocked: set | None) -> bool:
 
 # Function to apply to jobs
 def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=None) -> None:
-    from modules.application_audit import previously_attempted_ids, previously_submitted_roles
+    from modules.application_audit import previous_attempt_reasons, previously_submitted_roles
     applied_jobs = get_applied_job_ids()
     starting_registry = CandidateRegistry() if REGISTRY_PATH.exists() else None
-    attempted_jobs = previously_attempted_ids(registry=starting_registry)
+    attempted_reasons = previous_attempt_reasons(registry=starting_registry)
+    attempted_jobs = set(attempted_reasons)
     submitted_roles = previously_submitted_roles(file_name)
     rejected_jobs = set()
     blacklisted_companies = set()
@@ -1358,6 +1378,7 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                     find_bad_word=find_bad_word, on_submitted=record_modern, log=print_lg, registry=registry,
                     max_pages=100 if profile_search else (20 if broad_language_search else 10), require_js_or_ts=broad_language_search,
                     attempted_ids=attempted_jobs, submitted_roles=submitted_roles, profile_matches=profile_search,
+                    attempted_reasons=attempted_reasons,
                     classifier_enabled=local_ai_enabled, classifier_client=localAIClient,
                     candidate_context=candidate_context_for_classifier,
                     classifier_model=local_ai_model,
@@ -1395,20 +1416,49 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                 # Find all job listings in current page
                 buffer(3)
                 job_index = 0
+                previous_trace = None
                 while True:
                     # LinkedIn virtualises this list: off-screen <li>s aren't in the DOM yet and
                     # rendered ones go stale as we scroll, so a single snapshot only ever gets
                     # one screenful. Re-query each time instead of holding that snapshot.
                     job_listings = driver.find_elements(By.XPATH, "//li[@data-occludable-job-id]")
-                    if job_index >= len(job_listings): break
+                    current_visible_ids = _legacy_visible_job_ids(driver, job_listings)
+                    if previous_trace is not None:
+                        _trace_job_iteration(
+                            f"AFTER page={current_page} processed_index={previous_trace['index']} "
+                            f"processed_job={previous_trace['job_id']} visible={current_visible_ids}"
+                        )
+                    if job_index >= len(job_listings):
+                        _trace_job_iteration(f"END page={current_page} next_index={job_index} visible={current_visible_ids}")
+                        break
                     job = job_listings[job_index]
+                    chosen_index = job_index
                     job_index += 1
+                    chosen_hint = job.get_dom_attribute('data-occludable-job-id') or '?'
+                    _trace_job_iteration(
+                        f"BEFORE page={current_page} visible={current_visible_ids}; "
+                        f"NEXT index={chosen_index} job={chosen_hint} reason=positional job_index"
+                    )
                     if diagnostics: diagnostics.increment('jobs_inspected')
                     if keep_screen_awake: pyautogui.press('shiftright')
                     if current_count >= switch_number: break
                     print_lg("\n-@-\n")
 
                     job_id,title,company,work_location,work_style,skip = get_job_main_details(job, blacklisted_companies, rejected_jobs)
+                    current_url = driver.current_url or ''
+                    current_url_job = re.search(r'/jobs/view/(\d+)', current_url)
+                    if not current_url_job:
+                        current_url_job = re.search(r'[?&]currentJobId=(\d+)', current_url)
+                    selected_id = current_url_job.group(1) if current_url_job else 'unresolved'
+                    if skip:
+                        _trace_job_iteration(f'FILTER index={chosen_index} job={job_id or chosen_hint} source=LEGACY_CARD_FILTER reason=card was rejected before click')
+                        previous_trace = {'index': chosen_index, 'job_id': job_id or chosen_hint}
+                    else:
+                        _trace_job_iteration(
+                            f"SELECTED index={chosen_index} requested_job={job_id or chosen_hint} "
+                            f"actual_job={selected_id}"
+                        )
+                        previous_trace = {'index': chosen_index, 'job_id': selected_id}
                     if diagnostics and job_id:
                         diagnostics.set_job_url(f'https://www.linkedin.com/jobs/view/{job_id}/')
                     

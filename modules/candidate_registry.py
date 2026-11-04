@@ -160,9 +160,11 @@ class CandidateRegistry:
         if name in ('professional summary', 'profile summary', 'summary'): return 'profile_summary'
         return None
 
-    def answer(self, question, job_id=None):
-        if (str(job_id) == '4485704953' and
-                normalize_question(question) == 'are you comfortable commuting to this job s location'):
+    def answer(self, question, job_id=None, company=None):
+        # This saved preference is specific to Pluswealth's Gurugram office.
+        # Match the verified company context instead of tying it to one posting ID.
+        if (normalize_question(question) == 'are you comfortable commuting to this job s location' and
+                'pluswealth' in normalize_question(company or '')):
             answer = self.value('commute_pluswealth_gurugram')
             return str(answer) if answer is not None else None
         key = self.classify(question)

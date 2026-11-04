@@ -118,12 +118,12 @@ def test_confirmed_new_skills_and_nationality_are_context_specific(tmp_path):
     assert registry.answer('How many years of work experience with Angular?') is None
 
 
-def test_commute_answer_is_limited_to_the_confirmed_job(tmp_path):
+def test_commute_answer_is_limited_to_the_confirmed_company(tmp_path):
     registry = make_registry(tmp_path)
     registry.records['commute_pluswealth_gurugram'] = {'answer':'Yes', 'verification_status':'verified'}
     question = "Are you comfortable commuting to this job's location?"
-    assert registry.answer(question, job_id='4485704953') == 'Yes'
-    assert registry.answer(question, job_id='123') is None
+    assert registry.answer(question, company='Pluswealth') == 'Yes'
+    assert registry.answer(question, company='Another employer') is None
     assert registry.answer(question) is None
 
 
