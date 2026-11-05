@@ -13,7 +13,7 @@ _LOCK = threading.Lock()
 
 
 def record_prompt(category, prompt, response='', model='', provider='', error='', *,
-                  trace_id=None, run_id=None, job_id=None, candidate_context='',
+                  trace_id=None, run_id=None, job_id=None, job_title='', company='', candidate_context='',
                   parsed_output=None, latency_ms=None, retry_info=None,
                   decision=None, application_outcome=None):
     """Store a model call in SQLite and the legacy JSONL log.
@@ -35,6 +35,8 @@ def record_prompt(category, prompt, response='', model='', provider='', error=''
     record['trace_id'] = str(safe(trace_id))
     if run_id is not None: record['run_id'] = str(safe(run_id))
     if job_id is not None: record['job_id'] = str(safe(job_id))
+    if job_title: record['job_title'] = str(safe(job_title))
+    if company: record['company'] = str(safe(company))
     try:
         with _LOCK, PROMPT_LOG_PATH.open('a', encoding='utf-8') as handle:
             handle.write(json.dumps(record, ensure_ascii=False) + '\n')
@@ -44,6 +46,7 @@ def record_prompt(category, prompt, response='', model='', provider='', error=''
         tid = trace_id
         if not tid or trace_store.get_trace(tid) is None:
             tid = trace_store.create_trace(trace_id=trace_id, run_id=run_id, job_id=job_id,
+                job_title=job_title, company=company,
                 timestamp=record['timestamp'], category=record['category'], provider=record['provider'],
                 model=record['model'], prompt=record['prompt'], candidate_context=candidate_context,
                 retry_info=retry_info)

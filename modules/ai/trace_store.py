@@ -96,6 +96,8 @@ def _initialize(conn):
             trace_id TEXT PRIMARY KEY,
             run_id TEXT,
             job_id TEXT,
+            job_title TEXT NOT NULL DEFAULT '',
+            company TEXT NOT NULL DEFAULT '',
             timestamp TEXT NOT NULL,
             category TEXT NOT NULL DEFAULT '',
             provider TEXT NOT NULL DEFAULT '',
@@ -139,6 +141,10 @@ def _initialize(conn):
     columns = {row['name'] for row in conn.execute('PRAGMA table_info(ai_traces)')}
     if 'candidate_context' not in columns:
         conn.execute("ALTER TABLE ai_traces ADD COLUMN candidate_context TEXT NOT NULL DEFAULT ''")
+    if 'job_title' not in columns:
+        conn.execute("ALTER TABLE ai_traces ADD COLUMN job_title TEXT NOT NULL DEFAULT ''")
+    if 'company' not in columns:
+        conn.execute("ALTER TABLE ai_traces ADD COLUMN company TEXT NOT NULL DEFAULT ''")
 
 
 def _decode_trace(row):
@@ -150,16 +156,16 @@ def _decode_trace(row):
 
 
 def create_trace(*, trace_id=None, run_id=None, job_id=None, timestamp=None,
-                 category='', provider='', model='', prompt='', candidate_context='', status='running',
+                 job_title='', company='', category='', provider='', model='', prompt='', candidate_context='', status='running',
                  retry_info=None):
     """Create a trace and return its ID. Values are redacted before persistence."""
     trace_id = str(trace_id or uuid.uuid4())
     now = _now()
     with _connection() as conn:
         conn.execute('''INSERT INTO ai_traces
-            (trace_id,run_id,job_id,timestamp,category,provider,model,prompt,candidate_context,status,retry_info_json,updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
-            (trace_id, _redact(run_id), _redact(job_id), timestamp or now,
+            (trace_id,run_id,job_id,job_title,company,timestamp,category,provider,model,prompt,candidate_context,status,retry_info_json,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+            (trace_id, _redact(run_id), _redact(job_id), str(_redact(job_title)), str(_redact(company)), timestamp or now,
              str(_redact(category)), str(_redact(provider)), str(_redact(model)),
              str(_redact(prompt)), str(_redact(candidate_context)), str(status), _json(retry_info) if retry_info is not None else None, now))
     return trace_id
@@ -256,6 +262,9 @@ def list_traces(*, filters=None, limit=50, offset=0, **kwargs):
     for key in ('category', 'model', 'provider', 'status', 'decision', 'run_id', 'job_id'):
         val = filters.get(key)
         if val:
+            if key == 'decision' and val == '__none__':
+                where.append('(decision IS NULL OR decision=\'\')')
+                continue
             where.append(f'{key}=?')
             values.append(str(_redact(val)))
     if filters.get('since'):
@@ -263,16 +272,22 @@ def list_traces(*, filters=None, limit=50, offset=0, **kwargs):
     if filters.get('until'):
         where.append('timestamp<=?'); values.append(str(filters['until']))
     if filters.get('query'):
-        where.append('(job_id LIKE ? OR run_id LIKE ? OR category LIKE ? OR prompt LIKE ? OR raw_response LIKE ? OR decision LIKE ?)')
+        where.append('(job_id LIKE ? OR run_id LIKE ? OR job_title LIKE ? OR company LIKE ? OR category LIKE ? OR prompt LIKE ? OR candidate_context LIKE ? OR raw_response LIKE ? OR decision LIKE ?)')
         needle = '%' + str(_redact(filters['query'])) + '%'
-        values.extend([needle] * 6)
+        values.extend([needle] * 9)
     clause = ' WHERE ' + ' AND '.join(where) if where else ''
     with _connection() as conn:
         total = conn.execute('SELECT COUNT(*) FROM ai_traces' + clause, values).fetchone()[0]
-        rows = conn.execute('''SELECT trace_id,run_id,job_id,timestamp,category,provider,model,status,
-            latency_ms,error,decision,application_outcome FROM ai_traces''' + clause +
+        rows = conn.execute('''SELECT trace_id,run_id,job_id,job_title,company,timestamp,category,provider,model,status,
+            latency_ms,error,retry_info_json,decision,application_outcome FROM ai_traces''' + clause +
             ' ORDER BY timestamp DESC, trace_id DESC LIMIT ? OFFSET ?', (*values, limit, offset)).fetchall()
-    return {'items': [dict(row) for row in rows], 'total': total, 'limit': limit, 'offset': offset}
+        items = []
+        for row in rows:
+            item = dict(row)
+            raw_retry = item.pop('retry_info_json', None)
+            item['retry_info'] = json.loads(raw_retry) if raw_retry else None
+            items.append(item)
+        return {'items': items, 'total': total, 'limit': limit, 'offset': offset}
 
 
 def get_trace(trace_id):

@@ -311,17 +311,18 @@ def _ai_answer_allowed(label, kind, options=None):
 
 
 def _generate_application_answer(client, label, kind, options, candidate_context,
-                                 job_description, about_company, max_length=None):
+                                 job_description, about_company, max_length=None, trace_context=None):
     if not _ai_answer_allowed(label, kind, options):
         return None
     answer = ''
+    trace_metadata = dict(trace_context or {})
     if client:
         from modules.ai.connections import answer_question
         question_type = 'single_select' if options else kind
         answer = answer_question(
             client, label, options=options, question_type=question_type,
             job_description=job_description, about_company=about_company,
-            user_information_all=candidate_context)
+            user_information_all=candidate_context, trace_context=trace_metadata)
     answer = answer.strip()
     if not answer or answer.casefold() == 'cannot_answer':
         if options:
@@ -343,11 +344,19 @@ def _generate_application_answer(client, label, kind, options, candidate_context
         answer = str(options[0])
     if max_length and str(max_length).isdigit() and len(answer) > int(max_length):
         answer = answer[:int(max_length)]
+    trace_id = trace_metadata.get('trace_id')
+    if trace_id:
+        try:
+            from modules.ai import trace_store
+            trace_store.complete_trace(trace_id, parsed_output={'final_application_answer': answer})
+            trace_store.append_event(trace_id, 'workflow', 'final_application_answer', {'answer': answer})
+        except Exception:
+            pass
     return answer
 
 
 def _generate_application_selections(client, label, options, candidate_context,
-                                     job_description, about_company):
+                                     job_description, about_company, trace_context=None):
     """Choose matching checkbox options, honoring an explicit requested count."""
     options = [str(option).strip() for option in options if str(option).strip()]
     if not options:
@@ -360,7 +369,7 @@ def _generate_application_selections(client, label, options, candidate_context,
         answer = answer_question(
             client, label, options=options, question_type='multiple_select',
             job_description=job_description, about_company=about_company,
-            user_information_all=candidate_context)
+            user_information_all=candidate_context, trace_context=trace_context)
     selected = []
     for item in str(answer or '').splitlines():
         item = item.strip().lstrip('-•* ').strip()
@@ -534,8 +543,10 @@ def _application_answer_cache_key(label, options=()):
 
 def _fill_fields(driver, modal, profile, questions, email, log, registry=None, audit=None, page=None, job_id=None,
                  ai_client=None, candidate_context='', job_description='', about_company='', ai_model='', company=None,
-                 answer_cache=None):
+                 answer_cache=None, title=''):
     answer_cache = answer_cache if answer_cache is not None else {}
+    trace_context = {'job_id': job_id, 'job_title': title, 'company': company,
+                     'run_id': os.environ.get('BOT_RUN_ID')}
     # A LinkedIn city typeahead does not always carry HTML's required attribute.
     for field in modal.find_elements(By.CSS_SELECTOR, 'input[data-testid="typeahead-input"]'):
         if 'city' in (field.get_attribute('placeholder') or '').lower():
@@ -586,7 +597,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 ai_client,
                 label + '. Review the full applicant context, including professional work and personal projects. Create a concise but comprehensive skills list across the candidate\'s demonstrated frontend, backend, databases, AI, cloud, testing, and integration work. Expand shorthand such as JS to JavaScript. Do not reduce the answer to one keyword, and do not claim unsupported proficiency levels or years.',
                 kind, None, field_context, job_description, about_company,
-                field.get_attribute('maxlength'))
+                field.get_attribute('maxlength'), trace_context)
             if tailored_skills:
                 answer = tailored_skills
                 answer_source = f'AI tailored ({ai_model})'
@@ -598,7 +609,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 ai_client,
                 label + '. Turn the saved draft into a polished, specific answer using the applicant context. Preserve its factual meaning and add only relevant details supported by professional work or projects.',
                 kind, None, narrative_context, job_description, about_company,
-                field.get_attribute('maxlength'))
+                field.get_attribute('maxlength'), trace_context)
             if enriched:
                 answer = enriched
                 answer_source = f'AI enriched ({ai_model})'
@@ -615,7 +626,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                            if option.text.strip().casefold() not in ('select an option', 'select', 'choose an option')]
             answer = _generate_application_answer(
                 ai_client, label, kind, choices, field_context, job_description,
-                about_company, field.get_attribute('maxlength'))
+                about_company, field.get_attribute('maxlength'), trace_context)
             if answer is not None:
                 answer_source = f'AI generated ({ai_model})'
                 answer_cache[cache_key] = answer
@@ -745,7 +756,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
         if required and (answer is None or not str(answer).strip()) and not is_checkbox_group:
             answer = _generate_application_answer(
                 ai_client, label, 'single_select', option_labels, candidate_context,
-                job_description, about_company)
+                job_description, about_company, trace_context=trace_context)
             if answer is not None:
                 answer_source = f'AI generated ({ai_model})'
                 answer_cache[cache_key] = answer
@@ -794,7 +805,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
 
 
 def _repair_invalid_fields(driver, modal, ai_client, candidate_context,
-                          job_description, about_company, ai_model, log):
+                          job_description, about_company, ai_model, log, trace_context=None):
     """Use LinkedIn's validation feedback to revise rejected required fields."""
     try:
         fields = driver.execute_script(
@@ -822,7 +833,7 @@ def _repair_invalid_fields(driver, modal, ai_client, candidate_context,
                            ('select an option', 'select', 'choose an option')]
             answer = _generate_application_answer(
                 ai_client, question, kind, options, candidate_context,
-                job_description, about_company, field.get_attribute('maxlength'))
+                job_description, about_company, field.get_attribute('maxlength'), trace_context)
             if kind == 'checkbox':
                 continue
             elif field.tag_name == 'select':
@@ -1037,7 +1048,7 @@ def _apply_current_job(driver, profile, questions, email, resume_path, dry_run, 
                     answer_cache = application_answer_cache
                     _fill_fields(driver, modal, profile, questions, email, log, registry, audit, page, job_id,
                                  ai_client, candidate_context, job_description, about_company, ai_model,
-                                 company=company, answer_cache=answer_cache)
+                                 company=company, answer_cache=answer_cache, title=job_title)
                     modal = _modal(driver)
                     _verify_name_fields(modal, registry, audit, page)
                     break
@@ -1107,7 +1118,9 @@ def _apply_current_job(driver, profile, questions, email, resume_path, dry_run, 
                 messages = [line.strip() for line in text.splitlines() if 'required' in line.lower() or 'please enter' in line.lower()]
                 repaired = _repair_invalid_fields(
                     driver, m, ai_client, candidate_context, job_description,
-                    about_company, ai_model, log) if m else 0
+                    about_company, ai_model, log,
+                    trace_context={'job_id': job_id, 'job_title': job_title, 'company': company,
+                                   'run_id': os.environ.get('BOT_RUN_ID')}) if m else 0
                 if repaired and m:
                     retry_buttons = [b for b in m.find_elements(By.TAG_NAME, 'button')
                                      if b.text.strip() in ('Next', 'Review') and b.is_displayed()]
@@ -1234,6 +1247,37 @@ def _trace_job_iteration(log, message):
         log('[JOB_ITERATION_TRACE] ' + message)
 
 
+def _trace_final_classifier_decision(job_id, title, company, classifier_model, suitability,
+                                    model_decision, final_decision, override_reason='', run_id=None):
+    """Persist final classifier decisions and deterministic overrides to trace history."""
+    from modules.ai import trace_store
+    recent = trace_store.list_traces(filters={
+        'job_id': job_id, 'run_id': run_id, 'category': 'job suitability'}, limit=500)['items']
+    matching = [item for item in recent if item.get('job_title') == title
+                and item.get('company') == company]
+    for item in matching:
+        trace_store.correlate_trace(item['trace_id'], decision=final_decision)
+        trace_store.append_event(item['trace_id'], 'decision', 'final_decision', {
+            'model_decision': model_decision, 'final_decision': final_decision,
+            'override_reason': override_reason or None,
+        })
+    if not matching:
+        trace_id = trace_store.create_trace(
+            run_id=run_id, job_id=job_id, job_title=title, company=company,
+            category='job suitability', model=classifier_model, status='completed',
+            retry_info={'attempt': 0, 'mode': 'deterministic_fallback'})
+        trace_store.append_event(trace_id, 'workflow', 'classifier_fallback', {
+            'failure_kind': suitability.get('failure_kind') or 'MODEL_UNAVAILABLE',
+            'reason': suitability.get('reason'),
+        })
+        trace_store.append_event(trace_id, 'decision', 'final_decision', {
+            'model_decision': model_decision, 'final_decision': final_decision,
+            'override_reason': override_reason or None,
+        })
+        trace_store.complete_trace(trace_id, parsed_output=suitability, decision=final_decision)
+    return len(matching) or 1
+
+
 def _visible_card_ids(cards):
     """Return visible result-card IDs with their positions in the current DOM list."""
     result = []
@@ -1310,6 +1354,19 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
              'missing_skills': [], 'hard_blockers': []},
             decision_source=source, model_decision=None, final_decision='SKIP',
             override_reason='', model_called=False, job_description=description)
+        try:
+            from modules.ai import trace_store
+            trace_id = trace_store.create_trace(run_id=os.environ.get('BOT_RUN_ID'), job_id=job_id or stable_id,
+                job_title=title, company=company, category='deterministic job decision',
+                provider='', model='', status='completed',
+                retry_info={'attempt': 0, 'mode': 'deterministic'})
+            trace_store.append_event(trace_id, 'workflow', 'deterministic_filter',
+                                     {'source': source, 'reason': reason})
+            trace_store.append_event(trace_id, 'decision', 'final_decision',
+                                     {'model_decision': None, 'final_decision': 'SKIP', 'override_reason': reason})
+            trace_store.complete_trace(trace_id, decision='SKIP')
+        except Exception:
+            pass
         if source in ('ALREADY_SUBMITTED', 'PREVIOUS_ATTEMPT', 'SUBMISSION_UNCERTAIN', 'IN_PROGRESS', 'REVIEW'):
             log(f'{source}: Skipping {title}: {reason}')
         else:
@@ -1461,7 +1518,8 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
                         if verified_facts:
                             suitability_context += '\n\nVerified application facts:\n' + '\n'.join(verified_facts)
                     suitability = classify_job_suitability(
-                        classifier_client, title, company, location, description, suitability_context)
+                        classifier_client, title, company, location, description, suitability_context,
+                        job_id=job_id, run_id=os.environ.get('BOT_RUN_ID'))
                     if diagnostics:
                         diagnostics.complete_stage('model')
                         if suitability.get('failure_kind'):
@@ -1473,6 +1531,13 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
                         suitability['decision'] = 'REVIEW'
                         override_reason = 'Reported hard blocker requires human review.'
                     final_decision = suitability['decision']
+                    try:
+                        _trace_final_classifier_decision(
+                            job_id, title, company, classifier_model, suitability,
+                            model_decision, final_decision, override_reason,
+                            os.environ.get('BOT_RUN_ID'))
+                    except Exception:
+                        pass
                     record_suitability_decision(
                         job_id, title, company, location, classifier_model, suitability,
                         decision_source=('QWEN_CLASSIFIER' if model_decision else 'CLASSIFIER_FALLBACK'),
@@ -1507,6 +1572,17 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
                     job_id, registry, title, classifier_client, suitability_context,
                     description, about or '', classifier_model, pause_before_submit,
                     confirm_before_submit, pause_controller)
+                try:
+                    from modules.ai import trace_store
+                    trace_store.correlate_job(job_id, run_id=os.environ.get('BOT_RUN_ID'),
+                                              application_outcome=outcome)
+                    related = trace_store.list_traces(filters={
+                        'job_id': job_id, 'run_id': os.environ.get('BOT_RUN_ID')}, limit=500)['items']
+                    for item in related:
+                        trace_store.append_event(item['trace_id'], 'application_outcome', 'application_result',
+                                                 {'outcome': outcome})
+                except Exception:
+                    pass
                 log(f'{title}: {message}')
                 if outcome == 'submitted':
                     on_submitted(job_id, title, company, location, description, max(years) if years else 'Unknown')

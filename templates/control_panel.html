@@ -737,7 +737,7 @@
             filterControl('Model', 'traceModelFilter', 'text');
             filterControl('Decision', 'traceDecisionFilter', 'select', [['', 'Any decision'], ['APPLY', 'APPLY'], ['REVIEW', 'REVIEW'], ['SKIP', 'SKIP'], ['OTHER', 'Other / none']]);
             filterControl('Category', 'traceCategoryFilter', 'text');
-            filterControl('Status', 'traceStatusFilter', 'select', [['', 'Any status'], ['success', 'Success'], ['error', 'Error'], ['retry', 'Retried']]);
+            filterControl('Status', 'traceStatusFilter', 'select', [['', 'Any status'], ['completed', 'Completed'], ['running', 'Running'], ['error', 'Error']]);
             filterControl('From', 'traceFromFilter', 'datetime-local');
             filterControl('To', 'traceToFilter', 'datetime-local');
             var refresh = el('button', { class: 'btn secondary', type: 'button', text: 'Refresh' });
@@ -829,17 +829,16 @@
         }
 
         /*
-         * AI Traces frontend API contract (read-only):
+         * AI Traces API contract (read-only):
          * GET /api/ai-traces?limit=50&offset=0&q=&model=&decision=&category=&status=&from=&to=
-         *   -> {items:[{trace_id,run_id,job_id,job_title,company,timestamp,model,provider,
-         *      category,status,decision,final_decision,latency_ms,error,retry_count}],
-         *      total,limit,offset,has_more}. `items` may also be returned as a bare array.
-         * GET /api/ai-traces/<trace_id> -> {trace:{trace_id,run_id,job_id,job_title,company,
-         *      timestamp,model,provider,category,prompt,candidate_context,raw_response,
-         *      parsed_output,decision,final_decision,latency_ms,error,retry_count},
-         *      events:[{sequence,timestamp,type,label,tool_name,arguments,result,details}]}.
-         * Events are returned in sequence order. Workflow operations use type `workflow`; actual
-         * model tool invocations use type `tool_call`. The UI also accepts a flat trace detail.
+         *   -> {items:[{trace_id,run_id,job_id,timestamp,category,provider,model,status,
+         *      latency_ms,error,decision,application_outcome}],total,limit,offset,has_more}.
+         * The endpoint also supplies job_title/company and UI aliases final_decision/retry_count.
+         * GET /api/ai-traces/<trace_id> -> the flat get_trace object, including prompt,
+         *      candidate_context,raw_response,parsed_output,retry_info and events.
+         * Events use {event_id,sequence,timestamp,event_type,name,payload} in ascending sequence.
+         * Workflow operations use event_type `workflow`; only actual model tool invocations use
+         * `llm_tool_call`. The UI accepts the legacy type/label event aliases too.
          */
         var aiTraceItems = [], aiTraceOffset = 0, aiTraceTotal = null, aiTraceRequest = 0;
         var aiTracePollAt = 0, aiTraceSearchTimer = null, AI_TRACE_PAGE_SIZE = 50;
@@ -868,7 +867,8 @@
             payload = payload || {};
             return { items: Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.traces) ? payload.traces : []),
                 total: Number.isFinite(Number(payload.total)) ? Number(payload.total) : null,
-                has_more: Boolean(payload.has_more) };
+                has_more: Boolean(payload.has_more) || (Number.isFinite(Number(payload.total)) &&
+                    Number(payload.offset || 0) + (Array.isArray(payload.items) ? payload.items.length : 0) < Number(payload.total)) };
         }
         function refreshAITraces(force) {
             var now = Date.now();
@@ -980,11 +980,14 @@
                 var timeline = el('div', { class: 'trace-events' });
                 events.slice().sort(function (a, b) { return Number(a.sequence || 0) - Number(b.sequence || 0); }).forEach(function (event) {
                     var row = el('div', { class: 'trace-event' });
-                    row.appendChild(el('strong', { text: (event.type === 'tool_call' || event.type === 'tool' ? 'Tool call' : event.type === 'workflow' ? 'Workflow operation' : event.type || 'Event') + ': ' + (event.label || event.tool_name || event.name || 'Event') }));
+                    var eventType = event.event_type || event.type;
+                    var eventName = event.name || event.label || event.tool_name || 'Event';
+                    row.appendChild(el('strong', { text: (eventType === 'llm_tool_call' || eventType === 'tool_call' || eventType === 'tool' ? 'Tool call' : eventType === 'workflow' ? 'Workflow operation' : eventType || 'Event') + ': ' + eventName }));
                     if (event.timestamp) row.appendChild(el('div', { text: new Date(event.timestamp).toLocaleString() }));
                     if (event.arguments !== undefined) sectionInto(row, 'Arguments', event.arguments);
                     if (event.result !== undefined) sectionInto(row, 'Result', event.result);
                     if (event.details !== undefined) sectionInto(row, 'Details', event.details);
+                    if (event.payload !== undefined) sectionInto(row, 'Details', event.payload);
                     timeline.appendChild(row);
                 }); container.appendChild(timeline);
             }

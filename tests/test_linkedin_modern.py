@@ -207,7 +207,7 @@ def test_skip_classification_never_opens_an_application(monkeypatch):
     monkeypatch.setattr(modern, '_within_candidate_location', lambda *args: True)
     monkeypatch.setattr(modern, '_required_years', lambda description: [])
     from modules.ai import connections
-    monkeypatch.setattr(connections, 'classify_job_suitability', lambda *args: {
+    monkeypatch.setattr(connections, 'classify_job_suitability', lambda *args, **kwargs: {
         'decision': 'SKIP', 'model_decision': 'SKIP', 'reason': 'Core skills do not match', 'match_score': 0,
         'hard_blockers': [],
     })
@@ -700,7 +700,7 @@ def test_rerendered_radio_reuses_cached_answer_and_corrects_mismatch(monkeypatch
             return []
     calls = []
     monkeypatch.setattr(modern, '_ai_answer_allowed', lambda *args: True)
-    monkeypatch.setattr(modern, '_generate_application_answer', lambda *args: calls.append(1) or 'Yes')
+    monkeypatch.setattr(modern, '_generate_application_answer', lambda *args, **kwargs: calls.append(1) or 'Yes')
     def click_radio(driver, radio):
         for item in radios: item.selected = item is radio
     monkeypatch.setattr(modern, '_click', click_radio)

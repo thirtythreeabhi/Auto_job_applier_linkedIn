@@ -34,6 +34,7 @@ import atexit
 import importlib
 import string
 import tempfile
+import time
 import uuid
 from urllib.request import urlopen
 from urllib.parse import urlsplit, urlunsplit
@@ -45,6 +46,7 @@ from modules import updater
 from modules.ai import prompts as ai_prompts
 from modules.linkedin_comments import add_draft, get_by_url, list_drafts, update_status, refresh_draft
 from modules.ai.request_queue import queued_call
+from modules.ai import trace_store
 from modules import automation_control
 from modules import run_diagnostics
 
@@ -1034,16 +1036,36 @@ def api_create_comment_draft():
             return jsonify({'error': 'The configured LLM is unavailable.'}), 503
         prompt = linkedin_comment_prompt.format(candidate_context=context[:12000],
                                                   author=author or 'Not provided', post_text=post_text)
+        started = time.perf_counter()
+        trace_recorded = False
         try:
             response = queued_call(client.model.invoke, prompt)
             raw = getattr(response, 'content', str(response))
             if isinstance(raw, list):
                 raw = ''.join(str(block.get('text', '')) if isinstance(block, dict) else str(block) for block in raw)
             raw = str(raw).strip()
-            record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider)
+            parse_value = raw
             if raw.startswith('```'):
-                raw = raw.strip('`').removeprefix('json').strip()
-            result = json.loads(raw)
+                parse_value = raw.strip('`').removeprefix('json').strip()
+            try:
+                result = json.loads(parse_value)
+            except (json.JSONDecodeError, TypeError) as error:
+                record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider,
+                    error=error, latency_ms=(time.perf_counter() - started) * 1000,
+                    retry_info={'attempt': 1, 'mode': 'json'})
+                trace_recorded = True
+                raise
+            if not isinstance(result, dict):
+                error = ValueError('Model response must be a JSON object.')
+                record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider,
+                    error=error, latency_ms=(time.perf_counter() - started) * 1000,
+                    retry_info={'attempt': 1, 'mode': 'json'})
+                trace_recorded = True
+                raise error
+            record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider,
+                parsed_output=result, latency_ms=(time.perf_counter() - started) * 1000,
+                retry_info={'attempt': 1, 'mode': 'json'})
+            trace_recorded = True
             relevant = result.get('relevant') is True
             rationale = str(result.get('rationale', '')).strip()[:500]
             comment = str(result.get('comment', '')).strip()[:500] if relevant else ''
@@ -1052,6 +1074,13 @@ def api_create_comment_draft():
                                 'message': 'No sufficiently grounded comment was generated.'}), 200
             draft_id = add_draft(post_url, post_text, author, rationale, comment)
             return jsonify({'relevant': True, 'draft': get_by_url(post_url) or {'id': draft_id}}), 201
+        except Exception as error:
+            if not trace_recorded:
+                record_prompt('LinkedIn comment draft', prompt, model=client.model_name,
+                    provider=client.provider, error=error,
+                    latency_ms=(time.perf_counter() - started) * 1000,
+                    retry_info={'attempt': 1, 'mode': 'json'})
+            raise
         finally:
             close_ai_client(client)
     except (OSError, ValueError, KeyError) as error:
@@ -1117,6 +1146,51 @@ def api_ai_prompts():
         return jsonify([])
     except OSError:
         return jsonify({'error': 'Could not read the local AI prompt log.'}), 500
+
+
+@app.route('/api/ai-traces', methods=['GET'])
+def api_ai_traces():
+    """Return paginated, filtered summaries from the local SQLite trace store."""
+    query = request.args
+    filters = {
+        'query': query.get('q', ''), 'decision': '__none__' if query.get('decision') == 'OTHER' else query.get('decision', ''),
+        'model': query.get('model', ''), 'category': query.get('category', ''),
+        'status': query.get('status', ''), 'provider': query.get('provider', ''),
+        'run_id': query.get('run_id', ''), 'job_id': query.get('job_id', ''),
+        'since': query.get('since', query.get('from', '')),
+        'until': query.get('until', query.get('to', '')),
+    }
+    try:
+        page = trace_store.list_traces(filters=filters,
+            limit=query.get('limit', 50), offset=query.get('offset', 0))
+    except (TypeError, ValueError) as error:
+        return jsonify({'error': str(error)}), 400
+    for item in page['items']:
+        item['final_decision'] = item.get('decision')
+        item['retry_count'] = _ai_trace_retry_count(item.get('retry_info'))
+    page['has_more'] = page['offset'] + len(page['items']) < page['total']
+    return jsonify(page)
+
+
+@app.route('/api/ai-traces/<trace_id>', methods=['GET'])
+def api_ai_trace_detail(trace_id):
+    """Return one full trace and its ordered event timeline."""
+    detail = trace_store.get_trace(trace_id)
+    if detail is None:
+        return jsonify({'error': 'AI trace not found.'}), 404
+    detail['final_decision'] = detail.get('decision')
+    detail['retry_count'] = _ai_trace_retry_count(detail.get('retry_info'))
+    return jsonify(detail)
+
+
+def _ai_trace_retry_count(retry_info):
+    if not isinstance(retry_info, dict):
+        return 0
+    try:
+        attempts = int(retry_info.get('attempts', retry_info.get('attempt', 1)))
+    except (TypeError, ValueError):
+        return 0
+    return max(0, attempts - 1)
 
 
 def _validate_prompt_template(name, prompt):

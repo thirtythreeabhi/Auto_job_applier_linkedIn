@@ -125,6 +125,40 @@ def test_applied_jobs_mark_unknown_id_returns_404(client, tmp_path, monkeypatch)
     assert client.put("/applied-jobs/does-not-exist").status_code == 404
 
 
+def test_ai_trace_endpoints_follow_pagination_filter_and_ordered_detail_contract(client, tmp_path, monkeypatch):
+    from modules.ai import trace_store
+    monkeypatch.setenv('AI_TRACE_DB_PATH', str(tmp_path / 'traces.sqlite3'))
+    older = trace_store.create_trace(run_id='run-api', job_id='job-api', job_title='Engineer', company='Acme',
+        timestamp='2026-01-01T00:00:00+00:00', category='job suitability', provider='ollama',
+        model='qwen-test', prompt='Build RAG systems')
+    trace_store.append_event(older, 'llm_request', 'classifier', {'attempt': 1})
+    trace_store.append_event(older, 'decision', 'final_decision', {'final_decision': 'REVIEW'})
+    trace_store.complete_trace(older, raw_response='raw', parsed_output={'decision': 'REVIEW'},
+        decision='REVIEW', retry_info={'attempt': 1})
+    newer = trace_store.create_trace(run_id='run-api', job_id='job-api', job_title='Engineer', company='Acme',
+        timestamp='2026-02-01T00:00:00+00:00', category='application answer', provider='ollama',
+        model='qwen-test', prompt='Years of experience?')
+    trace_store.complete_trace(newer, raw_response='5', parsed_output={'final_answer': '5'})
+
+    page = client.get('/api/ai-traces?job_id=job-api&model=qwen-test&limit=1&offset=0').get_json()
+    assert page['total'] == 2 and page['has_more'] is True
+    assert page['items'][0]['trace_id'] == newer
+    assert page['items'][0]['job_title'] == 'Engineer' and page['items'][0]['company'] == 'Acme'
+    detail_response = client.get('/api/ai-traces/' + older)
+    assert detail_response.status_code == 200
+    detail = detail_response.get_json()
+    assert detail['trace_id'] == older and detail['raw_response'] == 'raw'
+    assert detail['parsed_output'] == {'decision': 'REVIEW'}
+    assert [event['sequence'] for event in detail['events']] == [1, 2]
+    assert detail['events'][0]['event_type'] == 'llm_request'
+    assert client.get('/api/ai-traces/missing').status_code == 404
+
+
+def test_ai_trace_endpoint_rejects_invalid_pagination(client):
+    response = client.get('/api/ai-traces?limit=banana')
+    assert response.status_code == 400
+
+
 # ------------------------------- bot status ---------------------------------
 def test_status_reports_not_running(client):
     resp = client.get("/api/status")

@@ -33,6 +33,8 @@ def test_retrieval_prioritizes_talentstream_rag_and_tool_call_evidence():
     assert "TalentStream" in selected
     assert "configurable AI-agent capabilities" in selected
     assert "retries, recovery workflows" in selected
+    assert "LLM integration" in selected and "tool/function calling" in selected
+    assert "Total professional experience: 1 year, explicitly confirmed." in selected
     assert "static website" not in selected
     assert "professional duration is not confirmed" in selected
 

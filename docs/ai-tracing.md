@@ -78,6 +78,11 @@ Accept optional query parameters `q`, `decision`, `model`, `category`,
 ```
 
 Summaries are ordered by timestamp descending, then trace ID descending.
+The route adds `has_more` for pagination and `job_title`/`company` for job
+grouping. It also exposes UI aliases `final_decision` (same as `decision`) and
+`retry_count` (derived from the stored attempt number). The control panel's
+`from`/`to` query names are accepted as aliases for `since`/`until`; its
+`Other / none` decision filter returns traces with no classifier decision.
 
 ### `GET /api/ai-traces/<trace_id>`
 

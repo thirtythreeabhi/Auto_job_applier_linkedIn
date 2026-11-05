@@ -25,5 +25,5 @@ def test_trace_api_contract_is_documented_in_frontend_source():
     assert "GET /api/ai-traces?limit=50&offset=0" in html
     assert "GET /api/ai-traces/<trace_id>" in html
     assert "items:[{trace_id,run_id,job_id" in html
-    assert "events:[{sequence,timestamp,type,label,tool_name,arguments,result,details}]" in html
-    assert "type `workflow`" in html and "type `tool_call`" in html
+    assert "Events use {event_id,sequence,timestamp,event_type,name,payload}" in html
+    assert "event_type `workflow`" in html and "`llm_tool_call`" in html

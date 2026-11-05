@@ -13,6 +13,14 @@ import logging
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def isolate_ai_trace_runtime_files(tmp_path, monkeypatch):
+    """Keep trace storage/log writes from touching the user's local runtime files."""
+    from modules.ai import prompt_log
+    monkeypatch.setenv('AI_TRACE_DB_PATH', str(tmp_path / 'ai-traces.sqlite3'))
+    monkeypatch.setattr(prompt_log, 'PROMPT_LOG_PATH', tmp_path / 'ai-prompts.jsonl')
+
+
 class _CaptureHandler(logging.Handler):
     '''Collects LogRecords so tests can assert on level as well as text.'''
     def __init__(self):
