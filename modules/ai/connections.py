@@ -44,6 +44,7 @@ from modules.helpers import print_lg, critical_error_log, logger, convert_to_jso
 from modules.ai.prompts import extract_skills_prompt, ai_answer_prompt, job_suitability_prompt
 from modules.ai.prompt_log import record_prompt
 from modules.ai.request_queue import queued_call
+from modules.ai.context_builder import build_job_context, fit_context_budget
 
 from modules.gui import confirm
 
@@ -212,12 +213,14 @@ def classify_job_suitability(client, title, company, location, job_description, 
     if not all((title, company, location, job_description, candidate_context)):
         return fail_closed('CLASSIFIER_CONTEXT_MISSING')
 
-    # The local Ollama endpoint currently returns a 4,096-token total budget.
-    # Keep a rolling excerpt of each long input and explicitly reserve room for
-    # the structured response instead of letting the model hit its token ceiling.
+    # Context is selected by documented evidence and job-specific skill overlap.
+    # Fit the assembled prompt under Ollama's 8,192-token context, reserving
+    # capacity for prompt overhead and structured output.
+    relevant_context = build_job_context(candidate_context, job_description, title)
+    relevant_context, bounded_description = fit_context_budget(relevant_context, job_description)
     prompt = job_suitability_prompt.format(
-        candidate_context=_rolling_window(candidate_context, 2400), title=title, company=company,
-        location=location, job_description=_rolling_window(job_description, 3400),
+        candidate_context=relevant_context, title=title, company=company,
+        location=location, job_description=bounded_description,
     )
     prompt += ('\n\nOutput constraints: keep the reason to at most 2 short sentences '
                'and 45 words. Return at most 6 concise items in each skills list. '

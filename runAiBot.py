@@ -1801,12 +1801,9 @@ def main() -> None:
         if local_ai_enabled:
             try:
                 raw_context = open('candidate_context.md', encoding='utf-8').read()
-                relevant_sections = ('education', 'professional experience', 'technical skills',
-                                     'major professional projects', 'personal projects', 'job search preferences')
-                candidate_context_for_classifier = '\n\n'.join(
-                    section.strip() for section in re.split(r'(?m)(?=^## )', raw_context)
-                    if any(name in section.splitlines()[0].casefold() for name in relevant_sections)
-                )
+                # Keep the source document intact until the job is known. The
+                # classifier builds a deterministic, job-specific evidence view.
+                candidate_context_for_classifier = raw_context
             except OSError as error:
                 logger.warning('Candidate context unavailable; suitability decisions will be REVIEW: %s', error)
                 candidate_context_for_classifier = ''
