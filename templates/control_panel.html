@@ -226,6 +226,27 @@
         .ai-prompt-card summary { cursor:pointer; font-weight:600; }
         .ai-prompt-card h3 { font-size:13px; margin:12px 0 4px; }
         .ai-prompt-card pre { white-space:pre-wrap; overflow-wrap:anywhere; background:#f5f7fa; border-radius:6px; padding:10px; max-height:360px; overflow:auto; font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+        .trace-toolbar { display:flex; flex-wrap:wrap; align-items:end; gap:8px; margin:12px 0; }
+        .trace-toolbar label { display:flex; flex-direction:column; gap:3px; color:var(--muted); font-size:12px; }
+        .trace-toolbar input, .trace-toolbar select { min-width:125px; max-width:100%; padding:8px 9px; border:1px solid var(--line); border-radius:7px; background:#fff; color:var(--ink); font:inherit; }
+        .trace-toolbar .trace-search { flex:1 1 230px; }
+        .trace-toolbar .trace-search input { width:100%; }
+        .trace-status { min-height:22px; color:var(--muted); font-size:13px; }
+        .trace-group { background:var(--card); border:1px solid var(--line); border-radius:10px; margin:12px 0; box-shadow:var(--shadow); overflow:hidden; }
+        .trace-group > summary { cursor:pointer; padding:12px 14px; font-weight:700; background:#f8fafc; }
+        .trace-run { padding:0 12px 10px; }
+        .trace-run > summary { cursor:pointer; padding:10px 2px; color:var(--muted); font-size:13px; }
+        .trace-card { border-top:1px solid var(--line); padding:10px 2px; }
+        .trace-card > summary { cursor:pointer; font-size:13px; font-weight:600; }
+        .trace-meta { display:flex; flex-wrap:wrap; gap:6px 12px; color:var(--muted); font-size:12px; margin:5px 0; }
+        .trace-pill { display:inline-block; border-radius:999px; padding:1px 8px; background:#eef1f6; color:#334155; font-size:11px; }
+        .trace-detail { padding:4px 8px 8px; }
+        .trace-detail h3 { font-size:13px; margin:12px 0 4px; }
+        .trace-detail pre { white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word; background:#f5f7fa; border:1px solid var(--line); border-radius:6px; padding:10px; max-height:420px; overflow:auto; margin:4px 0; font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+        .trace-events { border-left:2px solid #cbd5e1; margin:8px 0 8px 5px; padding-left:12px; }
+        .trace-event { position:relative; padding:5px 0 8px; }
+        .trace-event::before { content:""; position:absolute; width:7px; height:7px; border-radius:50%; background:var(--brand); left:-17px; top:11px; }
+        .trace-event time { color:var(--muted); font-size:11px; }
         .system-prompt-editor textarea { min-height:190px; font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
         h2.section-h { font-size: 16px; margin: 4px 0 14px; }
         table.jobs { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -474,6 +495,12 @@
             tabs.appendChild(aiLogBtn);
             panels.appendChild(buildAIPromptsPanel());
 
+            var aiTracesBtn = el('button', { type: 'button', text: 'AI Traces' });
+            aiTracesBtn.dataset.tab = 'AI Traces';
+            aiTracesBtn.addEventListener('click', function () { showTab('AI Traces'); refreshAITraces(true); });
+            tabs.appendChild(aiTracesBtn);
+            panels.appendChild(buildAITracesPanel());
+
             wireAi();
             updateModelLists();
             applyAiState();
@@ -492,6 +519,7 @@
             var isRun = (name === 'Run');
             document.getElementById('savebar').style.display = isRun ? 'none' : 'flex';
             if (isRun) { refreshStatus(); refreshLogs(); loadAppliedJobs(); loadUnresolvedQuestions(); loadCommentDrafts(); }
+            if (name === 'AI Traces') refreshAITraces(false);
         }
 
         // ---- AI master switch + model lists ----
@@ -685,6 +713,51 @@
             return panel;
         }
 
+        function buildAITracesPanel() {
+            var panel = el('div', { class: 'panel' });
+            panel.dataset.tab = 'AI Traces';
+            panel.appendChild(el('h2', { class: 'section-h', text: 'AI trace history' }));
+            panel.appendChild(el('p', { class: 'muted-small', text: 'Inspect model requests and their related job decisions, tool calls, and workflow events. Trace data is read-only.' }));
+            var controls = el('div', { class: 'trace-toolbar', role: 'search', 'aria-label': 'Filter AI traces' });
+            function filterControl(label, id, tag, options) {
+                var wrap = el('label', { text: label });
+                var control;
+                if (tag === 'select') {
+                    control = el('select', { id: id });
+                    options.forEach(function (option) { control.appendChild(el('option', { value: option[0], text: option[1] })); });
+                } else {
+                    control = el('input', { id: id, type: tag });
+                    if (tag === 'datetime-local') control.step = '1';
+                    else if (id === 'traceSearch') control.placeholder = 'Job, run, provider, model, prompt…';
+                }
+                wrap.appendChild(control); controls.appendChild(wrap); return control;
+            }
+            filterControl('Search jobs, runs, prompts', 'traceSearch', 'search');
+            controls.lastChild.classList.add('trace-search');
+            filterControl('Model', 'traceModelFilter', 'text');
+            filterControl('Decision', 'traceDecisionFilter', 'select', [['', 'Any decision'], ['APPLY', 'APPLY'], ['REVIEW', 'REVIEW'], ['SKIP', 'SKIP'], ['OTHER', 'Other / none']]);
+            filterControl('Category', 'traceCategoryFilter', 'text');
+            filterControl('Status', 'traceStatusFilter', 'select', [['', 'Any status'], ['success', 'Success'], ['error', 'Error'], ['retry', 'Retried']]);
+            filterControl('From', 'traceFromFilter', 'datetime-local');
+            filterControl('To', 'traceToFilter', 'datetime-local');
+            var refresh = el('button', { class: 'btn secondary', type: 'button', text: 'Refresh' });
+            refresh.addEventListener('click', function () { refreshAITraces(true); }); controls.appendChild(refresh);
+            var exportButton = el('button', { class: 'btn secondary', type: 'button', text: 'Export JSON' });
+            exportButton.addEventListener('click', exportAITraces); controls.appendChild(exportButton);
+            panel.appendChild(controls);
+            panel.appendChild(el('div', { id: 'traceStatus', class: 'trace-status', role: 'status', 'aria-live': 'polite', text: 'Loading traces…' }));
+            panel.appendChild(el('div', { id: 'aiTracesHolder', 'aria-live': 'polite' }));
+            var more = el('button', { id: 'traceLoadMore', class: 'btn secondary', type: 'button', text: 'Load more traces' });
+            more.hidden = true; more.addEventListener('click', loadMoreAITraces); panel.appendChild(more);
+            controls.addEventListener('input', function (event) {
+                if (['traceSearch', 'traceModelFilter', 'traceCategoryFilter'].indexOf(event.target.id) >= 0) debounceTraceFilters();
+            });
+            controls.addEventListener('change', function (event) {
+                if (['traceDecisionFilter', 'traceStatusFilter', 'traceFromFilter', 'traceToFilter'].indexOf(event.target.id) >= 0) refreshAITraces(true);
+            });
+            return panel;
+        }
+
         var SYSTEM_PROMPT_NAMES = ['ai_answer_prompt', 'job_suitability_prompt', 'extract_skills_prompt'];
         function loadSystemPrompts() {
             fetch('/api/system-prompts').then(function (r) { return r.json(); }).then(function (data) {
@@ -753,6 +826,191 @@
             }).catch(function () {
                 holder.textContent = 'Could not load the AI prompt log.';
             });
+        }
+
+        /*
+         * AI Traces frontend API contract (read-only):
+         * GET /api/ai-traces?limit=50&offset=0&q=&model=&decision=&category=&status=&from=&to=
+         *   -> {items:[{trace_id,run_id,job_id,job_title,company,timestamp,model,provider,
+         *      category,status,decision,final_decision,latency_ms,error,retry_count}],
+         *      total,limit,offset,has_more}. `items` may also be returned as a bare array.
+         * GET /api/ai-traces/<trace_id> -> {trace:{trace_id,run_id,job_id,job_title,company,
+         *      timestamp,model,provider,category,prompt,candidate_context,raw_response,
+         *      parsed_output,decision,final_decision,latency_ms,error,retry_count},
+         *      events:[{sequence,timestamp,type,label,tool_name,arguments,result,details}]}.
+         * Events are returned in sequence order. Workflow operations use type `workflow`; actual
+         * model tool invocations use type `tool_call`. The UI also accepts a flat trace detail.
+         */
+        var aiTraceItems = [], aiTraceOffset = 0, aiTraceTotal = null, aiTraceRequest = 0;
+        var aiTracePollAt = 0, aiTraceSearchTimer = null, AI_TRACE_PAGE_SIZE = 50;
+        function debounceTraceFilters() {
+            clearTimeout(aiTraceSearchTimer);
+            aiTraceSearchTimer = setTimeout(function () { refreshAITraces(true); }, 300);
+        }
+        function traceFilterValue(id) {
+            var control = document.getElementById(id); return control ? control.value.trim() : '';
+        }
+        function aiTraceQuery(offset) {
+            var params = new URLSearchParams();
+            params.set('limit', String(AI_TRACE_PAGE_SIZE)); params.set('offset', String(offset));
+            [['q', 'traceSearch'], ['model', 'traceModelFilter'], ['decision', 'traceDecisionFilter'],
+             ['category', 'traceCategoryFilter'], ['status', 'traceStatusFilter']].forEach(function (pair) {
+                var value = traceFilterValue(pair[1]); if (value) params.set(pair[0], value);
+            });
+            ['from', 'to'].forEach(function (name) {
+                var value = traceFilterValue(name === 'from' ? 'traceFromFilter' : 'traceToFilter');
+                if (value) params.set(name, new Date(value).toISOString());
+            });
+            return params.toString();
+        }
+        function normalizeTraceList(payload) {
+            if (Array.isArray(payload)) return { items: payload, total: payload.length, has_more: false };
+            payload = payload || {};
+            return { items: Array.isArray(payload.items) ? payload.items : (Array.isArray(payload.traces) ? payload.traces : []),
+                total: Number.isFinite(Number(payload.total)) ? Number(payload.total) : null,
+                has_more: Boolean(payload.has_more) };
+        }
+        function refreshAITraces(force) {
+            var now = Date.now();
+            if (!force && now - aiTracePollAt < 5000) return;
+            aiTracePollAt = now; aiTraceOffset = 0; aiTraceTotal = null;
+            var requestId = ++aiTraceRequest;
+            var status = document.getElementById('traceStatus');
+            if (status && !aiTraceItems.length) status.textContent = 'Loading traces…';
+            fetch('/api/ai-traces?' + aiTraceQuery(0), { headers: { 'Accept': 'application/json' } })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Trace request failed (' + response.status + ').');
+                    return response.json();
+                }).then(function (payload) {
+                    if (requestId !== aiTraceRequest) return;
+                    var page = normalizeTraceList(payload);
+                    aiTraceItems = page.items; aiTraceOffset = page.items.length; aiTraceTotal = page.total;
+                    renderAITraces(page.has_more);
+                }).catch(function () {
+                    if (requestId !== aiTraceRequest) return;
+                    var holder = document.getElementById('aiTracesHolder');
+                    if (holder && !aiTraceItems.length) holder.textContent = 'Could not load AI traces. Check that the trace API is available, then refresh.';
+                    if (status) status.textContent = 'Trace history could not be refreshed.';
+                });
+        }
+        function loadMoreAITraces() {
+            var requestId = ++aiTraceRequest;
+            var more = document.getElementById('traceLoadMore'); if (more) more.disabled = true;
+            fetch('/api/ai-traces?' + aiTraceQuery(aiTraceOffset), { headers: { 'Accept': 'application/json' } })
+                .then(function (response) { if (!response.ok) throw new Error('Trace request failed'); return response.json(); })
+                .then(function (payload) {
+                    if (requestId !== aiTraceRequest) return;
+                    var page = normalizeTraceList(payload); aiTraceItems = aiTraceItems.concat(page.items);
+                    aiTraceOffset += page.items.length; aiTraceTotal = page.total; renderAITraces(page.has_more);
+                }).catch(function () {
+                    var status = document.getElementById('traceStatus'); if (status) status.textContent = 'Could not load the next page.';
+                }).finally(function () { if (more) more.disabled = false; });
+        }
+        function traceDecision(item) { return item.final_decision || item.decision || ''; }
+        function traceJobLabel(item) {
+            var label = [item.job_title || item.title, item.company].filter(Boolean).join(' · ');
+            return label || (item.job_id ? 'Job ' + item.job_id : 'Unlinked job');
+        }
+        function renderAITraces(hasMore) {
+            var holder = document.getElementById('aiTracesHolder'), status = document.getElementById('traceStatus');
+            var more = document.getElementById('traceLoadMore'); if (!holder) return;
+            holder.textContent = '';
+            var grouped = new Map();
+            aiTraceItems.forEach(function (item) {
+                var jobKey = String(item.job_id || 'unlinked') + '|' + traceJobLabel(item);
+                if (!grouped.has(jobKey)) grouped.set(jobKey, new Map());
+                var runs = grouped.get(jobKey), runKey = String(item.run_id || 'unlinked');
+                if (!runs.has(runKey)) runs.set(runKey, []); runs.get(runKey).push(item);
+            });
+            grouped.forEach(function (runs, jobKey) {
+                var job = el('details', { class: 'trace-group' }); job.open = true;
+                var jobTitle = jobKey.split('|').slice(1).join('|');
+                var count = Array.from(runs.values()).reduce(function (n, values) { return n + values.length; }, 0);
+                job.appendChild(el('summary', { text: jobTitle + ' · ' + count + ' trace' + (count === 1 ? '' : 's') }));
+                runs.forEach(function (items, runId) {
+                    var run = el('details', { class: 'trace-run' }); run.open = true;
+                    run.appendChild(el('summary', { text: (runId === 'unlinked' ? 'Run not linked' : 'Run ' + runId) + ' · ' + items.length + ' trace' + (items.length === 1 ? '' : 's') }));
+                    items.forEach(function (item) { run.appendChild(buildTraceCard(item)); }); job.appendChild(run);
+                }); holder.appendChild(job);
+            });
+            if (status) status.textContent = aiTraceItems.length ? ('Showing ' + aiTraceItems.length + (aiTraceTotal === null ? '' : ' of ' + aiTraceTotal) + ' traces · updates every 5 seconds while this tab is open.') : 'No traces match these filters.';
+            if (more) more.hidden = !(hasMore || (aiTraceTotal !== null && aiTraceOffset < aiTraceTotal));
+        }
+        function buildTraceCard(item) {
+            var card = el('details', { class: 'trace-card' }); card.dataset.traceId = item.trace_id || '';
+            var timestamp = item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Unknown time';
+            var decision = traceDecision(item); var meta = [timestamp, item.provider, item.model, item.category,
+                decision ? 'Decision: ' + decision : '', item.latency_ms != null ? item.latency_ms + ' ms' : '',
+                item.error || item.status === 'error' ? 'Error' : (item.retry_count || item.status === 'retry' ? 'Retried ' + (item.retry_count || '') + '×' : 'Success')].filter(Boolean).join(' · ');
+            card.appendChild(el('summary', { text: meta }));
+            var detail = el('div', { class: 'trace-detail' });
+            detail.appendChild(el('div', { class: 'trace-meta', text: 'Trace ' + (item.trace_id || 'unknown') + (item.job_id ? ' · Job ID ' + item.job_id : '') + (item.run_id ? ' · Run ID ' + item.run_id : '') }));
+            card.appendChild(detail);
+            var loaded = false;
+            card.addEventListener('toggle', function () {
+                if (!card.open || loaded) return;
+                loaded = true; detail.appendChild(el('p', { class: 'muted-small', text: 'Loading trace details…' }));
+                fetch('/api/ai-traces/' + encodeURIComponent(String(item.trace_id || '')), { headers: { 'Accept': 'application/json' } })
+                    .then(function (response) { if (!response.ok) throw new Error('Detail request failed'); return response.json(); })
+                    .then(function (payload) { detail.textContent = ''; renderTraceDetail(detail, payload, item); })
+                    .catch(function () { detail.textContent = 'Could not load this trace detail.'; loaded = false; });
+            });
+            return card;
+        }
+        function renderTraceDetail(container, payload, summary) {
+            payload = payload || {}; var trace = payload.trace || payload.item || payload;
+            var events = Array.isArray(payload.events) ? payload.events : (Array.isArray(trace.events) ? trace.events : []);
+            function section(title, value) {
+                if (value === undefined || value === null || value === '') return;
+                container.appendChild(el('h3', { text: title }));
+                var content = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+                container.appendChild(el('pre', { text: content }));
+            }
+            if (trace.candidate_context !== undefined) section('Candidate context', trace.candidate_context);
+            section('Complete prompt', trace.prompt || trace.complete_prompt);
+            section('Raw response', trace.raw_response || trace.response);
+            section('Parsed output', trace.parsed_output);
+            section('Final decision', trace.final_decision || trace.decision || traceDecision(summary));
+            section('Error', trace.error);
+            if (trace.latency_ms != null || trace.retry_count != null || trace.retry_info != null) {
+                section('Latency and retries', { latency_ms: trace.latency_ms, retry_count: trace.retry_count, retry_info: trace.retry_info });
+            }
+            if (events.length) {
+                container.appendChild(el('h3', { text: 'Tool calls and workflow events' }));
+                var timeline = el('div', { class: 'trace-events' });
+                events.slice().sort(function (a, b) { return Number(a.sequence || 0) - Number(b.sequence || 0); }).forEach(function (event) {
+                    var row = el('div', { class: 'trace-event' });
+                    row.appendChild(el('strong', { text: (event.type === 'tool_call' || event.type === 'tool' ? 'Tool call' : event.type === 'workflow' ? 'Workflow operation' : event.type || 'Event') + ': ' + (event.label || event.tool_name || event.name || 'Event') }));
+                    if (event.timestamp) row.appendChild(el('div', { text: new Date(event.timestamp).toLocaleString() }));
+                    if (event.arguments !== undefined) sectionInto(row, 'Arguments', event.arguments);
+                    if (event.result !== undefined) sectionInto(row, 'Result', event.result);
+                    if (event.details !== undefined) sectionInto(row, 'Details', event.details);
+                    timeline.appendChild(row);
+                }); container.appendChild(timeline);
+            }
+            if (!container.childNodes.length) container.appendChild(el('p', { class: 'muted-small', text: 'No additional trace details were returned.' }));
+        }
+        function sectionInto(container, title, value) {
+            container.appendChild(el('div', { class: 'muted-small', text: title }));
+            container.appendChild(el('pre', { text: typeof value === 'string' ? value : JSON.stringify(value, null, 2) }));
+        }
+        function exportAITraces() {
+            var button = document.querySelector('#panels [data-tab="AI Traces"] .trace-toolbar button:last-child');
+            var status = document.getElementById('traceStatus'); if (button) button.disabled = true;
+            var requests = aiTraceItems.map(function (item) {
+                return fetch('/api/ai-traces/' + encodeURIComponent(String(item.trace_id || '')), { headers: { 'Accept': 'application/json' } })
+                    .then(function (response) { if (!response.ok) throw new Error('Export failed'); return response.json(); });
+            });
+            Promise.all(requests).then(function (details) {
+                var blob = new Blob([JSON.stringify(details, null, 2)], { type: 'application/json' });
+                var link = document.createElement('a'); link.href = URL.createObjectURL(blob);
+                link.download = 'ai-traces-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+                var downloadUrl = link.href;
+                document.body.appendChild(link); link.click(); link.remove();
+                setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 1000);
+                if (status) status.textContent = 'Exported ' + details.length + ' complete trace' + (details.length === 1 ? '' : 's') + '.';
+            }).catch(function () { if (status) status.textContent = 'Could not export all visible traces.'; })
+                .finally(function () { if (button) button.disabled = false; });
         }
 
         function setRunningUI(running, pid, state) {
@@ -1089,6 +1347,7 @@
             refreshModelStatus();
             if (activeTab === 'Run') refreshLogs();
             if (activeTab === 'AI Prompts') refreshAIPrompts(false);
+            if (activeTab === 'AI Traces') refreshAITraces(false);
             pollTimer = setTimeout(pollLoop, 1500);
         }
 
