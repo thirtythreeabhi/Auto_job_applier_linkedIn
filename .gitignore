@@ -48,6 +48,9 @@ candidate_field_mappings.json
 # Local AI prompt settings and runtime artifacts
 ai_prompt_overrides.json
 .ai_prompt_log.jsonl
+.ai_traces.sqlite3
+.ai_traces.sqlite3-shm
+.ai_traces.sqlite3-wal
 .llm_request.lock
 .panel_server.log
 linkedin_comment_drafts.sqlite3
