@@ -273,6 +273,81 @@ def test_run_detail_and_log_endpoints_validate_run_id(client, tmp_path, monkeypa
     assert client.get('/api/runs/not-a-run-id').status_code == 400
 
 
+def test_dashboard_shutdown_does_not_stop_worker(client, tmp_path, monkeypatch):
+    import app
+    app, process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    started = client.post('/api/run').get_json()
+    app._stop_bot_on_exit()
+    assert process.alive
+    assert app._is_running()
+    assert app.automation_control.status(app.CONTROL_PATH)['run_id'] == started['run_id']
+
+
+def test_restarted_dashboard_reconnects_to_validated_worker(client, tmp_path, monkeypatch):
+    import app
+    app, process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    started = client.post('/api/run').get_json()
+    with open(app.PID_PATH, 'w', encoding='utf-8') as stream:
+        import json
+        json.dump({'pid': process.pid, 'run_id': started['run_id'], 'start_ticks': '42',
+                   'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py'))}, stream)
+    monkeypatch.setattr(app, '_process_identity', lambda _pid: {
+        'start_ticks': '42', 'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py')),
+        'argv': ['python', 'runAiBot.py']})
+    monkeypatch.setattr(app, '_bot_proc', None)
+    response = client.get('/api/status').get_json()
+    assert response['running'] is True
+    assert response['pid'] == process.pid
+    assert response['run_id'] == started['run_id']
+
+
+def test_reused_or_stale_pid_is_rejected(client, tmp_path, monkeypatch):
+    import app
+    app, process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    started = client.post('/api/run').get_json()
+    with open(app.PID_PATH, 'w', encoding='utf-8') as stream:
+        import json
+        json.dump({'pid': process.pid, 'run_id': started['run_id'], 'start_ticks': 'old',
+                   'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py'))}, stream)
+    monkeypatch.setattr(app, '_process_identity', lambda _pid: {
+        'start_ticks': 'new', 'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py')),
+        'argv': ['python', 'runAiBot.py']})
+    monkeypatch.setattr(app, '_bot_proc', None)
+    assert client.get('/api/status').get_json()['running'] is False
+    assert not os.path.exists(app.PID_PATH)
+
+
+def test_duplicate_run_request_reconnects_instead_of_launching_again(client, tmp_path, monkeypatch):
+    import app
+    app, _process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    launches = []
+    monkeypatch.setattr(app.subprocess, 'Popen', lambda *args, **kwargs: (launches.append(1) or _process))
+    first = client.post('/api/run').get_json()
+    second = client.post('/api/run').get_json()
+    assert second['running'] is True
+    assert second['run_id'] == first['run_id']
+    assert len(launches) == 1
+
+
+def test_explicit_stop_can_terminate_reconnected_worker(client, tmp_path, monkeypatch):
+    import app
+    app, process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    started = client.post('/api/run').get_json()
+    with open(app.PID_PATH, 'w', encoding='utf-8') as stream:
+        import json
+        json.dump({'pid': process.pid, 'run_id': started['run_id'], 'start_ticks': '42',
+                   'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py'))}, stream)
+    monkeypatch.setattr(app, '_process_identity', lambda _pid: {
+        'start_ticks': '42', 'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py')),
+        'argv': ['python', 'runAiBot.py']})
+    monkeypatch.setattr(app, '_bot_proc', None)
+    monkeypatch.setattr(app.os, 'killpg', lambda *_args: None)
+    monkeypatch.setattr(app.os, 'kill', lambda *_args: (_ for _ in ()).throw(ProcessLookupError()))
+    stopped = client.post('/api/stop').get_json()
+    assert stopped['running'] is False
+    assert stopped['run_id'] == started['run_id']
+
+
 # ------------------------------- pages render -------------------------------
 def test_control_panel_and_history_pages_render(client):
     assert client.get("/").status_code == 200
