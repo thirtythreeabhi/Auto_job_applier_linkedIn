@@ -125,6 +125,40 @@ def test_applied_jobs_mark_unknown_id_returns_404(client, tmp_path, monkeypatch)
     assert client.put("/applied-jobs/does-not-exist").status_code == 404
 
 
+def test_ai_trace_endpoints_follow_pagination_filter_and_ordered_detail_contract(client, tmp_path, monkeypatch):
+    from modules.ai import trace_store
+    monkeypatch.setenv('AI_TRACE_DB_PATH', str(tmp_path / 'traces.sqlite3'))
+    older = trace_store.create_trace(run_id='run-api', job_id='job-api', job_title='Engineer', company='Acme',
+        timestamp='2026-01-01T00:00:00+00:00', category='job suitability', provider='ollama',
+        model='qwen-test', prompt='Build RAG systems')
+    trace_store.append_event(older, 'llm_request', 'classifier', {'attempt': 1})
+    trace_store.append_event(older, 'decision', 'final_decision', {'final_decision': 'REVIEW'})
+    trace_store.complete_trace(older, raw_response='raw', parsed_output={'decision': 'REVIEW'},
+        decision='REVIEW', retry_info={'attempt': 1})
+    newer = trace_store.create_trace(run_id='run-api', job_id='job-api', job_title='Engineer', company='Acme',
+        timestamp='2026-02-01T00:00:00+00:00', category='application answer', provider='ollama',
+        model='qwen-test', prompt='Years of experience?')
+    trace_store.complete_trace(newer, raw_response='5', parsed_output={'final_answer': '5'})
+
+    page = client.get('/api/ai-traces?job_id=job-api&model=qwen-test&limit=1&offset=0').get_json()
+    assert page['total'] == 2 and page['has_more'] is True
+    assert page['items'][0]['trace_id'] == newer
+    assert page['items'][0]['job_title'] == 'Engineer' and page['items'][0]['company'] == 'Acme'
+    detail_response = client.get('/api/ai-traces/' + older)
+    assert detail_response.status_code == 200
+    detail = detail_response.get_json()
+    assert detail['trace_id'] == older and detail['raw_response'] == 'raw'
+    assert detail['parsed_output'] == {'decision': 'REVIEW'}
+    assert [event['sequence'] for event in detail['events']] == [1, 2]
+    assert detail['events'][0]['event_type'] == 'llm_request'
+    assert client.get('/api/ai-traces/missing').status_code == 404
+
+
+def test_ai_trace_endpoint_rejects_invalid_pagination(client):
+    response = client.get('/api/ai-traces?limit=banana')
+    assert response.status_code == 400
+
+
 # ------------------------------- bot status ---------------------------------
 def test_status_reports_not_running(client):
     resp = client.get("/api/status")
@@ -271,6 +305,81 @@ def test_run_detail_and_log_endpoints_validate_run_id(client, tmp_path, monkeypa
     assert client.get('/api/runs/' + run_id).status_code == 200
     assert client.get('/api/runs/' + run_id + '/log').get_json()['content'] == 'diagnostic output\n'
     assert client.get('/api/runs/not-a-run-id').status_code == 400
+
+
+def test_dashboard_shutdown_does_not_stop_worker(client, tmp_path, monkeypatch):
+    import app
+    app, process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    started = client.post('/api/run').get_json()
+    app._stop_bot_on_exit()
+    assert process.alive
+    assert app._is_running()
+    assert app.automation_control.status(app.CONTROL_PATH)['run_id'] == started['run_id']
+
+
+def test_restarted_dashboard_reconnects_to_validated_worker(client, tmp_path, monkeypatch):
+    import app
+    app, process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    started = client.post('/api/run').get_json()
+    with open(app.PID_PATH, 'w', encoding='utf-8') as stream:
+        import json
+        json.dump({'pid': process.pid, 'run_id': started['run_id'], 'start_ticks': '42',
+                   'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py'))}, stream)
+    monkeypatch.setattr(app, '_process_identity', lambda _pid: {
+        'start_ticks': '42', 'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py')),
+        'argv': ['python', 'runAiBot.py']})
+    monkeypatch.setattr(app, '_bot_proc', None)
+    response = client.get('/api/status').get_json()
+    assert response['running'] is True
+    assert response['pid'] == process.pid
+    assert response['run_id'] == started['run_id']
+
+
+def test_reused_or_stale_pid_is_rejected(client, tmp_path, monkeypatch):
+    import app
+    app, process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    started = client.post('/api/run').get_json()
+    with open(app.PID_PATH, 'w', encoding='utf-8') as stream:
+        import json
+        json.dump({'pid': process.pid, 'run_id': started['run_id'], 'start_ticks': 'old',
+                   'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py'))}, stream)
+    monkeypatch.setattr(app, '_process_identity', lambda _pid: {
+        'start_ticks': 'new', 'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py')),
+        'argv': ['python', 'runAiBot.py']})
+    monkeypatch.setattr(app, '_bot_proc', None)
+    assert client.get('/api/status').get_json()['running'] is False
+    assert not os.path.exists(app.PID_PATH)
+
+
+def test_duplicate_run_request_reconnects_instead_of_launching_again(client, tmp_path, monkeypatch):
+    import app
+    app, _process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    launches = []
+    monkeypatch.setattr(app.subprocess, 'Popen', lambda *args, **kwargs: (launches.append(1) or _process))
+    first = client.post('/api/run').get_json()
+    second = client.post('/api/run').get_json()
+    assert second['running'] is True
+    assert second['run_id'] == first['run_id']
+    assert len(launches) == 1
+
+
+def test_explicit_stop_can_terminate_reconnected_worker(client, tmp_path, monkeypatch):
+    import app
+    app, process, _control_path = _mock_bot_launch(monkeypatch, tmp_path)
+    started = client.post('/api/run').get_json()
+    with open(app.PID_PATH, 'w', encoding='utf-8') as stream:
+        import json
+        json.dump({'pid': process.pid, 'run_id': started['run_id'], 'start_ticks': '42',
+                   'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py'))}, stream)
+    monkeypatch.setattr(app, '_process_identity', lambda _pid: {
+        'start_ticks': '42', 'script': os.path.realpath(os.path.join(app.ROOT, 'runAiBot.py')),
+        'argv': ['python', 'runAiBot.py']})
+    monkeypatch.setattr(app, '_bot_proc', None)
+    monkeypatch.setattr(app.os, 'killpg', lambda *_args: None)
+    monkeypatch.setattr(app.os, 'kill', lambda *_args: (_ for _ in ()).throw(ProcessLookupError()))
+    stopped = client.post('/api/stop').get_json()
+    assert stopped['running'] is False
+    assert stopped['run_id'] == started['run_id']
 
 
 # ------------------------------- pages render -------------------------------

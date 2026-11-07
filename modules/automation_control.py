@@ -67,6 +67,13 @@ def _locked(path):
                 fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
 
+@contextmanager
+def lifecycle_lock(path=CONTROL_PATH):
+    """Serialize dashboard lifecycle operations across independent processes."""
+    with _locked(str(path) + '.lifecycle'):
+        yield
+
+
 def create_run(run_id, path=CONTROL_PATH):
     """Reset stale commands and create a fresh run before launching its worker."""
     with _locked(path):

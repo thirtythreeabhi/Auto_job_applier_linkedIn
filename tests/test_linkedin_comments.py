@@ -22,6 +22,8 @@ def test_comment_draft_endpoint_generates_and_saves_grounded_comment(client, tmp
     import modules.linkedin_comments as drafts
     import modules.ai.connections as connections
     monkeypatch.setattr(drafts, 'DB_PATH', tmp_path / 'drafts.sqlite3')
+    monkeypatch.setattr(app, 'ROOT', str(tmp_path))
+    (tmp_path / 'candidate_context.md').write_text('Synthetic evidence: background job retries and recovery workflows.')
     response = SimpleNamespace(content=json.dumps({
         'relevant': True,
         'rationale': 'The post discusses background job retries documented in the candidate context.',
@@ -45,6 +47,11 @@ def test_comment_draft_endpoint_generates_and_saves_grounded_comment(client, tmp
     assert result.status_code == 201
     data = result.get_json()
     assert data['draft']['comment'] == 'Retries need clear states and safe recovery paths.'
+    from modules.ai import trace_store
+    traces = trace_store.list_traces(filters={'category': 'LinkedIn comment draft'})['items']
+    assert len(traces) == 1 and traces[0]['latency_ms'] >= 0
+    detail = trace_store.get_trace(traces[0]['trace_id'])
+    assert detail['parsed_output']['comment'] == 'Retries need clear states and safe recovery paths.'
     assert client.get('/api/comment-drafts').get_json()[0]['post_url'] == url
     assert client.post('/api/comment-drafts', json={
         'post_url': url, 'post_text': 'Duplicate post'
@@ -59,9 +66,12 @@ def test_comment_draft_endpoint_rejects_non_linkedin_url(client):
 
 
 def test_irrelevant_post_is_not_saved_as_a_draft(client, tmp_path, monkeypatch):
+    import app
     import modules.linkedin_comments as drafts
     import modules.ai.connections as connections
     monkeypatch.setattr(drafts, 'DB_PATH', tmp_path / 'drafts.sqlite3')
+    monkeypatch.setattr(app, 'ROOT', str(tmp_path))
+    (tmp_path / 'candidate_context.md').write_text('Synthetic candidate context for a software engineer.')
 
     class Model:
         def invoke(self, prompt):

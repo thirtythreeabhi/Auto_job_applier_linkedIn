@@ -24,6 +24,7 @@ user_config.json
 .bot_run.pid
 .bot_control.json
 .bot_control.json.lock
+.bot_control.json.lifecycle.lock
 .linkedin_feed.log
 .linkedin_feed_debug.html
 .linkedin_feed_comment_debug.html
@@ -48,6 +49,9 @@ candidate_field_mappings.json
 # Local AI prompt settings and runtime artifacts
 ai_prompt_overrides.json
 .ai_prompt_log.jsonl
+.ai_traces.sqlite3
+.ai_traces.sqlite3-shm
+.ai_traces.sqlite3-wal
 .llm_request.lock
 .panel_server.log
 linkedin_comment_drafts.sqlite3

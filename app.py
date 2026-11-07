@@ -34,6 +34,7 @@ import atexit
 import importlib
 import string
 import tempfile
+import time
 import uuid
 from urllib.request import urlopen
 from urllib.parse import urlsplit, urlunsplit
@@ -45,6 +46,7 @@ from modules import updater
 from modules.ai import prompts as ai_prompts
 from modules.linkedin_comments import add_draft, get_by_url, list_drafts, update_status, refresh_draft
 from modules.ai.request_queue import queued_call
+from modules.ai import trace_store
 from modules import automation_control
 from modules import run_diagnostics
 
@@ -218,37 +220,122 @@ def _copy_worker_output(source, log_path):
 
 
 def _is_running() -> bool:
-    '''True if the tracked bot subprocess exists and has not exited.'''
+    '''Reconcile this dashboard's handle or reconnect through the validated PID record.'''
     global _bot_proc
-    if _bot_proc is None:
-        return _orphaned_bot_pid() is not None
-    return_code = _bot_proc.poll()
-    if return_code is None:
-        return True
-    # Preserve a worker-reported terminal result; otherwise reconcile the exit.
-    run_id = automation_control.status(CONTROL_PATH).get('run_id')
-    if run_id:
-        run_diagnostics.reconcile_exit(run_id, return_code, DIAGNOSTICS_DIR)
-        run_diagnostics.record_exit_code(run_id, return_code, DIAGNOSTICS_DIR)
-        automation_control.set_stopped(run_id, CONTROL_PATH)
-    _bot_proc = None
-    _remove_pid_file()
-    return False
+    if _bot_proc is not None:
+        return_code = _bot_proc.poll()
+        if return_code is None:
+            return True
+        _reconcile_worker_exit(return_code)
+        return False
+    return _orphaned_bot_pid() is not None
+
+
+def _process_identity(pid):
+    """Return stable process identity for the worker executable, if verifiable."""
+    if os.name == 'nt':
+        try:
+            import ctypes
+            from ctypes import wintypes
+            kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+            kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            kernel32.OpenProcess.restype = wintypes.HANDLE
+            kernel32.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD,
+                                                           wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
+            kernel32.QueryFullProcessImageNameW.restype = wintypes.BOOL
+            kernel32.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+            kernel32.GetProcessTimes.restype = wintypes.BOOL
+            kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+            kernel32.CloseHandle.restype = wintypes.BOOL
+            handle = kernel32.OpenProcess(0x1000, False, int(pid))  # QUERY_LIMITED_INFORMATION
+            if not handle:
+                return None
+            try:
+                image = ctypes.create_unicode_buffer(32768)
+                length = wintypes.DWORD(len(image))
+                if not kernel32.QueryFullProcessImageNameW(handle, 0, image, ctypes.byref(length)):
+                    return None
+                created = wintypes.FILETIME()
+                exited = wintypes.FILETIME()
+                kernel = wintypes.FILETIME()
+                user = wintypes.FILETIME()
+                if not kernel32.GetProcessTimes(handle, ctypes.byref(created), ctypes.byref(exited),
+                                                ctypes.byref(kernel), ctypes.byref(user)):
+                    return None
+                start = (created.dwHighDateTime << 32) | created.dwLowDateTime
+                if os.path.normcase(os.path.abspath(image.value)) != os.path.normcase(os.path.abspath(sys.executable)):
+                    return None
+                return {'start_ticks': str(start),
+                        'script': os.path.realpath(os.path.join(ROOT, 'runAiBot.py'))}
+            finally:
+                kernel32.CloseHandle(handle)
+        except (AttributeError, OSError, ValueError):
+            return None
+    if os.name != 'posix' or not os.path.isdir('/proc'):
+        return None
+    try:
+        with open(f'/proc/{pid}/stat', encoding='utf-8') as stream:
+            raw_stat = stream.read()
+        # comm is parenthesized and may itself contain spaces or parentheses.
+        fields = raw_stat[raw_stat.rfind(')') + 2:].split()
+        start_ticks = fields[19]  # proc field 22, with fields[0] being field 3
+        with open(f'/proc/{pid}/cmdline', 'rb') as stream:
+            argv = stream.read().rstrip(b'\0').split(b'\0')
+        args = [os.fsdecode(arg) for arg in argv]
+        script = os.path.realpath(os.path.join(ROOT, 'runAiBot.py'))
+        if not any(os.path.realpath(arg) == script for arg in args if arg):
+            return None
+        return {'start_ticks': start_ticks, 'script': script, 'argv': args}
+    except (OSError, IndexError, ValueError):
+        return None
+
+
+def _read_worker_record():
+    try:
+        with open(PID_PATH, encoding='utf-8') as stream:
+            raw = stream.read()
+        try:
+            value = json.loads(raw)
+        except ValueError:
+            # Upgrade a legacy PID-only record only when /proc proves the exact
+            # worker script is still running and the control state has a run ID.
+            if os.name == 'nt' or not raw.strip().isdigit():
+                return None
+            pid = int(raw.strip())
+            control_run_id = automation_control.status(CONTROL_PATH).get('run_id')
+            identity = _process_identity(pid)
+            if not run_diagnostics.valid_run_id(control_run_id) or not identity:
+                return None
+            value = {'pid': pid, 'run_id': control_run_id,
+                     'start_ticks': identity['start_ticks'], 'script': identity['script']}
+            temp_path = PID_PATH + '.tmp'
+            with open(temp_path, 'w', encoding='utf-8') as stream:
+                json.dump(value, stream)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temp_path, PID_PATH)
+        if not isinstance(value, dict):
+            return None
+        pid, run_id = value.get('pid'), value.get('run_id')
+        if not isinstance(pid, int) or pid <= 1 or not run_diagnostics.valid_run_id(run_id):
+            return None
+        if automation_control.status(CONTROL_PATH).get('run_id') != run_id:
+            return None
+        identity = _process_identity(pid)
+        expected_script = os.path.realpath(os.path.join(ROOT, 'runAiBot.py'))
+        if (not identity or identity['start_ticks'] != str(value.get('start_ticks'))
+                or identity.get('script') != expected_script):
+            return None
+        return value
+    except (OSError, ValueError, TypeError):
+        return None
 
 
 def _orphaned_bot_pid():
-    """Find a live bot started by a previous control-panel process."""
-    if os.name == 'nt':
-        return None
-    try:
-        with open(PID_PATH, encoding='utf-8') as pid_file:
-            pid = int(pid_file.read().strip())
-        with open(f'/proc/{pid}/cmdline', 'rb') as cmd_file:
-            command = cmd_file.read().replace(b'\0', b' ').decode(errors='replace')
-        if os.path.join(ROOT, 'runAiBot.py') in command:
-            return pid
-    except (OSError, ValueError):
-        pass
+    """Find a validated worker from a prior dashboard process."""
+    record = _read_worker_record()
+    if record:
+        return record['pid']
     _remove_pid_file()
     return None
 
@@ -273,6 +360,16 @@ def _reconcile_missing_run():
             root=DIAGNOSTICS_DIR)
     automation_control.set_stopped(run_id, CONTROL_PATH)
     return result
+
+
+def _reconcile_worker_exit(return_code=None):
+    run_id = automation_control.status(CONTROL_PATH).get('run_id')
+    if run_id:
+        run_diagnostics.reconcile_exit(run_id, return_code, DIAGNOSTICS_DIR)
+        if return_code is not None:
+            run_diagnostics.record_exit_code(run_id, return_code, DIAGNOSTICS_DIR)
+        automation_control.set_stopped(run_id, CONTROL_PATH)
+    _remove_pid_file()
 
 
 def _remove_pid_file():
@@ -319,17 +416,22 @@ def _terminate(proc) -> None:
 
 
 def _terminate_orphaned_bot() -> bool:
-    '''Stop a bot recorded by another control-panel process instance.'''
-    pid = _orphaned_bot_pid()
-    if pid is None: return False
-    # Guard against a stale/reused PID: only signal the expected bot executable
-    # from this project, which is launched in its own process group.
-    try:
-        with open(f"/proc/{pid}/cmdline", "rb") as cmd_file:
-            command = cmd_file.read().replace(b"\0", b" ").decode(errors="replace")
-        expected = os.path.join(ROOT, "runAiBot.py")
-        if expected not in command:
+    '''Stop a validated worker recorded by another dashboard (explicit Stop only).'''
+    record = _read_worker_record()
+    pid = record['pid'] if record else None
+    if pid is None:
+        _remove_pid_file()
+        return False
+    if os.name == 'nt':
+        try:
+            result = subprocess.run(
+                ['taskkill', '/F', '/T', '/PID', str(pid)],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10,
+            )
+            return result.returncode == 0
+        except (OSError, subprocess.TimeoutExpired):
             return False
+    try:
         os.killpg(pid, signal.SIGTERM)
         for _ in range(50):
             try:
@@ -344,15 +446,8 @@ def _terminate_orphaned_bot() -> bool:
 
 
 def _stop_bot_on_exit(*_args) -> None:
-    """Stop the detached worker whenever the control panel exits."""
-    global _bot_proc
-    with _bot_lock:
-        if _bot_proc is not None:
-            _terminate(_bot_proc)
-            _bot_proc = None
-        else:
-            _terminate_orphaned_bot()
-        _remove_pid_file()
+    """Dashboard shutdown is independent; leave automation and its PID record intact."""
+    return None
 
 
 def _handle_shutdown_signal(signum, _frame) -> None:
@@ -588,7 +683,7 @@ def api_candidate_answer():
 def api_run():
     '''Starts the bot as a subprocess if it isn't already running.'''
     global _bot_proc
-    with _bot_lock:
+    with automation_control.lifecycle_lock(CONTROL_PATH), _bot_lock:
         if _is_running():
             control = automation_control.status(CONTROL_PATH)
             return jsonify({"running": True, "pid": _current_bot_pid(),
@@ -616,9 +711,23 @@ def api_run():
             else:
                 popen_kwargs["start_new_session"] = True
             _bot_proc = subprocess.Popen(_bot_command(), **popen_kwargs)
-            if getattr(_bot_proc, 'stdout', None) is not None:
-                threading.Thread(target=_copy_worker_output,
-                    args=(_bot_proc.stdout, str(run_log)), daemon=True).start()
+            worker_stdout = getattr(_bot_proc, 'stdout', None)
+            if worker_stdout is not None:
+                logger_kwargs = {
+                    'cwd': ROOT, 'stdin': worker_stdout,
+                    'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL,
+                }
+                if os.name == 'nt':
+                    logger_kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
+                else:
+                    logger_kwargs['start_new_session'] = True
+                try:
+                    subprocess.Popen([sys.executable, '-m', 'modules.worker_log_writer', str(run_log)],
+                                     **logger_kwargs)
+                    worker_stdout.close()
+                except Exception:
+                    threading.Thread(target=_copy_worker_output,
+                        args=(worker_stdout, str(run_log)), daemon=True).start()
         except Exception as err:
             if 'run_id' in locals():
                 run_diagnostics.fail(run_id, 'STARTUP_FAILED',
@@ -630,9 +739,17 @@ def api_run():
                 try: log_file.close()
                 except Exception: pass
             return jsonify({"running": False, "error": str(err)}), 500
+        identity = _process_identity(_bot_proc.pid)
         try:
-            with open(PID_PATH, "w", encoding="utf-8") as pid_file:
-                pid_file.write(str(_bot_proc.pid))
+            if identity:
+                temp_path = PID_PATH + '.tmp'
+                with open(temp_path, 'w', encoding='utf-8') as pid_file:
+                    json.dump({'pid': _bot_proc.pid, 'run_id': run_id,
+                               'start_ticks': identity['start_ticks'],
+                               'script': identity['script']}, pid_file)
+                    pid_file.flush()
+                    os.fsync(pid_file.fileno())
+                os.replace(temp_path, PID_PATH)
         except OSError:
             pass
         return jsonify({"running": True, "pid": _current_bot_pid(), "run_id": run_id, "state": "running"})
@@ -640,7 +757,7 @@ def api_run():
 
 @app.route('/api/pause', methods=['POST'])
 def api_pause():
-    with _bot_lock:
+    with automation_control.lifecycle_lock(CONTROL_PATH), _bot_lock:
         if not _is_running():
             return jsonify({'running': False, 'state': 'stopped'}), 409
         current = automation_control.status(CONTROL_PATH)
@@ -652,7 +769,7 @@ def api_pause():
 
 @app.route('/api/resume', methods=['POST'])
 def api_resume():
-    with _bot_lock:
+    with automation_control.lifecycle_lock(CONTROL_PATH), _bot_lock:
         if not _is_running():
             return jsonify({'running': False, 'state': 'stopped'}), 409
         current = automation_control.status(CONTROL_PATH)
@@ -666,7 +783,7 @@ def api_resume():
 def api_stop():
     '''Stops the running bot subprocess (and its children where possible).'''
     global _bot_proc
-    with _bot_lock:
+    with automation_control.lifecycle_lock(CONTROL_PATH), _bot_lock:
         running = _is_running()
         run_id = automation_control.status(CONTROL_PATH).get('run_id')
         proc = _bot_proc
@@ -691,7 +808,7 @@ def api_stop():
 @app.route('/api/status', methods=['GET'])
 def api_status():
     '''Reports whether the bot subprocess is currently running.'''
-    with _bot_lock:
+    with automation_control.lifecycle_lock(CONTROL_PATH), _bot_lock:
         running = _is_running()
         pid = _current_bot_pid() if running else None
         control = automation_control.status(CONTROL_PATH)
@@ -919,16 +1036,36 @@ def api_create_comment_draft():
             return jsonify({'error': 'The configured LLM is unavailable.'}), 503
         prompt = linkedin_comment_prompt.format(candidate_context=context[:12000],
                                                   author=author or 'Not provided', post_text=post_text)
+        started = time.perf_counter()
+        trace_recorded = False
         try:
             response = queued_call(client.model.invoke, prompt)
             raw = getattr(response, 'content', str(response))
             if isinstance(raw, list):
                 raw = ''.join(str(block.get('text', '')) if isinstance(block, dict) else str(block) for block in raw)
             raw = str(raw).strip()
-            record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider)
+            parse_value = raw
             if raw.startswith('```'):
-                raw = raw.strip('`').removeprefix('json').strip()
-            result = json.loads(raw)
+                parse_value = raw.strip('`').removeprefix('json').strip()
+            try:
+                result = json.loads(parse_value)
+            except (json.JSONDecodeError, TypeError) as error:
+                record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider,
+                    error=error, latency_ms=(time.perf_counter() - started) * 1000,
+                    retry_info={'attempt': 1, 'mode': 'json'})
+                trace_recorded = True
+                raise
+            if not isinstance(result, dict):
+                error = ValueError('Model response must be a JSON object.')
+                record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider,
+                    error=error, latency_ms=(time.perf_counter() - started) * 1000,
+                    retry_info={'attempt': 1, 'mode': 'json'})
+                trace_recorded = True
+                raise error
+            record_prompt('LinkedIn comment draft', prompt, raw, client.model_name, client.provider,
+                parsed_output=result, latency_ms=(time.perf_counter() - started) * 1000,
+                retry_info={'attempt': 1, 'mode': 'json'})
+            trace_recorded = True
             relevant = result.get('relevant') is True
             rationale = str(result.get('rationale', '')).strip()[:500]
             comment = str(result.get('comment', '')).strip()[:500] if relevant else ''
@@ -937,6 +1074,13 @@ def api_create_comment_draft():
                                 'message': 'No sufficiently grounded comment was generated.'}), 200
             draft_id = add_draft(post_url, post_text, author, rationale, comment)
             return jsonify({'relevant': True, 'draft': get_by_url(post_url) or {'id': draft_id}}), 201
+        except Exception as error:
+            if not trace_recorded:
+                record_prompt('LinkedIn comment draft', prompt, model=client.model_name,
+                    provider=client.provider, error=error,
+                    latency_ms=(time.perf_counter() - started) * 1000,
+                    retry_info={'attempt': 1, 'mode': 'json'})
+            raise
         finally:
             close_ai_client(client)
     except (OSError, ValueError, KeyError) as error:
@@ -1002,6 +1146,51 @@ def api_ai_prompts():
         return jsonify([])
     except OSError:
         return jsonify({'error': 'Could not read the local AI prompt log.'}), 500
+
+
+@app.route('/api/ai-traces', methods=['GET'])
+def api_ai_traces():
+    """Return paginated, filtered summaries from the local SQLite trace store."""
+    query = request.args
+    filters = {
+        'query': query.get('q', ''), 'decision': '__none__' if query.get('decision') == 'OTHER' else query.get('decision', ''),
+        'model': query.get('model', ''), 'category': query.get('category', ''),
+        'status': query.get('status', ''), 'provider': query.get('provider', ''),
+        'run_id': query.get('run_id', ''), 'job_id': query.get('job_id', ''),
+        'since': query.get('since', query.get('from', '')),
+        'until': query.get('until', query.get('to', '')),
+    }
+    try:
+        page = trace_store.list_traces(filters=filters,
+            limit=query.get('limit', 50), offset=query.get('offset', 0))
+    except (TypeError, ValueError) as error:
+        return jsonify({'error': str(error)}), 400
+    for item in page['items']:
+        item['final_decision'] = item.get('decision')
+        item['retry_count'] = _ai_trace_retry_count(item.get('retry_info'))
+    page['has_more'] = page['offset'] + len(page['items']) < page['total']
+    return jsonify(page)
+
+
+@app.route('/api/ai-traces/<trace_id>', methods=['GET'])
+def api_ai_trace_detail(trace_id):
+    """Return one full trace and its ordered event timeline."""
+    detail = trace_store.get_trace(trace_id)
+    if detail is None:
+        return jsonify({'error': 'AI trace not found.'}), 404
+    detail['final_decision'] = detail.get('decision')
+    detail['retry_count'] = _ai_trace_retry_count(detail.get('retry_info'))
+    return jsonify(detail)
+
+
+def _ai_trace_retry_count(retry_info):
+    if not isinstance(retry_info, dict):
+        return 0
+    try:
+        attempts = int(retry_info.get('attempts', retry_info.get('attempt', 1)))
+    except (TypeError, ValueError):
+        return 0
+    return max(0, attempts - 1)
 
 
 def _validate_prompt_template(name, prompt):
@@ -1200,7 +1389,7 @@ if __name__ == '__main__':
     url = "http://127.0.0.1:%d" % port
     print(
         "\n  Control panel ready at:  %s\n"
-        "  Keep this window open while you use the tool; close it to stop.\n" % url,
+        "  Automation keeps running if this dashboard closes. Use Stop to end it.\n" % url,
         flush=True,
     )
     # The launcher scripts set PANEL_OPEN_BROWSER=1 so the browser opens itself,

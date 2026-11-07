@@ -705,7 +705,9 @@ def answer_common_questions(label: str, answer: str | None) -> str | None:
 
 
 # Function to answer the questions for Easy Apply
-def answer_questions(modal: WebElement, questions_list: set, work_location: str, job_description: str | None = None ) -> set:
+def answer_questions(modal: WebElement, questions_list: set, work_location: str,
+                     job_description: str | None = None, trace_context: dict | None = None) -> set:
+    trace_context = dict(trace_context or {})
     # Get all questions from the page
      
     # The container class churns (it is `fb-dash-form-element` today, paired with a random
@@ -919,7 +921,8 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                     ai_answer = ""
                     if use_AI and aiClient:
                         try:
-                            ai_answer = answer_question(aiClient, label_org, question_type="text", job_description=job_description, user_information_all=user_information_all)
+                            ai_answer = answer_question(aiClient, label_org, question_type="text", job_description=job_description,
+                                user_information_all=user_information_all, trace_context=trace_context)
                         except Exception as e:
                             logger.warning("Failed to get AI answer! %s", e)
                     elif local_ai_enabled and localAIClient:
@@ -927,7 +930,7 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                             ai_answer = _generate_application_answer(
                                 localAIClient, label_org, "text", None,
                                 candidate_context_for_classifier, job_description,
-                                about_company_for_ai)
+                                about_company_for_ai, trace_context=trace_context)
                         except Exception as e:
                             logger.warning("Failed to get local AI answer! %s", e)
                     if ai_answer and isinstance(ai_answer, str) and ai_answer.strip():
@@ -1010,7 +1013,9 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         ai_answer = ''
                         if use_AI and aiClient:
                             try:
-                                ai_answer = answer_question(aiClient, label_org, question_type='textarea', job_description=job_description, user_information_all=user_information_all)
+                                ai_answer = answer_question(aiClient, label_org, question_type='textarea',
+                                    job_description=job_description, user_information_all=user_information_all,
+                                    trace_context=trace_context)
                             except Exception as e:
                                 logger.warning('Failed to get AI answer! %s', e)
                         elif local_ai_enabled and localAIClient:
@@ -1019,7 +1024,7 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                                     localAIClient, label_org, 'textarea', None,
                                     candidate_context_for_classifier or user_information_all,
                                     job_description, about_company_for_ai,
-                                    text_area.get_attribute('maxlength'))
+                                    text_area.get_attribute('maxlength'), trace_context)
                             except Exception as e:
                                 logger.warning('Failed to get local AI answer! %s', e)
                         if ai_answer and isinstance(ai_answer, str) and ai_answer.strip():
@@ -1063,7 +1068,7 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                 choices = _generate_application_selections(
                     ai_client, group_label, option_labels,
                     candidate_context_for_classifier or user_information_all,
-                    job_description, about_company_for_ai)
+                    job_description, about_company_for_ai, trace_context=trace_context)
                 choices_lower = {choice.casefold() for choice in choices}
                 for option, option_label, option_text in zip(checkboxes, option_label_elements, option_labels):
                     should_select = option_text.casefold() in choices_lower
@@ -1614,7 +1619,11 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                                         screenshot_name = screenshot(driver, job_id, "Failed at questions")
                                         errored = "stuck"
                                         raise Exception("Seems like stuck in a continuous loop of next, probably because of new questions.")
-                                    questions_list = answer_questions(modal, questions_list, work_location, job_description=description)
+                                    questions_list = answer_questions(modal, questions_list, work_location,
+                                        job_description=description, trace_context={
+                                            'job_id': job_id, 'job_title': title, 'company': company,
+                                            'run_id': run_id,
+                                        })
                                     # `pause_at_failed_question` users want the manual prompt the
                                     # counter above gives them, so only bail out when it is off.
                                     if not pause_at_failed_question and questions_are_stalled(blocked_questions):
@@ -1801,12 +1810,9 @@ def main() -> None:
         if local_ai_enabled:
             try:
                 raw_context = open('candidate_context.md', encoding='utf-8').read()
-                relevant_sections = ('education', 'professional experience', 'technical skills',
-                                     'major professional projects', 'personal projects', 'job search preferences')
-                candidate_context_for_classifier = '\n\n'.join(
-                    section.strip() for section in re.split(r'(?m)(?=^## )', raw_context)
-                    if any(name in section.splitlines()[0].casefold() for name in relevant_sections)
-                )
+                # Keep the source document intact until the job is known. The
+                # classifier builds a deterministic, job-specific evidence view.
+                candidate_context_for_classifier = raw_context
             except OSError as error:
                 logger.warning('Candidate context unavailable; suitability decisions will be REVIEW: %s', error)
                 candidate_context_for_classifier = ''

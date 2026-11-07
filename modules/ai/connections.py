@@ -29,6 +29,7 @@ from __future__ import annotations
 import os
 import json
 import re
+import time
 from difflib import SequenceMatcher
 from typing import Optional
 
@@ -44,6 +45,7 @@ from modules.helpers import print_lg, critical_error_log, logger, convert_to_jso
 from modules.ai.prompts import extract_skills_prompt, ai_answer_prompt, job_suitability_prompt
 from modules.ai.prompt_log import record_prompt
 from modules.ai.request_queue import queued_call
+from modules.ai.context_builder import build_job_context, fit_context_budget
 
 from modules.gui import confirm
 
@@ -197,7 +199,8 @@ def _rolling_window(text, limit, head_ratio=0.62):
             text[-tail:].lstrip())
 
 
-def classify_job_suitability(client, title, company, location, job_description, candidate_context):
+def classify_job_suitability(client, title, company, location, job_description, candidate_context,
+                             *, job_id=None, run_id=None):
     """Classify a job, failing closed to REVIEW when inference or parsing fails."""
     fallback = {
         "decision": "REVIEW", "match_score": 0, "confidence": 0.0,
@@ -212,51 +215,114 @@ def classify_job_suitability(client, title, company, location, job_description, 
     if not all((title, company, location, job_description, candidate_context)):
         return fail_closed('CLASSIFIER_CONTEXT_MISSING')
 
-    # The local Ollama endpoint currently returns a 4,096-token total budget.
-    # Keep a rolling excerpt of each long input and explicitly reserve room for
-    # the structured response instead of letting the model hit its token ceiling.
+    # Context is selected by documented evidence and job-specific skill overlap.
+    # Fit the assembled prompt under Ollama's 8,192-token context, reserving
+    # capacity for prompt overhead and structured output.
+    relevant_context = build_job_context(candidate_context, job_description, title)
+    relevant_context, bounded_description = fit_context_budget(relevant_context, job_description)
     prompt = job_suitability_prompt.format(
-        candidate_context=_rolling_window(candidate_context, 2400), title=title, company=company,
-        location=location, job_description=_rolling_window(job_description, 3400),
+        candidate_context=relevant_context, title=title, company=company,
+        location=location, job_description=bounded_description,
     )
     prompt += ('\n\nOutput constraints: keep the reason to at most 2 short sentences '
                'and 45 words. Return at most 6 concise items in each skills list. '
                'Do not repeat the job description or candidate context.')
     result = None
+    trace_ids = []
+    metadata = {'run_id': run_id or os.environ.get('BOT_RUN_ID'), 'job_id': job_id,
+                'job_title': title, 'company': company, 'candidate_context': relevant_context}
     try:
-        structured = client.model.with_structured_output(JobSuitability)
+        include_raw = True
+        try:
+            structured = client.model.with_structured_output(JobSuitability, include_raw=True)
+        except TypeError:
+            include_raw = False
+            structured = client.model.with_structured_output(JobSuitability)
+        started = time.perf_counter()
         value = queued_call(structured.invoke, prompt)
-        result = value.model_dump() if hasattr(value, "model_dump") else value
-        record_prompt('job suitability', prompt, json.dumps(result, ensure_ascii=False),
-                      client.model_name, client.provider)
+        raw_response = ''
+        if include_raw and isinstance(value, dict) and 'parsed' in value:
+            if value.get('parsing_error'):
+                raise value['parsing_error']
+            parsed = value.get('parsed')
+            raw_response = _msg_text(value.get('raw')) if value.get('raw') is not None else ''
+            result = parsed.model_dump() if hasattr(parsed, 'model_dump') else parsed
+        else:
+            result = value.model_dump() if hasattr(value, "model_dump") else value
+        if not raw_response:
+            raw_response = json.dumps(result, ensure_ascii=False, default=str)
+        trace_ids.append(record_prompt('job suitability', prompt,
+            raw_response, client.model_name, client.provider,
+            parsed_output=result, latency_ms=(time.perf_counter() - started) * 1000,
+            retry_info={'attempt': 1, 'mode': 'structured_output'}, **metadata))
     except Exception as structured_error:
-        record_prompt('job suitability', prompt, model=client.model_name,
-                      provider=client.provider, error=structured_error)
+        trace_ids.append(record_prompt('job suitability', prompt, model=client.model_name,
+            provider=client.provider, error=structured_error,
+            latency_ms=(time.perf_counter() - started) * 1000 if 'started' in locals() else None,
+            retry_info={'attempt': 1, 'mode': 'structured_output'}, **metadata))
         logger.info("Structured suitability output unavailable; trying JSON response: %s", structured_error)
         try:
+            from modules.ai import trace_store
+            trace_store.append_event(trace_ids[-1], 'retry', 'structured_output_fallback',
+                                     {'next_attempt': 2, 'mode': 'text_json'})
+        except Exception:
+            pass
+        try:
+            started = time.perf_counter()
             raw = _msg_text(queued_call(client.model.invoke, prompt))
             result = convert_to_json(raw)
-            record_prompt('job suitability (text fallback)', prompt, raw,
-                          client.model_name, client.provider)
+            trace_ids.append(record_prompt('job suitability (text fallback)', prompt, raw,
+                client.model_name, client.provider, parsed_output=result,
+                latency_ms=(time.perf_counter() - started) * 1000,
+                retry_info={'attempt': 2, 'mode': 'text_json', 'fallback_from': 'structured_output'},
+                **metadata))
         except Exception as error:
-            record_prompt('job suitability (text fallback)', prompt,
-                          model=client.model_name, provider=client.provider, error=error)
+            trace_ids.append(record_prompt('job suitability (text fallback)', prompt,
+                model=client.model_name, provider=client.provider, error=error,
+                latency_ms=(time.perf_counter() - started) * 1000 if 'started' in locals() else None,
+                retry_info={'attempt': 2, 'mode': 'text_json', 'fallback_from': 'structured_output'},
+                **metadata))
             logger.warning("Suitability classification failed: %s", error)
             kind = 'MODEL_TIMEOUT' if 'timeout' in type(error).__name__.casefold() or 'timed out' in str(error).casefold() else 'MODEL_UNAVAILABLE'
-            return fail_closed(kind)
+            final = fail_closed(kind)
+            _finalize_classifier_traces(trace_ids, final, job_id, metadata['run_id'])
+            return final
 
     try:
         if not isinstance(result, dict) or "error" in result:
-            return fail_closed('INVALID_RESPONSE')
+            final = fail_closed('INVALID_RESPONSE')
+            _finalize_classifier_traces(trace_ids, final, job_id, metadata['run_id'])
+            return final
         result["decision"] = str(result.get("decision", "")).strip().upper()
         if result["decision"] not in {"APPLY", "REVIEW", "SKIP"}:
-            return fail_closed('INVALID_RESPONSE')
+            final = fail_closed('INVALID_RESPONSE')
+            _finalize_classifier_traces(trace_ids, final, job_id, metadata['run_id'])
+            return final
         validated = JobSuitability.model_validate(result).model_dump()
         validated['model_decision'] = validated['decision']
+        _finalize_classifier_traces(trace_ids, validated, job_id, metadata['run_id'])
         return validated
     except Exception as error:
         logger.warning("Invalid suitability response; sending job to review: %s", error)
-        return fail_closed('INVALID_RESPONSE')
+        final = fail_closed('INVALID_RESPONSE')
+        _finalize_classifier_traces(trace_ids, final, job_id, metadata['run_id'])
+        return final
+
+
+def _finalize_classifier_traces(trace_ids, result, job_id=None, run_id=None):
+    """Attach the classifier result to each request attempt without duplicate logs."""
+    from modules.ai import trace_store
+    for trace_id in trace_ids:
+        try:
+            trace_store.correlate_trace(trace_id, job_id=job_id, run_id=run_id,
+                                        decision=result.get('decision'))
+            trace_store.append_event(trace_id, 'decision', 'classifier_result', {
+                'model_decision': result.get('model_decision'),
+                'decision': result.get('decision'),
+                'failure_kind': result.get('failure_kind'),
+            })
+        except Exception:
+            pass
 
 
 def extract_skills(client: Optional[AIClient], job_description: str, stream: bool = False) -> dict:
@@ -267,27 +333,44 @@ def extract_skills(client: Optional[AIClient], job_description: str, stream: boo
     if not client or not job_description:
         return {"error": "AI client unavailable or empty job description."}
     prompt = extract_skills_prompt.format(job_description)
+    started = time.perf_counter()
+    structured_trace_id = None
     try:
         structured = client.model.with_structured_output(ExtractedSkills)
         result = queued_call(structured.invoke, prompt)
         data = result.model_dump()
-        record_prompt('skill extraction', prompt, json.dumps(data, ensure_ascii=False),
-                      client.model_name, client.provider)
+        structured_trace_id = record_prompt('skill extraction', prompt, json.dumps(data, ensure_ascii=False),
+                      client.model_name, client.provider, parsed_output=data,
+                      latency_ms=(time.perf_counter() - started) * 1000,
+                      retry_info={'attempt': 1, 'mode': 'structured_output'})
         return data
     except Exception as e:
-        record_prompt('skill extraction', prompt, model=client.model_name,
-                      provider=client.provider, error=e)
+        structured_trace_id = record_prompt('skill extraction', prompt, model=client.model_name,
+                      provider=client.provider, error=e,
+                      latency_ms=(time.perf_counter() - started) * 1000,
+                      retry_info={'attempt': 1, 'mode': 'structured_output'})
         # Some local or older models don't support structured output — fall back to plain JSON parsing.
         logger.warning("Structured skill extraction unavailable, falling back to plain parsing. %s", e)
         try:
+            try:
+                from modules.ai import trace_store
+                trace_store.append_event(structured_trace_id, 'retry', 'structured_output_fallback',
+                                         {'next_attempt': 2, 'mode': 'text_json'})
+            except Exception:
+                pass
+            started = time.perf_counter()
             raw = _msg_text(queued_call(client.model.invoke, prompt))
             result = convert_to_json(raw)
             record_prompt('skill extraction (text fallback)', prompt, raw,
-                          client.model_name, client.provider)
+                          client.model_name, client.provider, parsed_output=result,
+                          latency_ms=(time.perf_counter() - started) * 1000,
+                          retry_info={'attempt': 2, 'mode': 'text_json', 'fallback_from': 'structured_output'})
             return result
         except Exception as e2:
             record_prompt('skill extraction (text fallback)', prompt,
-                          model=client.model_name, provider=client.provider, error=e2)
+                          model=client.model_name, provider=client.provider, error=e2,
+                          latency_ms=(time.perf_counter() - started) * 1000,
+                          retry_info={'attempt': 2, 'mode': 'text_json', 'fallback_from': 'structured_output'})
             _ai_error_alert("Could not extract skills from the job description.", e2)
             return {"error": str(e2)}
 
@@ -305,6 +388,9 @@ class _AnswerState(TypedDict, total=False):
     prompt: str
     raw: str
     answer: str
+    raw_trace_id: str
+    trace_context: dict
+    attempt: int
 
 
 def _build_answer_graph(model, client):
@@ -338,15 +424,22 @@ def _build_answer_graph(model, client):
         return {"prompt": prompt}
 
     def generate(state: _AnswerState) -> dict:
+        started = time.perf_counter()
         try:
             message = queued_call(model.invoke, state["prompt"])
             raw = _msg_text(message).strip()
-            record_prompt('application answer', state['prompt'], raw,
-                          client.model_name, client.provider)
-            return {"raw": raw}
+            trace_context = dict(state.get('trace_context') or {})
+            trace_context['candidate_context'] = state.get('user_information') or ''
+            trace_id = record_prompt('application answer', state['prompt'], raw,
+                client.model_name, client.provider, latency_ms=(time.perf_counter() - started) * 1000,
+                retry_info={'attempt': int(state.get('attempt', 1)), 'mode': 'text'}, **trace_context)
+            return {"raw": raw, "raw_trace_id": trace_id}
         except Exception as error:
-            record_prompt('application answer', state['prompt'],
-                          model=client.model_name, provider=client.provider, error=error)
+            trace_context = state.get('trace_context') or {}
+            record_prompt('application answer', state['prompt'], model=client.model_name,
+                provider=client.provider, error=error,
+                latency_ms=(time.perf_counter() - started) * 1000,
+                retry_info={'attempt': int(state.get('attempt', 1)), 'mode': 'text'}, **trace_context)
             raise
 
     def format_text(state: _AnswerState) -> dict:
@@ -428,6 +521,7 @@ def answer_question(
     about_company: Optional[str] = None,
     user_information_all: Optional[str] = None,
     stream: bool = False,
+    trace_context: Optional[dict] = None,
 ) -> str:
     '''
     Generate an answer to a single application-form question.
@@ -436,6 +530,7 @@ def answer_question(
     if not client or not question:
         return ""
     try:
+        trace_metadata = trace_context if isinstance(trace_context, dict) else {}
         request = {
             "question": question,
             "options": options,
@@ -443,20 +538,40 @@ def answer_question(
             "job_description": job_description,
             "about_company": about_company,
             "user_information": user_information_all,
+            "trace_context": trace_metadata,
+            "attempt": 1,
         }
         final = client.answer_graph.invoke(request)
         answer = final.get("answer", "") or ""
+        first_trace_id = final.get('raw_trace_id')
         if not answer.strip() or answer.strip().casefold() == "cannot_answer":
             # A model may still refuse or return an empty choice despite the
             # best-estimate prompt. Retry once with an explicit instruction.
             retry = dict(request)
+            retry['attempt'] = 2
             retry["question"] = (str(question) +
                 "\n\nProvide your best reasonable estimate from the supplied applicant context. "
                 "Do not answer CANNOT_ANSWER.")
             final = client.answer_graph.invoke(retry)
             answer = final.get("answer", "") or ""
+            if first_trace_id:
+                try:
+                    from modules.ai import trace_store
+                    trace_store.append_event(first_trace_id, 'retry', 'answer_retry', {'next_attempt': 2})
+                except Exception:
+                    pass
             if not answer.strip() or answer.strip().casefold() == "cannot_answer":
+                trace_metadata['trace_id'] = final.get('raw_trace_id')
                 return ""
+        trace_id = final.get('raw_trace_id')
+        trace_metadata['trace_id'] = trace_id
+        if trace_id:
+            try:
+                from modules.ai import trace_store
+                trace_store.complete_trace(trace_id, parsed_output={'final_answer': answer})
+                trace_store.append_event(trace_id, 'workflow', 'final_answer_selected', {'answer': answer})
+            except Exception:
+                pass
         print_lg(f'AI answered "{question}" -> "{answer}"')
         return answer
     except Exception as e:
