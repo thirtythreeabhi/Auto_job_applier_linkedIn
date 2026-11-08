@@ -55,3 +55,6 @@ ai_prompt_overrides.json
 .llm_request.lock
 .panel_server.log
 linkedin_comment_drafts.sqlite3
+
+# Generated Graphify knowledge graph and visualizations
+graphify-out/
