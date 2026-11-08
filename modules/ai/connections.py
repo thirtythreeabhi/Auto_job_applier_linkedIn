@@ -465,6 +465,8 @@ class _AnswerState(TypedDict, total=False):
     raw_trace_id: str
     trace_context: dict
     attempt: int
+    field_metadata: dict
+    structured_response: bool
 
 
 def _build_answer_graph(model, client):
@@ -495,6 +497,16 @@ def _build_answer_graph(model, client):
                            "\n".join(f"- {o}" for o in options))
             else:
                 prompt += "\n\nAnswer with exactly one of these options:\n" + "\n".join(f"- {o}" for o in options)
+        if state.get('structured_response'):
+            prompt += (
+                "\n\nActual form field metadata (authoritative constraints):\n" +
+                json.dumps(state.get('field_metadata') or {}, ensure_ascii=False) +
+                "\n\nReturn exactly one JSON object with keys field_type, answer, evidence, confidence, "
+                "needs_human_review. evidence must be an array of exact supporting excerpts from applicant "
+                "information above; use [] if no evidence. Do not invent facts or estimate missing durations/counts. "
+                "For consent, eligibility, identity, or legal attestations, set needs_human_review=true unless "
+                "the exact answer is explicitly verified. answer must be a string."
+            )
         return {"prompt": prompt}
 
     def generate(state: _AnswerState) -> dict:
@@ -517,7 +529,8 @@ def _build_answer_graph(model, client):
             raise
 
     def format_text(state: _AnswerState) -> dict:
-        return {"answer": (state.get("raw") or "").strip()}
+        raw = (state.get("raw") or "").strip()
+        return {"answer": raw}
 
     def select_option(state: _AnswerState) -> dict:
         raw = (state.get("raw") or "").strip()
@@ -571,6 +584,8 @@ def _build_answer_graph(model, client):
         return {"answer": options[0] if options else ""}
 
     def route(state: _AnswerState) -> str:
+        if state.get('structured_response'):
+            return "text"
         return "select" if state.get("question_type") in ("single_select", "multiple_select") else "text"
 
     graph = StateGraph(_AnswerState)
@@ -596,6 +611,8 @@ def answer_question(
     user_information_all: Optional[str] = None,
     stream: bool = False,
     trace_context: Optional[dict] = None,
+    field_metadata: Optional[dict] = None,
+    structured_response: bool = False,
 ) -> str:
     '''
     Generate an answer to a single application-form question.
@@ -614,9 +631,14 @@ def answer_question(
             "user_information": user_information_all,
             "trace_context": trace_metadata,
             "attempt": 1,
+            "field_metadata": field_metadata or {},
+            "structured_response": structured_response,
         }
         final = client.answer_graph.invoke(request)
         answer = final.get("answer", "") or ""
+        if structured_response:
+            trace_metadata['trace_id'] = final.get('raw_trace_id')
+            return answer.strip()
         first_trace_id = final.get('raw_trace_id')
         if not answer.strip() or answer.strip().casefold() == "cannot_answer":
             # A model may still refuse or return an empty choice despite the

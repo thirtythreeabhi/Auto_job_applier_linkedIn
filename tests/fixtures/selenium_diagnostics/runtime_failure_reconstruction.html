@@ -1,0 +1,40 @@
+<!--
+Offline reconstruction, not a captured LinkedIn page source.
+
+Observed evidence: failure.png shows the Apply to ALIANDO form at 3/4 pages
+under a “Save this application?” dialog with Discard and Save controls.
+The run traceback reports an open dialog with data-testid="dialog", a
+Dismiss button, and an intercepted click. The form selectors below also
+follow selectors used by modules/linkedin_modern.py. DOM order and timing are
+deliberately test inputs; they were not recoverable from the screenshot.
+-->
+<main id="search-results">
+  <div role="button">
+    <button aria-label="Dismiss AI Engineer job" type="button">Dismiss</button>
+    <div componentkey="job-card-component-ref-4479893840">AI Engineer · ALIANDO</div>
+  </div>
+</main>
+<dialog data-testid="dialog" open>
+  <header>
+    <h2>Apply to ALIANDO</h2>
+    <button aria-label="Dismiss" type="button">Close application</button>
+  </header>
+  <section role="region" aria-label="Your job application progress is at 75 percent.">
+    <span>3/4 pages</span>
+  </section>
+  <form>
+    <fieldset>
+      <legend>Is your expected annual compensation for this opportunity less than ₹30 lakhs?*</legend>
+      <label for="comp-yes">Yes</label><input id="comp-yes" name="compensation" type="radio" required>
+      <label for="comp-no">No</label><input id="comp-no" name="compensation" type="radio">
+    </fieldset>
+    <button type="button">Back</button>
+    <button type="button">Review</button>
+  </form>
+</dialog>
+<dialog data-testid="dialog" open>
+  <header><h2>Save this application?</h2></header>
+  <p>Save to return to this application later.</p>
+  <button type="button">Discard</button>
+  <button type="button">Save</button>
+</dialog>

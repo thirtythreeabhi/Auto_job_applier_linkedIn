@@ -177,7 +177,7 @@ def _now():
 def record_suitability_decision(job_id, title, company, location, model, result, path=AUDIT_PATH,
                                 *, decision_source='QWEN_CLASSIFIER', model_decision=None,
                                 final_decision=None, override_reason='', model_called=True,
-                                job_description=''):
+                                job_description='', run_id=None):
     """Persist a classifier result or deterministic filter decision."""
     path = Path(path)
     try:
@@ -194,6 +194,7 @@ def record_suitability_decision(job_id, title, company, location, model, result,
     decisions.append({
         'decision_id': uuid.uuid4().hex,
         'job_id': str(job_id),
+        'run_id': run_id,
         'job_title': str(title),
         'company': str(company),
         'location': str(location),
@@ -229,12 +230,13 @@ def record_suitability_decision(job_id, title, company, location, model, result,
 
 
 class ApplicationAudit:
-    def __init__(self, job_id, title, company, path=AUDIT_PATH):
+    def __init__(self, job_id, title, company, path=AUDIT_PATH, run_id=None):
         self.path = Path(path)
         self.entry = {'attempt_id': uuid.uuid4().hex, 'job_id': str(job_id),
                       'job_title': title, 'company': company,
                       'job_url': f'https://www.linkedin.com/jobs/view/{job_id}/',
-                      'started_at': _now(), 'status': 'in_progress', 'fields': []}
+                      'started_at': _now(), 'status': 'in_progress', 'fields': [],
+                      'run_id': run_id}
         self._save()
 
     def _save(self):

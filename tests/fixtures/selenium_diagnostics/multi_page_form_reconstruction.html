@@ -1,0 +1,26 @@
+<!--
+Synthetic offline state fixture. It is based on the captured modal in
+../06_easy_apply_modal.html and selector contracts in linkedin_modern.py;
+the combined four-page content was not captured from LinkedIn.
+-->
+<dialog data-testid="dialog" open>
+  <header><h2>Apply to Example Company</h2><button aria-label="Dismiss">Close</button></header>
+  <section role="region" aria-label="Your job application progress is at 25 percent.">
+    <span>1/4 pages</span>
+  </section>
+  <form>
+    <label for="city">Enter city or location</label>
+    <input id="city" data-testid="typeahead-input" placeholder="City" value="">
+    <fieldset role="radiogroup">
+      <legend>Are you authorized to work here?*</legend>
+      <label for="work-yes">Yes</label><input id="work-yes" name="work" type="radio" required>
+      <label for="work-no">No</label><input id="work-no" name="work" type="radio">
+    </fieldset>
+    <fieldset>
+      <legend>Skills</legend>
+      <label for="skill-python">Python</label><input id="skill-python" type="checkbox">
+      <label for="skill-sql">SQL</label><input id="skill-sql" type="checkbox">
+    </fieldset>
+    <button type="button">Next</button>
+  </form>
+</dialog>

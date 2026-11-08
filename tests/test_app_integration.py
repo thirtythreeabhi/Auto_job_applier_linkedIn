@@ -160,7 +160,13 @@ def test_ai_trace_endpoint_rejects_invalid_pagination(client):
 
 
 # ------------------------------- bot status ---------------------------------
-def test_status_reports_not_running(client):
+def test_status_reports_not_running(client, monkeypatch):
+    # The host may have a real worker launched by the dashboard while tests run.
+    # Isolate the route's no-worker case from that external process and its files.
+    import app
+    monkeypatch.setattr(app, '_bot_proc', None)
+    monkeypatch.setattr(app, '_orphaned_bot_pid', lambda: None)
+    monkeypatch.setattr(app, '_reconcile_missing_run', lambda: None)
     resp = client.get("/api/status")
     assert resp.status_code == 200
     assert resp.get_json()["running"] is False
@@ -191,7 +197,11 @@ def _mock_bot_launch(monkeypatch, tmp_path):
     monkeypatch.setattr(app, '_bot_command', lambda: ['python', 'runAiBot.py'])
     monkeypatch.setattr(app, '_bot_environment', lambda: os.environ.copy())
     process = _FakeBotProcess()
-    monkeypatch.setattr(app.subprocess, 'Popen', lambda *args, **kwargs: process)
+    process.launch_kwargs = None
+    def fake_popen(*args, **kwargs):
+        process.launch_kwargs = kwargs
+        return process
+    monkeypatch.setattr(app.subprocess, 'Popen', fake_popen)
     # These tests use a fake PID, so keep process signaling inside the fake
     # instead of asking Linux to inspect or signal a real /proc entry.
     monkeypatch.setattr(app.worker_process, 'stop_job_bot_process',
@@ -208,6 +218,7 @@ def test_pause_resume_ack_and_repeated_pause(client, tmp_path, monkeypatch):
     started = client.post('/api/run').get_json()
     run_id = started['run_id']
     assert started['state'] == 'running'
+    assert _process.launch_kwargs['env']['BOT_RUN_ID'] == run_id
 
     assert client.post('/api/pause').get_json()['state'] == 'pausing'
     assert client.post('/api/pause').get_json()['state'] == 'pausing'

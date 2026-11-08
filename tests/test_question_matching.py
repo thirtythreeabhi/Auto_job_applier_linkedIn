@@ -539,28 +539,61 @@ def test_follow_company_still_sets_the_box(bot, monkeypatch, follow_companies,
 class FakeTextInput(FakeElement):
     '''One <input type="text">: reads/writes `value`, and `clear()` empties it.'''
 
-    def __init__(self, value=""):
+    def __init__(self, value="", maxlength=None):
         super().__init__()
         self.value = value
+        self.maxlength = maxlength
 
     def get_attribute(self, name):
-        return self.value if name == "value" else None
+        if name == "value": return self.value
+        if name == "maxlength": return self.maxlength
+        return None
 
     def clear(self):
         self.value = ""
 
 
-def text_question(bot, monkeypatch, label_text, value=""):
+def text_question(bot, monkeypatch, label_text, value="", maxlength=None):
     '''Builds a modal holding one text question; returns (modal, FakeTextInput).'''
     monkeypatch.setattr(bot, "print_lg", lambda *a, **k: None)
     monkeypatch.setattr(bot, "use_AI", False)
     # Real human_type sleeps between keystrokes, and does nothing at all for "".
     monkeypatch.setattr(bot, "human_type",
                         lambda target, text: setattr(target, "value", target.value + (text or "")))
-    field = FakeTextInput(value)
+    field = FakeTextInput(value, maxlength)
     question = FakeElement(children={".//input[@type='text']": field,
                                      ".//label[@for]": FakeElement(text=label_text)})
     return FakeElement(children={".//div[@data-test-form-element]": [question]}), field
+
+
+def test_legacy_text_field_maxlength_rejects_before_entry(bot, monkeypatch):
+    monkeypatch.setattr(bot, "current_city", "A very long city name")
+    modal, field = text_question(bot, monkeypatch, "What city do you currently live in?", maxlength="5")
+
+    with pytest.raises(bot.UnansweredQuestions, match='5-character limit'):
+        bot.answer_questions(modal, set(), "Remote")
+
+    assert field.value == ""
+
+
+def test_legacy_ci_cd_duration_does_not_fall_back_to_total_experience(bot, monkeypatch):
+    monkeypatch.setattr(bot, "years_of_experience", "6")
+    modal, field = text_question(bot, monkeypatch, "How many years of CI/CD experience do you have?")
+
+    bot.answer_questions(modal, set(), "Remote")
+
+    assert field.value == ""
+    assert bot.unanswered_questions
+
+
+def test_legacy_invalid_browser_state_blocks_form_advance(bot, monkeypatch):
+    class InvalidDriver:
+        def execute_script(self, *_args):
+            return {'invalid': ['required radio'], 'errors': []}
+
+    monkeypatch.setattr(bot, 'driver', InvalidDriver())
+    with pytest.raises(bot.UnansweredQuestions, match='Browser reports invalid'):
+        bot._verify_legacy_form_page(FakeElement())
 
 
 @pytest.mark.parametrize("question", [
@@ -585,7 +618,6 @@ def test_an_unclassified_text_question_is_not_answered_with_a_number(bot, monkey
 @pytest.mark.parametrize("question, setting, value", [
     ("What is your phone number?", "phone_number", "5551234567"),
     ("What is your notice period in months?", "notice_period_months", "2"),
-    ("What is your expected salary?", "desired_salary", "250000"),
     ("LinkedIn profile URL", "linkedIn", "https://linkedin.com/in/example"),
     ("What is your zip code?", "zipcode", "12345"),
     ("How many years of work experience do you have?", "years_of_experience", "6"),
@@ -601,6 +633,16 @@ def test_the_text_classifications_that_were_right_still_answer(bot, monkeypatch,
     bot.answer_questions(modal, set(), "Remote")
 
     assert field.value == value
+    assert not bot.unanswered_questions
+
+
+def test_expected_salary_uses_verified_candidate_registry_value(bot, monkeypatch):
+    # Salary answers come from candidate_answers.json, not a stale legacy setting.
+    modal, field = text_question(bot, monkeypatch, "What is your expected salary?")
+
+    bot.answer_questions(modal, set(), "Remote")
+
+    assert field.value == "600000"
     assert not bot.unanswered_questions
 
 

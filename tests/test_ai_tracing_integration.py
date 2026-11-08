@@ -63,19 +63,21 @@ def test_final_application_answer_is_kept_separate_from_raw_model_output(tmp_pat
     class AnswerModel:
         def invoke(self, prompt):
             class Message:
-                content = 'Maybe later'
+                content = json.dumps({'field_type': 'single_select', 'answer': 'Beta',
+                    'evidence': ['The candidate selected Beta'], 'confidence': .95,
+                    'needs_human_review': False})
             return Message()
 
     client = connections.AIClient(AnswerModel(), provider='ollama', model_name='qwen-test')
     from modules.linkedin_modern import _generate_application_answer
     answer = _generate_application_answer(client, 'Pick one', 'single_select', ['Alpha', 'Beta'],
-        '', '', '', trace_context={'job_id': 'job-answer', 'job_title': 'Engineer',
+        'The candidate selected Beta', '', '', trace_context={'job_id': 'job-answer', 'job_title': 'Engineer',
                                    'company': 'Acme', 'run_id': 'run-answer'})
 
-    assert answer == 'Beta'  # existing deterministic option selection behavior
+    assert answer == 'Beta'  # exact option accepted after structured validation
     item = trace_store.list_traces(filters={'job_id': 'job-answer'})['items'][0]
     detail = trace_store.get_trace(item['trace_id'])
-    assert detail['raw_response'] == 'Maybe later'
+    assert json.loads(detail['raw_response'])['answer'] == 'Beta'
     assert detail['parsed_output'] == {'final_application_answer': 'Beta'}
     assert detail['run_id'] == 'run-answer'
     assert any(event['name'] == 'final_application_answer' and event['payload']['answer'] == 'Beta'

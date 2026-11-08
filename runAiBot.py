@@ -18,6 +18,8 @@ version:    26.01.20.5.08
 # Imports
 import os
 import sys
+import argparse
+import uuid
 import csv
 import re
 import time
@@ -49,13 +51,16 @@ from modules.helpers import *
 from modules.clickers_and_finders import *
 from modules.validator import validate_config
 from modules.linkedin_modern import is_modern_page, open_profile_matched_jobs, run_search as run_modern_search, SubmissionUncertain, EasyApplyLimitReached, _raise_if_limited
+from modules import diagnostic_execution, application_diagnostics, run_diagnostics
 from modules.linkedin_modern import (
     _generate_application_answer, _generate_application_selections,
-    _is_narrative_question,
+    _is_narrative_question, _answer_metadata, _field_descriptor,
+    _verify_browser_acceptance, _question_expects_numeric_answer,
 )
 from modules.candidate_registry import CandidateRegistry, REGISTRY_PATH
 from modules.automation_control import PauseController
 from modules.run_diagnostics import RunDiagnostics
+from modules.resource_monitor import ResourceMonitor
 from config import _overrides as user_overrides
 
 if use_AI or local_ai_enabled:
@@ -708,6 +713,24 @@ def answer_common_questions(label: str, answer: str | None) -> str | None:
     return auth_answer if auth_answer is not None else answer
 
 
+def _verify_legacy_form_page(modal):
+    """Fail closed on native invalid controls and visible LinkedIn errors."""
+    try:
+        state = driver.execute_script('''
+          const root = arguments[0];
+          const invalid = Array.from(root.querySelectorAll('input,select,textarea'))
+            .filter(el => (el.willValidate && !el.validity.valid) || el.getAttribute('aria-invalid') === 'true');
+          const errors = Array.from(root.querySelectorAll('[role="alert"], [aria-live="assertive"]'))
+            .filter(el => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length))
+            .map(el => (el.innerText || el.textContent || '').trim()).filter(Boolean);
+          return {invalid, errors};
+        ''', modal)
+    except Exception as error:
+        raise UnansweredQuestions('Could not inspect browser validation; refusing to advance.') from error
+    if not isinstance(state, dict) or state.get('invalid') or state.get('errors'):
+        raise UnansweredQuestions('Browser reports invalid or unanswered fields; refusing to advance.')
+
+
 # Function to answer the questions for Easy Apply
 def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                      job_description: str | None = None, trace_context: dict | None = None) -> set:
@@ -794,6 +817,8 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         randomly_answered_questions.add((f'{label_org} [ {options} ]', "select"))
                         unanswered_questions.add(f'{label_org} [ {options} ]')
             else: answer = prev_answer
+            if answer and answer != prev_answer and select.first_selected_option.text.strip() != str(answer).strip():
+                raise ValueError(f'Could not verify selected dropdown option for: {label_org}')
             questions_list.add((f'{label_org} [ {options} ]', answer, "select", prev_answer))
             continue
         
@@ -847,8 +872,15 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         unanswered_questions.add(f'{label_org} ]')
                     else:
                         actions.move_to_element(options[matched]).click().perform()
-                        answer = options_labels[matched]
+                        answer = option_texts[matched]
             else: answer = prev_answer
+            selected_indices = [index for index, option in enumerate(options) if option.is_selected()]
+            if len(selected_indices) > 1:
+                raise ValueError(f'Multiple radio choices remained selected for: {label_org}')
+            if answer and answer != prev_answer and driver is not None:
+                expected_index = match_answer_to_option(answer, option_texts)
+                if expected_index is None or selected_indices != [expected_index]:
+                    raise ValueError(f'Could not verify the selected radio answer for: {label_org}')
             questions_list.add((label_org+" ]", answer, "radio", prev_answer))
             continue
         
@@ -898,23 +930,27 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         answer = notice_period_weeks
                     else: answer = notice_period
                 elif label_has(label, 'salary', 'compensation', 'ctc', 'pay'): 
+                    registry = CandidateRegistry()
                     if label_has(label, 'current', 'present'):
+                        verified_amount = registry.value('current_ctc')
                         if label_has(label, 'month', 'months', 'monthly'):
-                            answer = current_ctc_monthly
-                        elif label_has(label, 'lakh', 'lakhs'):
-                            answer = current_ctc_lakhs
+                            answer = str(round(float(verified_amount) / 12, 2)) if verified_amount is not None else ''
+                        elif label_has(label, 'lakh', 'lakhs', 'lpa'):
+                            answer = str(round(float(verified_amount) / 100000, 2)) if verified_amount is not None else ''
                         else:
-                            answer = current_ctc
+                            answer = str(verified_amount) if verified_amount is not None else ''
                     else:
+                        verified_amount = registry.value('desired_salary')
                         if label_has(label, 'month', 'months', 'monthly'):
-                            answer = desired_salary_monthly
-                        elif label_has(label, 'lakh', 'lakhs'):
-                            answer = desired_salary_lakhs
+                            answer = str(round(float(verified_amount) / 12, 2)) if verified_amount is not None else ''
+                        elif label_has(label, 'lakh', 'lakhs', 'lpa'):
+                            answer = str(round(float(verified_amount) / 100000, 2)) if verified_amount is not None else ''
                         else:
-                            answer = desired_salary
+                            answer = str(verified_amount) if verified_amount is not None else ''
                 elif label_has(label, 'linkedin'): answer = linkedIn
                 elif label_has(label, 'website', 'blog', 'portfolio', 'link', 'links'): answer = website
-                elif label_has(label, 'scale of 1-10'): answer = confidence_level
+                elif label_has(label, 'scale of 1-10'):
+                    answer = CandidateRegistry().answer(label_org) or ''
                 elif label_has(label, 'headline'): answer = linkedin_headline
                 elif label_has(label, 'hear', 'heard', 'come across') and label_has(label, 'this') and label_has(label, 'job', 'position'): answer = "https://github.com/GodsScion/Auto_job_applier_linkedIn"
                 elif label_has(label, 'state', 'province'): answer = state
@@ -923,20 +959,22 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                 else: answer = answer_common_questions(label,answer)
                 if answer == "":
                     ai_answer = ""
-                    if use_AI and aiClient:
-                        try:
-                            ai_answer = answer_question(aiClient, label_org, question_type="text", job_description=job_description,
-                                user_information_all=user_information_all, trace_context=trace_context)
-                        except Exception as e:
-                            logger.warning("Failed to get AI answer! %s", e)
-                    elif local_ai_enabled and localAIClient:
+                    answer_metadata = _answer_metadata(_field_descriptor(Question, text),
+                        bool(text.get_attribute('required') or label_org.rstrip().endswith('*')))
+                    ai_client = aiClient if use_AI and aiClient else (localAIClient if local_ai_enabled else None)
+                    if ai_client:
                         try:
                             ai_answer = _generate_application_answer(
-                                localAIClient, label_org, "text", None,
-                                candidate_context_for_classifier, job_description,
-                                about_company_for_ai, trace_context=trace_context)
+                                ai_client, label_org, text.get_attribute('type') or 'text', None,
+                                candidate_context_for_classifier or user_information_all,
+                                job_description, about_company_for_ai,
+                                text.get_attribute('maxlength'), trace_context,
+                                answer_metadata,
+                                evidence_context=candidate_context_for_classifier or user_information_all)
                         except Exception as e:
                             logger.warning("Failed to get local AI answer! %s", e)
+                    if answer_metadata.get('_answer_rejected'):
+                        raise UnansweredQuestions(f'AI answer rejected for: {label_org}')
                     if ai_answer and isinstance(ai_answer, str) and ai_answer.strip():
                         answer = ai_answer.strip()
                         print_lg(f'AI answered "{label_org}": "{answer}"')
@@ -949,8 +987,30 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         print_lg(f'No answer for the text question "{label_org}". Leaving it empty - add it to config/questions.py.')
                         randomly_answered_questions.add((label_org, "text"))
                         unanswered_questions.add(label_org)
+                if answer and (text.get_attribute('type') == 'number' or _question_expects_numeric_answer(label_org)):
+                    numeric = re.fullmatch(
+                        r'[₹$€£]?\s*(-?\d[\d,]*(?:\.\d+)?)\s*(?:years?|yrs?|months?|days?|lpa|inr|per\s+annum)?',
+                        str(answer).strip(), re.I)
+                    if not numeric:
+                        answer = ''
+                        randomly_answered_questions.add((label_org, 'text'))
+                        unanswered_questions.add(label_org)
+                    else:
+                        answer = numeric.group(1).replace(',', '')
+                maxlength = text.get_attribute('maxlength')
+                if answer and maxlength is not None and str(maxlength).isdigit() and len(str(answer)) > int(maxlength):
+                    unanswered_questions.add(label_org)
+                    raise UnansweredQuestions(
+                        f'Answer exceeds the {maxlength}-character limit for: {label_org}')
                 text.clear()
                 human_type(text, answer)
+                if answer:
+                    actual = (text.get_attribute('value') or '').strip()
+                    if actual.casefold() != str(answer).strip().casefold():
+                        raise ValueError(f'Could not verify entered form value for: {label_org}')
+                    if driver is not None:
+                        driver.execute_script('arguments[0].blur();', text)
+                        _verify_browser_acceptance(driver, text, label_org)
                 if do_actions:
                     sleep(2)
                     actions.send_keys(Keys.ARROW_DOWN)
@@ -991,10 +1051,16 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                     answer_context = candidate_context_for_classifier or user_information_all
                     if draft:
                         answer_context += '\n\nSaved draft for this question: ' + draft
+                    answer_metadata = _answer_metadata(_field_descriptor(Question, text_area),
+                        bool(text_area.get_attribute('required') or label_org.rstrip().endswith('*')))
                     ai_answer = _generate_application_answer(
                         ai_client, enriched_question, 'textarea', None,
                         answer_context, job_description, about_company_for_ai,
-                        text_area.get_attribute('maxlength'))
+                        text_area.get_attribute('maxlength'), trace_context,
+                        answer_metadata,
+                        evidence_context=candidate_context_for_classifier or user_information_all)
+                    if answer_metadata.get('_answer_rejected'):
+                        raise UnansweredQuestions(f'AI answer rejected for: {label_org}')
                     if ai_answer:
                         answer = ai_answer.strip()
                         print_lg(f'AI enriched "{label_org}": "{answer}"')
@@ -1015,30 +1081,42 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                     elif label_has(label, 'cover'): answer = cover_letter
                     if answer == '':
                         ai_answer = ''
-                        if use_AI and aiClient:
-                            try:
-                                ai_answer = answer_question(aiClient, label_org, question_type='textarea',
-                                    job_description=job_description, user_information_all=user_information_all,
-                                    trace_context=trace_context)
-                            except Exception as e:
-                                logger.warning('Failed to get AI answer! %s', e)
-                        elif local_ai_enabled and localAIClient:
+                        answer_metadata = _answer_metadata(_field_descriptor(Question, text_area),
+                            bool(text_area.get_attribute('required') or label_org.rstrip().endswith('*')))
+                        ai_client = aiClient if use_AI and aiClient else (localAIClient if local_ai_enabled else None)
+                        if ai_client:
                             try:
                                 ai_answer = _generate_application_answer(
-                                    localAIClient, label_org, 'textarea', None,
+                                    ai_client, label_org, 'textarea', None,
                                     candidate_context_for_classifier or user_information_all,
                                     job_description, about_company_for_ai,
-                                    text_area.get_attribute('maxlength'), trace_context)
+                                    text_area.get_attribute('maxlength'), trace_context,
+                                    answer_metadata,
+                                    evidence_context=candidate_context_for_classifier or user_information_all)
                             except Exception as e:
                                 logger.warning('Failed to get local AI answer! %s', e)
+                            if answer_metadata.get('_answer_rejected'):
+                                raise UnansweredQuestions(f'AI answer rejected for: {label_org}')
                         if ai_answer and isinstance(ai_answer, str) and ai_answer.strip():
                             answer = ai_answer.strip()
                             print_lg(f'AI answered "{label_org}": "{answer}"')
                         else:
                             randomly_answered_questions.add((label_org, 'textarea'))
                             unanswered_questions.add(label_org)
+            maxlength = text_area.get_attribute('maxlength')
+            if answer and maxlength is not None and str(maxlength).isdigit() and len(str(answer)) > int(maxlength):
+                unanswered_questions.add(label_org)
+                raise UnansweredQuestions(
+                    f'Answer exceeds the {maxlength}-character limit for: {label_org}')
             text_area.clear()
             human_type(text_area, answer)
+            if answer:
+                actual = (text_area.get_attribute('value') or '').strip()
+                if actual.casefold() != str(answer).strip().casefold():
+                    raise ValueError(f'Could not verify entered form value for: {label_org}')
+                if driver is not None:
+                    driver.execute_script('arguments[0].blur();', text_area)
+                    _verify_browser_acceptance(driver, text_area, label_org)
             questions_list.add((label, text_area.get_attribute("value"), "textarea", prev_answer))
             continue
 
@@ -1308,7 +1386,8 @@ def questions_are_stalled(previous_blocked: set | None) -> bool:
 
 
 # Function to apply to jobs
-def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=None) -> None:
+def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=None,
+                  diagnostic_job_id=None, diagnostic_budget=None, run_context=None) -> None:
     from modules.application_audit import previous_attempt_reasons, previously_submitted_roles
     applied_jobs = get_applied_job_ids()
     starting_registry = CandidateRegistry() if REGISTRY_PATH.exists() else None
@@ -1393,13 +1472,22 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                     classifier_model=local_ai_model,
                     pause_before_submit=configured_pause_before_submit,
                     confirm_before_submit=_confirm_modern_submission,
-                    pause_controller=pause_controller, diagnostics=diagnostics)
+                    pause_controller=pause_controller, diagnostics=diagnostics,
+                    diagnostic_job_id=diagnostic_job_id,
+                    diagnostic_budget=diagnostic_budget, run_context=run_context)
                 skip_count += skipped + reviewed
                 if diagnostics:
                     diagnostics.complete_stage('search')
                 if reviewed:
                     print_lg('Stopped at the final application review without submitting.')
                     return
+                if diagnostic_job_id is not None:
+                    return
+            except diagnostic_execution.DiagnosticJobNotFound as error:
+                if diagnostic_job_id is None:
+                    raise
+                print_lg(f'{error} Checking the next configured search term for this job ID only.')
+                continue
             except SubmissionUncertain as error:
                 logger.error('%s Stopping to avoid a duplicate application.', error)
                 raise
@@ -1408,6 +1496,10 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                 raise
             continue
 
+        if diagnostic_job_id is not None:
+            raise diagnostic_execution.DiagnosticConfigurationError(
+                'Diagnostic mode requires the current LinkedIn search-results layout; refusing legacy-flow fallback.'
+            )
         if registry is not None:
             logger.error('This older LinkedIn layout cannot yet enforce the verified-answer registry. Stopping before applying.')
             return
@@ -1500,6 +1592,7 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                         failed_job(job_id, job_link, resume, date_listed, "Found Blacklisted words in About Company", e, "Skipped", screenshot_name)
                         skip_count += 1
                         continue
+
                     except Exception as e:
                         logger.warning("Failed to scroll to About Company!")
                         # print_lg(e)
@@ -1623,11 +1716,22 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                                         screenshot_name = screenshot(driver, job_id, "Failed at questions")
                                         errored = "stuck"
                                         raise Exception("Seems like stuck in a continuous loop of next, probably because of new questions.")
-                                    questions_list = answer_questions(modal, questions_list, work_location,
-                                        job_description=description, trace_context={
-                                            'job_id': job_id, 'job_title': title, 'company': company,
-                                            'run_id': run_id,
-                                        })
+                                    try:
+                                        questions_list = answer_questions(modal, questions_list, work_location,
+                                            job_description=description, trace_context={
+                                                'job_id': job_id, 'job_title': title, 'company': company,
+                                                'run_id': run_id,
+                                            })
+                                    except Exception:
+                                        # A failed answer, value check, or browser validation must
+                                        # never fall through the finally block into Review/Submit.
+                                        errored = 'stuck'
+                                        raise
+                                    try:
+                                        _verify_legacy_form_page(modal)
+                                    except UnansweredQuestions as validation_error:
+                                        errored = 'stuck'
+                                        raise validation_error
                                     # `pause_at_failed_question` users want the manual prompt the
                                     # counter above gives them, so only bail out when it is off.
                                     if not pause_at_failed_question and questions_are_stalled(blocked_questions):
@@ -1646,7 +1750,14 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                                     except ElementClickInterceptedException: break    # Happens when it tries to click Next button in About Company photos section
                                     buffer(click_gap)
 
-                            except NoSuchElementException: errored = "nose"
+                            except NoSuchElementException:
+                                errored = "stuck"
+                                raise
+                            except Exception:
+                                # The finally block also handles normal completion. Mark every
+                                # exceptional form path as non-submittable before entering it.
+                                errored = "stuck"
+                                raise
                             finally:
                                 # Nothing in here may raise: an exception raised in a finally
                                 # REPLACES the pending one, which is why every failure used to be
@@ -1656,7 +1767,8 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                                 if questions_list and errored != "stuck": 
                                     print_lg("Answered the following questions...", questions_list)
                                     print("\n\n" + "\n".join(str(question) for question in questions_list) + "\n\n")
-                                wait_xp_click(modal, review_button_xpath, 1, scrollTop=True)
+                                if errored != 'stuck':
+                                    wait_xp_click(modal, review_button_xpath, 1, scrollTop=True)
                                 cur_pause_before_submit = pause_before_submit
                                 if errored == "stuck":
                                     discard_reason = "Required questions left unanswered."
@@ -1671,7 +1783,8 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
                                 if not discard_reason:
                                     follow_company(modal)
                                     _raise_if_limited(driver, 'before_submit')
-                                    if wait_xp_click(modal, submit_button_xpath, 2, scrollTop=True):
+                                    if diagnostic_execution.perform_submission_click(
+                                            wait_xp_click, modal, submit_button_xpath, 2, scrollTop=True):
                                         errored = 'submitting'
                                         _raise_if_limited(driver, 'after_submit', 'unconfirmed')
                                         date_applied = datetime.now()
@@ -1760,16 +1873,21 @@ def apply_to_jobs(search_terms: list[str], pause_controller=None, diagnostics=No
             # LinkedIn page source can contain private profile data and session tokens.
             # Keep it out of logs; the exception above provides the diagnostic context.
             raise
+    if diagnostic_job_id is not None:
+        raise diagnostic_execution.DiagnosticJobNotFound(
+            f'LinkedIn search did not return requested job ID {diagnostic_job_id} in any configured search.'
+        )
 
         
-def run(total_runs: int, pause_controller=None, diagnostics=None) -> int:
+def run(total_runs: int, pause_controller=None, diagnostics=None, run_context=None) -> int:
     if dailyEasyApplyLimitReached:
         return total_runs
     print_lg("\n########################################################################################################################\n")
     print_lg(f"Date and Time: {datetime.now()}")
     print_lg(f"Cycle number: {total_runs}")
     print_lg(f"Currently looking for jobs posted within '{date_posted}' and sorting them by '{sort_by}'")
-    apply_to_jobs(search_terms, pause_controller=pause_controller, diagnostics=diagnostics)
+    apply_to_jobs(search_terms, pause_controller=pause_controller, diagnostics=diagnostics,
+                  run_context=run_context)
     print_lg("########################################################################################################################\n")
     # Only wait between cycles when there is actually going to be another cycle. This used
     # to run at the end of every single run, which reads as a 10 minute hang.
@@ -1785,14 +1903,78 @@ def run(total_runs: int, pause_controller=None, diagnostics=None) -> int:
 
 linkedIn_tab = False
 
-def main() -> None:
+def _parse_execution_args(argv=None):
+    parser = argparse.ArgumentParser(description='LinkedIn job automation')
+    parser.add_argument('--diagnostic', action='store_true',
+                        help='run the isolated, non-submitting Selenium diagnostic mode')
+    parser.add_argument('--diagnostic-job-id',
+                        help='LinkedIn job ID to inspect; required with --diagnostic')
+    args = parser.parse_args(argv)
+    if args.diagnostic and not args.diagnostic_job_id:
+        parser.error('--diagnostic requires --diagnostic-job-id')
+    if args.diagnostic_job_id and not str(args.diagnostic_job_id).isdigit():
+        parser.error('--diagnostic-job-id must contain only digits')
+    args.diagnostic_job_id = str(args.diagnostic_job_id) if args.diagnostic_job_id else None
+    return args
+
+
+def _prepare_diagnostic_run(job_id, run_root=None, configure_logging=True):
+    if not str(job_id or '').isdigit():
+        raise diagnostic_execution.DiagnosticConfigurationError(
+            'Diagnostic mode requires one numeric LinkedIn job ID.'
+        )
+    root = run_root or run_diagnostics.RUNS_DIR
     run_id = os.environ.get('BOT_RUN_ID')
+    existing = run_diagnostics.get_run(run_id, root) if run_diagnostics.valid_run_id(run_id) else None
+    if not existing or existing.get('status') != 'running':
+        run_id = uuid.uuid4().hex
+        run_diagnostics.create_run(run_id, root)
+    os.environ['BOT_RUN_ID'] = run_id
+    os.environ['BOT_DIAGNOSTIC_JOB_ID'] = str(job_id)
+    run_dir = run_diagnostics.run_dir(run_id, root)
+    (run_dir / 'worker.log').touch(exist_ok=True)
+    application_diagnostics.ensure_attempt_log(run_id, root)
+    if configure_logging:
+        setup_logging(log_path=str(run_dir / 'worker.log'))
+    print_lg(f'Diagnostic run ID: {run_id}; target job ID: {job_id}; submission is prohibited.')
+    return run_id
+
+
+def _dispatch_initial_execution(diagnostic_job_id, diagnostic_budget,
+                                pause_controller, diagnostics, total_runs=1, run_context=None):
+    if diagnostic_job_id is not None:
+        apply_to_jobs(search_terms, pause_controller=pause_controller, diagnostics=diagnostics,
+                      diagnostic_job_id=diagnostic_job_id, diagnostic_budget=diagnostic_budget,
+                      run_context=run_context)
+        return total_runs
+    return run(total_runs, pause_controller, diagnostics, run_context)
+
+
+def main(argv=None) -> None:
+    global stop_before_submit
+    args = _parse_execution_args(argv)
+    diagnostic_job_id = args.diagnostic_job_id
+    if diagnostic_job_id is None and os.environ.get('BOT_DIAGNOSTIC_JOB_ID'):
+        raise diagnostic_execution.DiagnosticConfigurationError(
+            'BOT_DIAGNOSTIC_JOB_ID is set; restart with --diagnostic-job-id or clear the diagnostic environment.'
+        )
+    diagnostic_budget = (diagnostic_execution.DiagnosticAttemptBudget(diagnostic_job_id)
+                         if diagnostic_job_id is not None else None)
+    if diagnostic_job_id is not None:
+        run_id = _prepare_diagnostic_run(diagnostic_job_id)
+        stop_before_submit = True
+    run_context = application_diagnostics.run_context_from_environment()
+    run_id = run_context.run_id
+    application_diagnostics.ensure_attempt_log(run_id, run_context.root)
     pause_controller = PauseController(run_id) if run_id else None
     diagnostics = RunDiagnostics(run_id) if run_id else None
+    resource_monitor = ResourceMonitor(run_id, diagnostics.root) if diagnostics else None
     pyautogui.alert("Please consider sponsoring this project at:\n\nhttps://github.com/sponsors/GodsScion\n\n", "Support the project", "Okay")
     total_runs = 1
     fatal_error = None
     try:
+        if resource_monitor:
+            resource_monitor.start()
         global linkedIn_tab, tabs_count, useNewResume, aiClient, localAIClient, candidate_context_for_classifier
         global options, driver, actions, wait
         alert_title = "Error Occurred. Closing Browser!"
@@ -1844,8 +2026,28 @@ def main() -> None:
         # Start applying to jobs
         driver.switch_to.window(linkedIn_tab)
         if diagnostics: diagnostics.complete_stage('startup')
-        total_runs = run(total_runs, pause_controller, diagnostics)
-        while(run_non_stop):
+        if diagnostic_job_id is not None:
+            total_runs = _dispatch_initial_execution(diagnostic_job_id, diagnostic_budget,
+                                                     pause_controller, diagnostics, total_runs,
+                                                     run_context=run_context)
+            if diagnostic_budget.consumed == 0:
+                print_lg('The requested job was isolated, but no Easy Apply attempt was started.')
+            try:
+                if getattr(driver, 'session_id', None) and diagnostics:
+                    screenshot_path = diagnostics.root / run_id / 'diagnostic.png'
+                    driver.save_screenshot(str(screenshot_path))
+            except Exception as screenshot_error:
+                if diagnostics:
+                    diagnostics.event('diagnostic_screenshot_failed',
+                                      error_type=type(screenshot_error).__name__)
+            if diagnostics:
+                diagnostics.finish('completed', 'DIAGNOSTIC_COMPLETE',
+                                   'Diagnostic execution ended without submitting an application.', 0)
+        else:
+            total_runs = _dispatch_initial_execution(None, None, pause_controller,
+                                                     diagnostics, total_runs,
+                                                     run_context=run_context)
+        while(diagnostic_job_id is None and run_non_stop):
             if cycle_date_posted:
                 date_options = ["Any time", "Past month", "Past week", "Past 24 hours"]
                 global date_posted
@@ -1853,9 +2055,9 @@ def main() -> None:
             if alternate_sortby:
                 global sort_by
                 sort_by = "Most recent" if sort_by == "Most relevant" else "Most relevant"
-                total_runs = run(total_runs, pause_controller, diagnostics)
+                total_runs = run(total_runs, pause_controller, diagnostics, run_context)
                 sort_by = "Most recent" if sort_by == "Most relevant" else "Most relevant"
-            total_runs = run(total_runs, pause_controller, diagnostics)
+            total_runs = run(total_runs, pause_controller, diagnostics, run_context)
             if dailyEasyApplyLimitReached:
                 break
         
@@ -1921,6 +2123,8 @@ def main() -> None:
             diagnostics.fail(reason, 'Automation stopped because an unexpected error occurred.',
                              e, failed_stage=current_stage, driver=driver)
     finally:
+        if resource_monitor:
+            resource_monitor.stop()
         summary = "Total runs: {}\nJobs Easy Applied: {}\nExternal job links collected: {}\nTotal applied or collected: {}\nFailed jobs: {}\nIrrelevant jobs skipped: {}\n".format(total_runs,easy_applied_count,external_jobs_count,easy_applied_count + external_jobs_count,failed_count,skip_count)
         print_lg(summary)
         print_lg("\n\nTotal runs:                     {}".format(total_runs))

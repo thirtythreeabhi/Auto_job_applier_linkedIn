@@ -81,7 +81,7 @@ def test_city_typeahead_stops_if_existing_value_cannot_be_cleared(monkeypatch):
         value = 'New Delhi, Delhi, India'
         typed_city = False
         def click(self): pass
-        def get_attribute(self, name): return self.value
+        def get_attribute(self, name): return self.value if name == 'value' else getattr(self, 'attrs', {}).get(name)
         def send_keys(self, *keys):
             if keys == (modern.Keys.CONTROL, 'a') or keys == (modern.Keys.BACKSPACE,):
                 return  # Simulate LinkedIn restoring the value after clear.
@@ -94,9 +94,20 @@ def test_city_typeahead_stops_if_existing_value_cannot_be_cleared(monkeypatch):
             raise TimeoutException('field stayed populated')
 
     field = Field()
+    class Modal:
+        def find_elements(self, by, selector): return [field]
+    modal = Modal()
+    monkeypatch.setattr(modern, '_modal', lambda driver: modal)
+    field.tag_name = 'input'
+    field.attrs = {'type': 'text', 'aria-label': 'City', 'placeholder': 'City', 'value': field.value}
+    field.stale = False
+    field.is_displayed = lambda: True
+    field.is_enabled = lambda: True
+    field.is_selected = lambda: False
+    field.find_elements = lambda *args: []
     monkeypatch.setattr(modern, 'WebDriverWait', Wait)
     with pytest.raises(CannotCompleteApplication, match='Could not clear'):
-        modern._fill_city_typeahead(object(), object(), field, {'current_city': 'New Delhi'})
+        modern._fill_city_typeahead(object(), modal, field, {'current_city': 'New Delhi'})
     assert not field.typed_city
 
 
@@ -462,6 +473,115 @@ def test_job_status_requires_the_employer_and_submitted_status():
     assert not _job_status_confirms('Application status\nApplication submitted', '')
 
 
+def _submission_recovery_mocks(monkeypatch, *, body_error=None, submitted=True, search_fails=False):
+    from modules import linkedin_modern as modern
+    from selenium.common.exceptions import TimeoutException
+    monkeypatch.setattr(modern.application_diagnostics, 'append_exception_event', lambda event, *args: None)
+
+    class Body:
+        @property
+        def text(self):
+            return ('Arohana Tech Solutions\nApplication status\nApplication submitted'
+                    if submitted else 'Arohana Tech Solutions\nApplication status\nIn progress')
+
+    class Driver:
+        current_url = 'https://www.linkedin.com/jobs/search-results/?currentJobId=4486767446'
+        submit_clicks = 0
+        visited = []
+        def get(self, url):
+            self.visited.append(url)
+            self.current_url = url
+        def find_element(self, by, selector):
+            if body_error:
+                raise body_error
+            return Body()
+        def find_elements(self, by, selector):
+            if search_fails:
+                return []
+            return [object()]
+
+    class Wait:
+        def __init__(self, driver, timeout, **kwargs): self.driver = driver
+        def until(self, predicate):
+            if predicate(self.driver): return True
+            raise TimeoutException('mock wait timed out')
+
+    monkeypatch.setattr(modern, 'WebDriverWait', Wait)
+    return modern, Driver()
+
+
+def test_submission_status_confirmation_and_search_restoration_succeed(monkeypatch):
+    modern, driver = _submission_recovery_mocks(monkeypatch)
+    class Audit:
+        status = 'submitting'
+        def finish(self, status, message): self.status = status
+    audit = Audit()
+    outcome, _ = modern._confirm_submission_and_restore_search(
+        driver, '4486767446', 'Arohana Tech Solutions',
+        'https://www.linkedin.com/jobs/search-results/?currentJobId=4486767446', audit, lambda _: None)
+    assert outcome == 'submitted'
+    assert audit.status == 'submitted'
+    assert len(driver.visited) == 2
+
+
+def test_submission_stays_submitted_when_search_restoration_times_out(monkeypatch):
+    modern, driver = _submission_recovery_mocks(monkeypatch, search_fails=True)
+    class Audit:
+        status = 'submitting'
+        transitions = []
+        def finish(self, status, message):
+            self.status = status
+            self.transitions.append(status)
+    audit = Audit()
+    outcome, _ = modern._confirm_submission_and_restore_search(
+        driver, '4486767446', 'Arohana Tech Solutions',
+        'https://www.linkedin.com/jobs/search-results/?currentJobId=4486767446', audit, lambda _: None)
+    assert outcome == 'submitted'
+    assert audit.status == 'submitted'
+    assert audit.transitions == ['submitted']
+    assert len(driver.visited) == 2
+    assert driver.submit_clicks == 0
+
+
+def test_unverified_submission_status_remains_uncertain(monkeypatch):
+    modern, driver = _submission_recovery_mocks(monkeypatch, submitted=False)
+    class Audit:
+        status = 'submitting'
+        def finish(self, status, message): self.status = status
+    audit = Audit()
+    with pytest.raises(modern.SubmissionUncertain):
+        modern._confirm_submission_and_restore_search(
+            driver, '4486767446', 'Arohana Tech Solutions',
+            'https://www.linkedin.com/jobs/search-results/?currentJobId=4486767446', audit, lambda _: None)
+    assert audit.status == 'submitting'
+    assert len(driver.visited) == 1
+
+
+def test_submission_verification_exception_keeps_safe_uncertain_state(monkeypatch):
+    from modules import linkedin_modern as modern
+    from selenium.common.exceptions import WebDriverException
+    modern, driver = _submission_recovery_mocks(monkeypatch, body_error=WebDriverException('status lookup failed'))
+    audits = []
+    class Audit:
+        def __init__(self, *args, **kwargs):
+            self.entry = {'status': 'in_progress', 'run_id': kwargs.get('run_id')}
+            audits.append(self)
+        def finish(self, status, message): self.entry['status'] = status
+    monkeypatch.setattr(modern, 'ApplicationAudit', Audit)
+    monkeypatch.setattr(modern, '_raise_if_limited', lambda *args: None)
+    def verification_failure(*args):
+        audit = args[10]
+        audit.finish('submitting', 'Submit clicked.')
+        modern._confirm_submission_and_restore_search(
+            driver, '4486767446', 'Arohana Tech Solutions', driver.current_url, audit, lambda _: None)
+    monkeypatch.setattr(modern, '_apply_current_job', verification_failure)
+    with pytest.raises(modern.SubmissionUncertain):
+        modern.apply_current_job(driver, {}, {}, '', '', False, lambda _: None,
+                                 'Arohana Tech Solutions', '4486767446')
+    assert audits[0].entry['status'] == 'uncertain'
+    assert len(driver.visited) == 1
+
+
 def test_candidate_locations_do_not_assume_relocation_or_foreign_authorization():
     assert _within_candidate_location('New Delhi (On-site)')
     assert _within_candidate_location('Gurugram (Hybrid)')
@@ -547,9 +667,10 @@ def test_rechecks_name_after_the_form_updates():
 
 def test_error_after_submission_attempt_is_treated_as_uncertain(monkeypatch):
     from modules import linkedin_modern as modern
+    monkeypatch.setattr(modern.application_diagnostics, 'append_exception_event', lambda event, *args: None)
     audits = []
     class Audit:
-        def __init__(self, *args): self.entry = {'status': 'in_progress'}; audits.append(self)
+        def __init__(self, *args, **kwargs): self.entry = {'status': 'in_progress', 'run_id': kwargs.get('run_id')}; audits.append(self)
         def finish(self, status, message): self.entry['status'] = status
     def fail_after_click(*args):
         audits[0].entry['status'] = 'submitting'
@@ -571,6 +692,8 @@ def test_dismiss_saves_unfinished_application_instead_of_discarding(monkeypatch)
     class Button:
         def __init__(self, text): self.text = text
         def is_displayed(self): return True
+        def is_enabled(self): return True
+        def get_attribute(self, name): return None
         def click(self):
             if self.text == 'Dismiss': driver.prompt = True
             elif self.text == 'Save': driver.prompt = False; driver.closed = True
@@ -580,7 +703,9 @@ def test_dismiss_saves_unfinished_application_instead_of_discarding(monkeypatch)
     class Dialog:
         text = 'Save this application?'
         def is_displayed(self): return True
-        def find_elements(self, *args): return [Button('Discard'), Button('Save')]
+        def find_elements(self, by, selector):
+            if selector == 'h1,h2,h3': return []
+            return [Button('Discard'), Button('Save')]
     dialog = Dialog()
     monkeypatch.setattr(modern, '_modal', lambda d: None if d.prompt or d.closed else ApplicationModal())
     monkeypatch.setattr(modern.time, 'sleep', lambda _: None)
@@ -615,6 +740,7 @@ def test_dismiss_resolves_save_prompt_before_underlying_form(monkeypatch):
     class Button:
         def __init__(self, text, label=''): self.text, self.label = text, label
         def is_displayed(self): return True
+        def is_enabled(self): return True
         def get_attribute(self, name): return self.label if name == 'aria-label' else None
         def click(self):
             if self.text == 'Save': driver.closed = True
@@ -622,7 +748,8 @@ def test_dismiss_resolves_save_prompt_before_underlying_form(monkeypatch):
     class Dialog:
         def __init__(self, text, buttons): self.text, self.buttons = text, buttons
         def is_displayed(self): return True
-        def find_elements(self, *args): return self.buttons
+        def find_elements(self, by, selector):
+            return [] if selector in ('h1,h2,h3', 'header h2') else self.buttons
     underlying = Dialog('Apply to Example', [Button('', 'Dismiss')])
     prompt = Dialog('Save this application?', [Button('Discard'), Button('Save')])
     monkeypatch.setattr(modern, '_modal', lambda d: None if d.closed else underlying)
@@ -655,12 +782,14 @@ def test_linkedin_radio_group_without_required_attribute_uses_question_and_optio
             if query == './/input|.//select|.//textarea': return [yes,no]
             if query == './/fieldset|.//*[@role="radiogroup"]': return [Group()]
             return []
+    modal = Modal()
+    monkeypatch.setattr(modern, '_modal', lambda driver: modal)
     class Registry:
         def unverified(self, label): return False
         def answer(self, label, job_id=None, company=None): return 'Yes' if company == 'Pluswealth' else None
         def classify(self, label): return None
     monkeypatch.setattr(modern, '_click', lambda driver, option: setattr(option,'selected',True))
-    modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None, Registry(), company='Pluswealth')
+    modern._fill_fields(object(), modal, {}, {}, '', lambda _: None, Registry(), company='Pluswealth')
     assert yes.selected and not no.selected
 
 
@@ -672,7 +801,7 @@ def test_application_answer_cache_key_normalizes_question_and_keeps_options_dist
            _application_answer_cache_key('Work location?', ['Hybrid'])
 
 
-def test_rerendered_radio_reuses_cached_answer_and_corrects_mismatch(monkeypatch):
+def test_rerendered_radio_regenerates_answer_and_corrects_mismatch(monkeypatch):
     from modules import linkedin_modern as modern
     question = 'Are you comfortable commuting to this job location?'
     radios = []
@@ -698,6 +827,8 @@ def test_rerendered_radio_reuses_cached_answer_and_corrects_mismatch(monkeypatch
             if selector == './/input|.//select|.//textarea': return radios
             if selector == './/fieldset|.//*[@role="radiogroup"]': return [group]
             return []
+    modal = Modal()
+    monkeypatch.setattr(modern, '_modal', lambda driver: modal)
     calls = []
     monkeypatch.setattr(modern, '_ai_answer_allowed', lambda *args: True)
     monkeypatch.setattr(modern, '_generate_application_answer', lambda *args, **kwargs: calls.append(1) or 'Yes')
@@ -706,12 +837,13 @@ def test_rerendered_radio_reuses_cached_answer_and_corrects_mismatch(monkeypatch
     monkeypatch.setattr(modern, '_click', click_radio)
     cache = {}
     radios[:] = [Radio('Yes'), Radio('No')]
-    modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None, answer_cache=cache)
+    modern._fill_fields(object(), modal, {}, {}, '', lambda _: None, answer_cache=cache)
     assert radios[0].selected
     radios[:] = [Radio('Yes'), Radio('No', selected=True)]
-    modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None, answer_cache=cache)
+    modern._fill_fields(object(), modal, {}, {}, '', lambda _: None, answer_cache=cache)
     assert radios[0].selected and not radios[1].selected
-    assert len(calls) == 1
+    # The model answer is not reused as an unvalidated string after a rerender.
+    assert len(calls) == 2
 
 
 def test_required_nonconsent_checkbox_is_not_automatically_selected(monkeypatch):
@@ -725,10 +857,12 @@ def test_required_nonconsent_checkbox_is_not_automatically_selected(monkeypatch)
     class Modal:
         def find_elements(self, by, query):
             return [field] if query == './/input[@required and @type="checkbox"]' else []
+    modal = Modal()
+    monkeypatch.setattr(modern, '_modal', lambda driver: modal)
     monkeypatch.setattr(modern, '_field_label', lambda modal, item: 'I can relocate')
     monkeypatch.setattr(modern, '_click', lambda *args: pytest.fail('Required checkbox must not be auto-selected'))
     with pytest.raises(modern.CannotCompleteApplication, match='explicit review'):
-        modern._fill_fields(None, Modal(), {}, {}, '', lambda _: None)
+        modern._fill_fields(object(), modal, {}, {}, '', lambda _: None)
 
 
 def test_optional_company_follow_is_cleared_before_submission(monkeypatch):
@@ -779,9 +913,10 @@ def test_limit_exception_survives_application_audit_handler(monkeypatch, tmp_pat
     import json
     from modules import linkedin_modern as modern
     from modules.application_audit import ApplicationAudit
+    monkeypatch.setattr(modern.application_diagnostics, 'append_exception_event', lambda event, *args: None)
 
     limit = modern.EasyApplyLimitReached('You have reached your application limit.', 'after_submit', 'unconfirmed')
-    monkeypatch.setattr(modern, 'ApplicationAudit', lambda *args: ApplicationAudit(*args, path=tmp_path / 'audit.json'))
+    monkeypatch.setattr(modern, 'ApplicationAudit', lambda *args, **kwargs: ApplicationAudit(*args, path=tmp_path / 'audit.json', **kwargs))
     monkeypatch.setattr(modern, '_apply_current_job', lambda *args, **kwargs: (_ for _ in ()).throw(limit))
     with pytest.raises(modern.EasyApplyLimitReached) as caught:
         modern.apply_current_job(object(), {}, {}, '', '/tmp/resume.pdf', False, lambda _: None,
