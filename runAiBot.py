@@ -141,6 +141,10 @@ class UnansweredQuestions(Exception):
     skipped, not failed - there is nothing broken to retry, the user has to add answers.
     '''
 
+
+class LocalAIStartupError(RuntimeError):
+    """The required local AI client could not be initialized during startup."""
+
 tabs_count = 1
 easy_applied_count = 0
 external_jobs_count = 0
@@ -1790,6 +1794,7 @@ def main() -> None:
     fatal_error = None
     try:
         global linkedIn_tab, tabs_count, useNewResume, aiClient, localAIClient, candidate_context_for_classifier
+        global options, driver, actions, wait
         alert_title = "Error Occurred. Closing Browser!"
         if diagnostics: diagnostics.begin_stage('startup')
         validate_config()
@@ -1798,15 +1803,6 @@ def main() -> None:
             pyautogui.alert(text='Your default resume "{}" is missing! Please update it\'s folder path "default_resume_path" in config.py\n\nOR\n\nAdd a resume with exact name and path (check for spelling mistakes including cases).\n\n\nFor now the bot will continue using your previous upload from LinkedIn!'.format(default_resume_path), title="Missing Resume", button="OK")
             useNewResume = False
         
-        # Login to LinkedIn
-        if diagnostics: diagnostics.begin_stage('login')
-        tabs_count = len(driver.window_handles)
-        driver.get("https://www.linkedin.com/login")
-        if not is_logged_in_LN(): login_LN()
-        if diagnostics: diagnostics.complete_stage('login')
-        
-        linkedIn_tab = driver.current_window_handle
-
         if local_ai_enabled:
             try:
                 raw_context = open('candidate_context.md', encoding='utf-8').read()
@@ -1816,9 +1812,31 @@ def main() -> None:
             except OSError as error:
                 logger.warning('Candidate context unavailable; suitability decisions will be REVIEW: %s', error)
                 candidate_context_for_classifier = ''
-            localAIClient = create_ai_client(
-                model_name=local_ai_model, provider=local_ai_provider,
-                api_url=local_ai_api_url, api_key=local_ai_api_key, force=True)
+            try:
+                localAIClient = create_ai_client(
+                    model_name=local_ai_model, provider=local_ai_provider,
+                    api_url=local_ai_api_url, api_key=local_ai_api_key,
+                    force=True, required=True)
+                if localAIClient is None:
+                    raise RuntimeError('Client setup returned no client.')
+            except Exception as error:
+                raise LocalAIStartupError(
+                    f"Local AI startup failed for {local_ai_provider}/{local_ai_model}. "
+                    f"Open the control panel's Account tab and check the Local AI settings. Details: {error}"
+                ) from error
+
+        # Importing open_chrome does not start a browser. Wait until required AI setup
+        # succeeds before creating the browser session or opening LinkedIn.
+        options, driver, actions, wait = startChromeSession()
+
+        # Do not open LinkedIn or begin job processing until required AI setup succeeds.
+        if diagnostics: diagnostics.begin_stage('login')
+        tabs_count = len(driver.window_handles)
+        driver.get("https://www.linkedin.com/login")
+        if not is_logged_in_LN(): login_LN()
+        if diagnostics: diagnostics.complete_stage('login')
+
+        linkedIn_tab = driver.current_window_handle
 
         if use_AI:
             aiClient = create_ai_client()
@@ -1881,6 +1899,13 @@ def main() -> None:
                 reason = 'SELECTOR_FAILED' if current_stage in ('search', 'application') else 'BROWSER_SESSION_LOST'
             diagnostics.fail(reason, 'Browser automation failed before the current stage completed.',
                              e, failed_stage=current_stage, driver=driver)
+    except LocalAIStartupError as e:
+        critical_error_log("Required local AI setup failed during startup", e)
+        pyautogui.alert(str(e), "Local AI setup failed")
+        fatal_error = e
+        if diagnostics:
+            diagnostics.fail('LOCAL_AI_UNAVAILABLE', str(e), e,
+                             failed_stage='startup')
     except Exception as e:
         critical_error_log("In Applier Main", e)
         pyautogui.alert(e,alert_title)

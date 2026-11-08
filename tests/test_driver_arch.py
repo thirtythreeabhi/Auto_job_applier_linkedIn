@@ -24,9 +24,8 @@ from selenium.webdriver.common.selenium_manager import SeleniumManager
 
 
 # ---------------------------------------------------------------------------
-# modules/open_chrome.py opens a real browser at import time. Stub the four things
-# that reach outside the process, import it once, then every test works on the real
-# module. binary_paths raising also makes the import exercise the fallback path.
+# Importing modules/open_chrome.py must not open a browser. Stub the helpers that
+# reach outside the process so the driver-resolution functions remain safe to inspect.
 # ---------------------------------------------------------------------------
 _chrome_kwargs = []
 
@@ -46,10 +45,9 @@ with mock.patch.object(uc, "Chrome", _FakeChrome), \
     import modules.open_chrome as oc
 
 
-def test_import_time_launch_fell_back_to_ucs_own_download():
-    '''With Selenium Manager broken, the launch must still happen the old way.'''
-    assert _chrome_kwargs, "modules.open_chrome never constructed a driver"
-    assert "driver_executable_path" not in _chrome_kwargs[0]
+def test_import_does_not_launch_chrome():
+    '''Browser creation is deferred until startup prerequisites have passed.'''
+    assert not _chrome_kwargs, "modules.open_chrome launched Chrome during import"
 
 
 def test_selenium_manager_failure_returns_none(monkeypatch):

@@ -22,6 +22,12 @@ One page per file in `config/`.
 | [`config/secrets.py`](config-secrets.md) | LinkedIn login and the optional AI setup |
 | [`config/settings.py`](config-settings.md) | How the bot runs: click gap, background mode, safe mode, dry runs, logs |
 
+## Code reading
+
+| Page | What is in it |
+|---|---|
+| [Reading `app.py`](app-reading-guide.md) | A beginner-friendly map of the control panel, its routes, and common Python patterns |
+
 ## Project
 
 | Page | What is in it |

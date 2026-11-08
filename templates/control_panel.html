@@ -260,6 +260,8 @@
         .header-tools { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; }
         .model-status { font-size:13px; color:var(--muted); }
         .model-status strong { color:var(--ink); }
+        .field.local-ai-issue { border-left:4px solid #b42318; padding-left:12px; background:#fff5f4; }
+        .local-ai-startup-error { border:1px solid #f2a6a0; border-left:4px solid #b42318; background:#fff5f4; color:#7a271a; padding:12px 14px; border-radius:8px; margin:0 0 16px; }
 
         /* --- Responsive --- */
         @media (max-width: 640px) {
@@ -319,6 +321,8 @@
         var BASELINE = {};      // JSON snapshot for change detection
         var MODEL_FIELDS = [];  // [{datalistId, models}] for provider-aware model lists
         var activeTab = null;
+        var launchedRunId = null;
+        var handledLocalAIStartupFailureId = null;
         var logOffset = 0;
         var logLines = [];
         var logPending = '';
@@ -422,6 +426,24 @@
             if (field.models_by_provider) {
                 return makeModelControl(field, asText(value));
             }
+            if (field.local_ai && field.key === 'local_ai_model') {
+                var wrap = el('div', {});
+                var row = el('div', { style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap' });
+                var input = el('input', { type: 'text', id: id, list: 'dl__local_ollama_models', autocomplete: 'off', style: 'flex:1;min-width:0' });
+                input.value = asText(value);
+                var list = el('datalist', { id: 'dl__local_ollama_models' });
+                var picker = el('select', { id: 'ollamaModelSelect', style: 'width:100%;margin-top:8px;display:none' });
+                picker.appendChild(el('option', { value: '', text: 'Choose an installed Ollama model…' }));
+                picker.addEventListener('change', function () { if (picker.value) input.value = picker.value; });
+                var button = el('button', { type: 'button', class: 'btn secondary', id: 'refreshOllamaModels', text: 'Refresh models' });
+                button.addEventListener('click', refreshOllamaModels);
+                var testButton = el('button', { type: 'button', class: 'btn secondary', id: 'testOllamaConnection', text: 'Test connection' });
+                testButton.addEventListener('click', testOllamaConnection);
+                row.appendChild(input); row.appendChild(button); row.appendChild(testButton);
+                wrap.appendChild(row); wrap.appendChild(list); wrap.appendChild(picker);
+                wrap.appendChild(el('p', { class: 'muted-small', id: 'ollamaModelsStatus', role: 'status', 'aria-live': 'polite', text: 'Refresh to load models installed on the configured Ollama server.' }));
+                return wrap;
+            }
             var t = el('input', { type: 'text', id: id });
             t.value = asText(value);
             return t;
@@ -433,6 +455,7 @@
             box.dataset.cm = field.config_module;
             box.dataset.key = field.key;
             if (field.ai) box.dataset.ai = '1';
+            if (field.local_ai) box.dataset.localAi = '1';
             if (field.type === 'bool') {
                 var line = el('div', { class: 'checkline' });
                 line.appendChild(control);
@@ -536,6 +559,19 @@
                     ctrl.disabled = !enabled;
                 });
             });
+            applyLocalAiState();
+        }
+
+        function applyLocalAiState() {
+            var toggle = document.getElementById('f__secrets__local_ai_enabled');
+            var enabled = toggle ? toggle.checked : false;
+            document.querySelectorAll('.field[data-local-ai="1"]').forEach(function (box) {
+                if (box.dataset.key === 'local_ai_enabled') return;
+                box.classList.toggle('disabled', !enabled);
+                box.querySelectorAll('input, select, textarea, button').forEach(function (ctrl) {
+                    ctrl.disabled = !enabled;
+                });
+            });
         }
 
         function currentProvider() {
@@ -559,6 +595,84 @@
             if (cb) cb.addEventListener('change', applyAiState);
             var prov = document.getElementById('f__secrets__ai_provider');
             if (prov) prov.addEventListener('change', updateModelLists);
+            var localToggle = document.getElementById('f__secrets__local_ai_enabled');
+            if (localToggle) localToggle.addEventListener('change', applyLocalAiState);
+            ['local_ai_provider', 'local_ai_api_url'].forEach(function (key) {
+                var control = document.getElementById('f__secrets__' + key);
+                if (control) control.addEventListener('change', updateLocalModelControls);
+            });
+            updateLocalModelControls();
+        }
+
+        function updateLocalModelControls() {
+            var provider = document.getElementById('f__secrets__local_ai_provider');
+            var isOllama = provider && provider.value === 'ollama';
+            var button = document.getElementById('refreshOllamaModels');
+            var testButton = document.getElementById('testOllamaConnection');
+            var status = document.getElementById('ollamaModelsStatus');
+            var picker = document.getElementById('ollamaModelSelect');
+            if (button) button.style.display = isOllama ? '' : 'none';
+            if (testButton) testButton.style.display = isOllama ? '' : 'none';
+            if (picker && !isOllama) picker.style.display = 'none';
+            ['local_ai_ollama_num_ctx', 'local_ai_ollama_keep_alive'].forEach(function (key) {
+                var field = document.querySelector('.field[data-cm="secrets"][data-key="' + key + '"]');
+                if (field) field.style.display = isOllama ? '' : 'none';
+            });
+            if (status) status.textContent = isOllama ? 'Refresh to load models installed on the configured Ollama server.' : 'Enter the model identifier supported by this provider.';
+        }
+
+        function refreshOllamaModels() {
+            var button = document.getElementById('refreshOllamaModels');
+            var status = document.getElementById('ollamaModelsStatus');
+            var list = document.getElementById('dl__local_ollama_models');
+            var picker = document.getElementById('ollamaModelSelect');
+            var provider = document.getElementById('f__secrets__local_ai_provider');
+            if (!button || !status || !list) return;
+            button.disabled = true;
+            status.textContent = 'Checking Ollama…';
+            fetch('/api/model-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                provider: provider ? provider.value : 'ollama',
+                model: (document.getElementById('f__secrets__local_ai_model') || {}).value || '',
+                api_url: (document.getElementById('f__secrets__local_ai_api_url') || {}).value || ''
+            }) }).then(function (r) { return r.json(); }).then(function (s) {
+                list.innerHTML = '';
+                if (picker) {
+                    picker.innerHTML = '';
+                    picker.appendChild(el('option', { value: '', text: 'Choose an installed Ollama model…' }));
+                }
+                (s.models || []).forEach(function (name) {
+                    list.appendChild(el('option', { value: name }));
+                    if (picker) picker.appendChild(el('option', { value: name, text: name }));
+                });
+                if (picker) picker.style.display = s.models && s.models.length ? '' : 'none';
+                if (s.status === 'offline') status.textContent = 'Could not reach Ollama. Check that it is running and the API URL is correct.' + (s.models && s.models.length ? '' : ' You can still type a model name and save.') + (s.error ? ' (' + s.error + ')' : '');
+                else if (s.models && s.models.length) status.textContent = s.models.length + ' installed model' + (s.models.length === 1 ? '' : 's') + '. Configured model: ' + (s.status === 'running' ? 'running' : s.status === 'installed' ? 'installed, idle' : 'not installed') + '. Select a suggestion or type a name.';
+                else status.textContent = 'Ollama is reachable, but no installed models were returned. Pull a model with Ollama, or enter a name manually.';
+            }).catch(function () { status.textContent = 'Could not check Ollama. You can still type a model name and save.'; })
+                .finally(function () { button.disabled = false; });
+        }
+
+        function testOllamaConnection() {
+            var button = document.getElementById('testOllamaConnection');
+            var status = document.getElementById('ollamaModelsStatus');
+            if (!button || !status) return;
+            var value = function (key) {
+                var control = document.getElementById('f__secrets__' + key);
+                return control ? control.value : '';
+            };
+            button.disabled = true;
+            status.textContent = 'Testing Ollama connection and model… This may take a little while if the model needs to load.';
+            fetch('/api/ollama-test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                provider: value('local_ai_provider'), model: value('local_ai_model'),
+                api_url: value('local_ai_api_url'), num_ctx: value('local_ai_ollama_num_ctx'),
+                keep_alive: value('local_ai_ollama_keep_alive')
+            }) }).then(function (response) {
+                return response.json().then(function (result) { return { ok: response.ok, result: result }; });
+            }).then(function (response) {
+                status.textContent = response.result.message || response.result.error || 'Ollama test failed.';
+            }).catch(function (error) {
+                status.textContent = 'Could not complete the Ollama test: ' + error;
+            }).finally(function () { button.disabled = false; });
         }
 
         // ---- Run tab ----
@@ -1057,6 +1171,7 @@
                 .then(function (s) {
                     setRunningUI(s.running, s.pid, s.state);
                     renderRunDiagnostics(s);
+                    handleLocalAIStartupFailure(s.run);
                     var notice = document.getElementById('easyApplyLimitNotice');
                     var run = s.run || {};
                     if (!notice) return;
@@ -1075,6 +1190,44 @@
                     notice.appendChild(el('p', { class: 'muted-small', text: evidence.screenshot ? 'Screenshot: logs/runs/' + run.run_id + '/' + evidence.screenshot : 'Reference: this run’s worker log.' }));
                 })
                 .catch(function () {});
+        }
+
+        function handleLocalAIStartupFailure(run) {
+            if (!run || run.run_id !== launchedRunId || run.status !== 'failed' ||
+                    run.reason_code !== 'LOCAL_AI_UNAVAILABLE' ||
+                    handledLocalAIStartupFailureId === run.run_id) return;
+            handledLocalAIStartupFailureId = run.run_id;
+            var message = run.explanation || 'The required local AI model could not be started.';
+            var lower = message.toLowerCase();
+            var targetKey = 'local_ai_provider';
+            if (lower.indexOf('not reachable') !== -1 || lower.indexOf('url is empty') !== -1 || lower.indexOf('api url') !== -1) {
+                targetKey = 'local_ai_api_url';
+            } else if (lower.indexOf('api key') !== -1 || lower.indexOf('credential') !== -1 || lower.indexOf('unauthorized') !== -1) {
+                targetKey = 'local_ai_api_key';
+            } else if (lower.indexOf('not installed') !== -1) {
+                targetKey = 'local_ai_model';
+            }
+
+            document.querySelectorAll('.field.local-ai-issue').forEach(function (field) {
+                field.classList.remove('local-ai-issue');
+            });
+            var target = document.querySelector('.field[data-cm="secrets"][data-key="' + targetKey + '"]');
+            if (target) target.classList.add('local-ai-issue');
+            var accountPanel = document.querySelector('.panel[data-tab="Account"]');
+            if (accountPanel) {
+                var banner = document.getElementById('localAIStartupError');
+                if (!banner) {
+                    banner = el('div', { id: 'localAIStartupError', class: 'local-ai-startup-error', role: 'alert' });
+                    var firstLocalField = accountPanel.querySelector('.field[data-local-ai="1"]');
+                    if (firstLocalField) accountPanel.insertBefore(banner, firstLocalField);
+                    else accountPanel.insertBefore(banner, accountPanel.firstChild);
+                }
+                banner.textContent = 'Local AI could not start. Check the highlighted setting and save your changes. ' + message;
+            }
+            var advanced = accountPanel && accountPanel.querySelector('details.advanced');
+            if (advanced && target && advanced.contains(target)) advanced.open = true;
+            showTab('Account');
+            if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function renderRunDiagnostics(status) {
@@ -1270,6 +1423,13 @@
 
         function startBot() {
             showTab('Run');
+            launchedRunId = null;
+            handledLocalAIStartupFailureId = null;
+            document.querySelectorAll('.field.local-ai-issue').forEach(function (field) {
+                field.classList.remove('local-ai-issue');
+            });
+            var previousError = document.getElementById('localAIStartupError');
+            if (previousError) previousError.remove();
             var pane = document.getElementById('logPane');
             logLines = [];
             logPending = '';
@@ -1277,7 +1437,12 @@
             if (pane) pane.textContent = '';
             logOffset = 0;
             fetch('/api/run', { method: 'POST' }).then(function (r) { return r.json(); })
-                .then(function (s) { setRunningUI(s.running, s.pid, s.state); refreshLogs(); })
+                .then(function (s) {
+                    launchedRunId = s.run_id || null;
+                    setRunningUI(s.running, s.pid, s.state);
+                    refreshLogs();
+                    refreshStatus();
+                })
                 .catch(function () {});
         }
 

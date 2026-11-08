@@ -101,9 +101,17 @@ Set core_skills_match to true when the candidate's confirmed skills match the
 essential technical work, regardless of years requested. Set it false when core
 skills themselves are missing. Do not treat experience years as a hard blocker.
 Use hard_blockers only for definite eligibility constraints stated in the posting,
-not for years, preferred skills, or general qualifications. Return the requested
-structured fields. match_score is a ranking heuristic, not a probability of
-getting hired. Mention only concrete requirements and evidence.
+not for years, preferred skills, or general qualifications. Return every field
+below; do not omit fields or replace missing evidence with invented facts. Use
+exactly one of APPLY, REVIEW, or SKIP for decision. Return core_skills_match as a
+boolean; match_score as an integer from 0 to 100; confidence as a number from 0
+to 1 (a fraction, not a percentage); matched_skills, missing_skills, and
+hard_blockers as arrays of strings; experience_gap_years as an integer or null;
+and reason as a concise string. match_score is a ranking heuristic, not a
+probability of getting hired. Mention only concrete requirements and evidence.
+
+Return this complete JSON object shape with all keys present:
+{"decision":"REVIEW","core_skills_match":false,"match_score":0,"confidence":0.0,"matched_skills":[],"missing_skills":[],"experience_gap_years":null,"hard_blockers":[],"reason":"..."}
 
 CANDIDATE CONTEXT:
 {candidate_context}

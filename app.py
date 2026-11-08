@@ -36,7 +36,7 @@ import string
 import tempfile
 import time
 import uuid
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from urllib.parse import urlsplit, urlunsplit
 
 import config_schema
@@ -49,6 +49,18 @@ from modules.ai.request_queue import queued_call
 from modules.ai import trace_store
 from modules import automation_control
 from modules import run_diagnostics
+from modules import worker_process
+
+# READING MAP
+# 1. Imports and paths: tools this file uses and files it reads/writes.
+# 2. Configuration: _load_defaults, _effective_config, and _coerce.
+# 3. Bot process control: helpers that start, stop, and check runAiBot.py.
+# 4. Web pages and job history: routes for /, /history, and /applied-jobs.
+# 5. Control-panel API: routes the browser calls to configure and control runs.
+# 6. AI, logs, and updates: routes for diagnostics and maintenance.
+#
+# Start with docs/app-reading-guide.md for plain-language explanations. This
+# file serves the web panel; the job-search workflow mainly lives in runAiBot.py.
 
 app = Flask(__name__)
 CORS(app)
@@ -232,62 +244,8 @@ def _is_running() -> bool:
 
 
 def _process_identity(pid):
-    """Return stable process identity for the worker executable, if verifiable."""
-    if os.name == 'nt':
-        try:
-            import ctypes
-            from ctypes import wintypes
-            kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
-            kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-            kernel32.OpenProcess.restype = wintypes.HANDLE
-            kernel32.QueryFullProcessImageNameW.argtypes = [wintypes.HANDLE, wintypes.DWORD,
-                                                           wintypes.LPWSTR, ctypes.POINTER(wintypes.DWORD)]
-            kernel32.QueryFullProcessImageNameW.restype = wintypes.BOOL
-            kernel32.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
-            kernel32.GetProcessTimes.restype = wintypes.BOOL
-            kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
-            kernel32.CloseHandle.restype = wintypes.BOOL
-            handle = kernel32.OpenProcess(0x1000, False, int(pid))  # QUERY_LIMITED_INFORMATION
-            if not handle:
-                return None
-            try:
-                image = ctypes.create_unicode_buffer(32768)
-                length = wintypes.DWORD(len(image))
-                if not kernel32.QueryFullProcessImageNameW(handle, 0, image, ctypes.byref(length)):
-                    return None
-                created = wintypes.FILETIME()
-                exited = wintypes.FILETIME()
-                kernel = wintypes.FILETIME()
-                user = wintypes.FILETIME()
-                if not kernel32.GetProcessTimes(handle, ctypes.byref(created), ctypes.byref(exited),
-                                                ctypes.byref(kernel), ctypes.byref(user)):
-                    return None
-                start = (created.dwHighDateTime << 32) | created.dwLowDateTime
-                if os.path.normcase(os.path.abspath(image.value)) != os.path.normcase(os.path.abspath(sys.executable)):
-                    return None
-                return {'start_ticks': str(start),
-                        'script': os.path.realpath(os.path.join(ROOT, 'runAiBot.py'))}
-            finally:
-                kernel32.CloseHandle(handle)
-        except (AttributeError, OSError, ValueError):
-            return None
-    if os.name != 'posix' or not os.path.isdir('/proc'):
-        return None
-    try:
-        with open(f'/proc/{pid}/stat', encoding='utf-8') as stream:
-            raw_stat = stream.read()
-        # comm is parenthesized and may itself contain spaces or parentheses.
-        fields = raw_stat[raw_stat.rfind(')') + 2:].split()
-        start_ticks = fields[19]  # proc field 22, with fields[0] being field 3
-        with open(f'/proc/{pid}/cmdline', 'rb') as stream:
-            argv = stream.read().rstrip(b'\0').split(b'\0')
-        args = [os.fsdecode(arg) for arg in argv]
-        script = os.path.realpath(os.path.join(ROOT, 'runAiBot.py'))
-        if not any(os.path.realpath(arg) == script for arg in args if arg):
-            return None
-        return {'start_ticks': start_ticks, 'script': script, 'argv': args}
-    except (OSError, IndexError, ValueError):
-        return None
+    """Keep project paths here; delegate OS-specific identity checks."""
+    return worker_process.identify_job_bot(pid, ROOT, sys.executable)
 
 
 def _read_worker_record():
@@ -379,40 +337,9 @@ def _remove_pid_file():
         pass
 
 
-def _terminate(proc) -> None:
-    '''Terminate the subprocess and, where feasible, its child processes.'''
-    if proc is None or proc.poll() is not None:
-        return
-    try:
-        if os.name == "nt":
-            # Kill the whole process tree on Windows.
-            subprocess.run(
-                ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            )
-        else:
-            # We launched with start_new_session=True, so the child is its own
-            # process-group leader; signal the whole group.
-            try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
-            except (ProcessLookupError, PermissionError):
-                proc.terminate()
-    except Exception:
-        try:
-            proc.terminate()
-        except Exception:
-            pass
-    # Give it a moment, then force-kill if still alive.
-    try:
-        proc.wait(timeout=5)
-    except Exception:
-        try:
-            if os.name != "nt":
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            else:
-                proc.kill()
-        except Exception:
-            pass
+def _terminate(proc):
+    """Keep route compatibility while delegating OS-level termination."""
+    worker_process.stop_job_bot_process(proc, ROOT)
 
 
 def _terminate_orphaned_bot() -> bool:
@@ -431,6 +358,9 @@ def _terminate_orphaned_bot() -> bool:
             return result.returncode == 0
         except (OSError, subprocess.TimeoutExpired):
             return False
+    if sys.platform.startswith('linux'):
+        return worker_process.stop_verified_linux_process_group(
+            pid, ROOT, record.get('start_ticks'))
     try:
         os.killpg(pid, signal.SIGTERM)
         for _ in range(50):
@@ -504,6 +434,7 @@ def history():
     return render_template('index.html')
 
 
+# The browser's job-history page asks this app for rows from the CSV file.
 # The applied-jobs history CSV the bot writes, and how its columns map to the JSON
 # keys the history page consumes.
 _HISTORY_CSV = 'all_applied_applications_history.csv'
@@ -565,6 +496,7 @@ def mark_job_applied(job_id):
 # ===========================================================================
 # Control-panel API
 # ===========================================================================
+# Configuration routes: the browser reads the schema and saves user settings.
 @app.route('/api/schema', methods=['GET'])
 def api_schema():
     '''Returns the field schema the UI renders its forms from.'''
@@ -679,6 +611,7 @@ def api_candidate_answer():
         return jsonify({'error': 'Could not save the verified answer.'}), 500
 
 
+# Run-control routes: these start, pause, resume, stop, and report on the bot.
 @app.route('/api/run', methods=['POST'])
 def api_run():
     '''Starts the bot as a subprocess if it isn't already running.'''
@@ -787,15 +720,21 @@ def api_stop():
         running = _is_running()
         run_id = automation_control.status(CONTROL_PATH).get('run_id')
         proc = _bot_proc
+        if proc is not None:
+            stopped = _terminate(proc)
+            if stopped is False and proc.poll() is None:
+                return jsonify({'running': True, 'run_id': run_id,
+                                'error': 'Could not safely verify and stop the job bot process.'}), 409
+            _bot_proc = None
+        else:
+            stopped = _terminate_orphaned_bot()
+            if running and not stopped:
+                return jsonify({'running': True, 'run_id': run_id,
+                                'error': 'Could not safely verify and stop the job bot process.'}), 409
         if running and run_id:
             run_diagnostics.finish(run_id, 'stopped', 'USER_STOPPED',
                                    'Automation was stopped by the user.',
                                    root=DIAGNOSTICS_DIR)
-        if proc is not None:
-            _terminate(proc)
-            _bot_proc = None
-        else:
-            _terminate_orphaned_bot()
         if run_id and proc is not None and getattr(proc, 'returncode', None) is not None:
             process_code = getattr(proc, 'returncode', None)
             run_diagnostics.record_exit_code(run_id, process_code, DIAGNOSTICS_DIR)
@@ -869,6 +808,7 @@ def api_run_log(run_id):
         return jsonify({'error': 'Run log not found.'}), 404
 
 
+# LinkedIn feed and comment-draft routes power the optional feed-review tools.
 @app.route('/api/comment-drafts', methods=['GET'])
 def api_comment_drafts():
     """List locally saved comment drafts; this endpoint never accesses LinkedIn."""
@@ -1096,21 +1036,25 @@ def api_skip_comment_draft(draft_id):
     return jsonify({'skipped': True})
 
 
-@app.route('/api/model-status', methods=['GET'])
+# AI routes expose model status, prompts, and saved request traces to the panel.
+@app.route('/api/model-status', methods=['GET', 'POST'])
 def api_model_status():
-    """Report whether the configured Ollama model is installed and currently loaded."""
+    """Report Ollama availability and the models installed on its configured server."""
     secrets = importlib.import_module('config.secrets')
     user_secrets = _overrides.load_user_config().get('secrets', {})
     def setting(name):
         return user_secrets.get(name, getattr(secrets, name, None))
 
+    payload = request.get_json(silent=True) if request.method == 'POST' else None
     enabled = bool(setting('local_ai_enabled'))
-    model = str(setting('local_ai_model') or '')
-    provider = str(setting('local_ai_provider') or '').lower()
-    api_url = str(setting('local_ai_api_url') or '')
+    model = str((payload or {}).get('model', setting('local_ai_model')) or '')
+    provider = str((payload or {}).get('provider', setting('local_ai_provider')) or '').lower()
+    api_url = str((payload or {}).get('api_url', setting('local_ai_api_url')) or '')
     result = {"enabled": enabled, "model": model, "provider": provider,
-              "status": "disabled" if not enabled else "unavailable"}
-    if not enabled or provider != 'ollama' or not api_url:
+              "models": [], "status": "disabled" if not enabled else "unavailable"}
+    if request.method == 'GET' and not enabled:
+        return jsonify(result)
+    if provider != 'ollama' or not api_url:
         return jsonify(result)
 
     parsed = urlsplit(api_url)
@@ -1121,11 +1065,61 @@ def api_model_status():
         with urlopen(base + '/api/tags', timeout=1.5) as response:
             installed = json.loads(response.read().decode('utf-8')).get('models', [])
         names = lambda items: [str(item.get('name', item.get('model', ''))) for item in items]
-        result['status'] = ('running' if model in names(running) else
-                            'installed' if model in names(installed) else 'missing')
+        result['models'] = names(installed)
+        # Ollama may expose a tag-qualified name even when the UI has the
+        # equivalent unqualified name (and vice versa).
+        matches = lambda name, candidates: name in candidates or name.split(':')[0] in [v.split(':')[0] for v in candidates]
+        result['status'] = ('running' if matches(model, names(running)) else
+                            'installed' if matches(model, result['models']) else 'missing')
     except Exception:
         result['status'] = 'offline'
     return jsonify(result)
+
+
+@app.route('/api/ollama-test', methods=['POST'])
+def api_ollama_test():
+    """Run a small local inference request with the current Ollama form settings."""
+    payload = request.get_json(silent=True) or {}
+    provider = str(payload.get('provider', '')).strip().lower()
+    model = str(payload.get('model', '')).strip()
+    api_url = str(payload.get('api_url', '')).strip()
+    if provider != 'ollama':
+        return jsonify({'ok': False, 'error': 'Select Ollama to run this test.'}), 400
+    if not model:
+        return jsonify({'ok': False, 'error': 'Enter an Ollama model name first.'}), 400
+    try:
+        num_ctx = int(payload.get('num_ctx', 8192))
+    except (TypeError, ValueError):
+        return jsonify({'ok': False, 'error': 'Context size must be a whole number of tokens.'}), 400
+    if num_ctx < 512 or num_ctx > 262144:
+        return jsonify({'ok': False, 'error': 'Context size must be between 512 and 262144 tokens.'}), 400
+    keep_alive = str(payload.get('keep_alive', '5m')).strip() or '5m'
+    if len(keep_alive) > 32:
+        return jsonify({'ok': False, 'error': 'Keep-alive value is too long.'}), 400
+    parsed = urlsplit(api_url)
+    base = urlunsplit((parsed.scheme, parsed.netloc, '', '', '')).rstrip('/')
+    if not base or parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        return jsonify({'ok': False, 'error': 'Enter a valid Ollama API URL.'}), 400
+
+    body = json.dumps({
+        'model': model,
+        'messages': [{'role': 'user', 'content': 'Reply with exactly: READY'}],
+        'stream': False,
+        'options': {'num_ctx': num_ctx},
+        'keep_alive': keep_alive,
+    }).encode('utf-8')
+    try:
+        req = Request(base + '/api/chat', data=body,
+                      headers={'Content-Type': 'application/json'}, method='POST')
+        with urlopen(req, timeout=120) as response:
+            result = json.loads(response.read().decode('utf-8'))
+        answer = str((result.get('message') or {}).get('content') or '').strip()
+        if not answer:
+            return jsonify({'ok': False, 'error': 'Ollama responded, but the model returned an empty answer.'}), 502
+        return jsonify({'ok': True, 'model': model,
+                        'message': f'Ollama connection and model test succeeded ({model}, context {num_ctx}, keep-alive {keep_alive}).'})
+    except Exception as error:
+        return jsonify({'ok': False, 'error': f'Ollama test failed: {error}'}), 502
 
 
 @app.route('/api/ai-prompts', methods=['GET'])

@@ -192,6 +192,12 @@ def _mock_bot_launch(monkeypatch, tmp_path):
     monkeypatch.setattr(app, '_bot_environment', lambda: os.environ.copy())
     process = _FakeBotProcess()
     monkeypatch.setattr(app.subprocess, 'Popen', lambda *args, **kwargs: process)
+    # These tests use a fake PID, so keep process signaling inside the fake
+    # instead of asking Linux to inspect or signal a real /proc entry.
+    monkeypatch.setattr(app.worker_process, 'stop_job_bot_process',
+                        lambda proc, *_args, **_kwargs: (proc.terminate() or True))
+    monkeypatch.setattr(app.worker_process, 'stop_verified_linux_process_group',
+                        lambda *_args, **_kwargs: True)
     return app, process, control_path
 
 

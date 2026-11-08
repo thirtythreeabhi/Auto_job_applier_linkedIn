@@ -29,9 +29,8 @@ password = "example_password"           # Enter your password in the quotes
 # key or a local model server, so it stays off by default.
 use_AI = False                           # True or False (case-sensitive)
 
-# Which AI service to use. The tool reaches all of them through LangChain, so this
-# one setting is usually all you change:
-#   "openai" - OpenAI, or ANY OpenAI-compatible server (Ollama, LM Studio, vLLM,
+# Which AI service to use. The tool uses LangChain integrations:
+#   "openai" - OpenAI, or ANY OpenAI-compatible server (LM Studio, vLLM,
 #              DeepSeek, ...). Point llm_api_url at that server.
 #   "gemini" - Google Gemini (uses your Google API key; llm_api_url is ignored).
 # ("deepseek" also works and behaves like "openai".)
@@ -60,11 +59,15 @@ llm_temperature = None
 
 # One local model client is shared by the modern-flow suitability gate and
 # grounded Easy Apply answer drafts. It remains separate from legacy `use_AI`.
+# Ollama uses its native integration so its context and keep-alive options apply.
 local_ai_enabled = True
 local_ai_provider = "ollama"
 local_ai_model = "qwen3-vl:4b-instruct-8k"
 local_ai_api_url = "http://localhost:11434/v1/"
 local_ai_api_key = "not-needed"
+# Ollama-only request settings. Context size matches the classifier's prompt budget.
+local_ai_ollama_num_ctx = 8192
+local_ai_ollama_keep_alive = "5m"
 
 
 

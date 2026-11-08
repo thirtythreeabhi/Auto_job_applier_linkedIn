@@ -151,20 +151,28 @@ def createChromeSession(isRetry: bool = False):
     actions = ActionChains(driver)
     return options, driver, actions, wait
 
-try:
-    options, driver, actions, wait = None, None, None, None
-    options, driver, actions, wait = createChromeSession()
-except SessionNotCreatedException as e:
-    # Recoverable: the guest-profile retry below usually succeeds, so this is not an ERROR.
-    logger.warning("Failed to create Chrome Session, retrying with guest profile", exc_info=e)
-    options, driver, actions, wait = createChromeSession(True)
-except Exception as e:
-    msg = 'Seems like Google Chrome is out dated. Update browser and try again! \n\n\nIf issue persists, try Safe Mode. Set, safe_mode = True in config.py \n\nPlease check GitHub discussions/support for solutions https://github.com/GodsScion/Auto_job_applier_linkedIn \n                                   OR \nReach out in discord ( https://discord.gg/fFp7uUzWCY )'
-    if isinstance(e,TimeoutError): msg = "Couldn't download Chrome-driver. Set auto_manage_driver = False in config!"
-    logger.error(msg)
-    critical_error_log("In Opening Chrome", e)
-    from modules.gui import alert
-    alert(msg, "Error in opening chrome")
-    try: driver.quit()
-    except NameError: exit()
+options, driver, actions, wait = None, None, None, None
+
+
+def startChromeSession():
+    """Explicitly create the browser after startup prerequisites have passed."""
+    global options, driver, actions, wait
+    try:
+        try:
+            options, driver, actions, wait = createChromeSession()
+        except SessionNotCreatedException as error:
+            # Recoverable: the guest-profile retry below usually succeeds, so this is not an ERROR.
+            logger.warning("Failed to create Chrome Session, retrying with guest profile", exc_info=error)
+            options, driver, actions, wait = createChromeSession(True)
+    except Exception as error:
+        message = (
+            'Could not start Chrome. Update Chrome and try again. If the issue persists, '
+            'try safe_mode = True in config/settings.py. See the project support page for help.'
+        )
+        if isinstance(error, TimeoutError):
+            message = "Couldn't download Chrome-driver. Set auto_manage_driver = False in config/settings.py."
+        logger.error(message, exc_info=error)
+        critical_error_log("In Opening Chrome", error)
+        raise RuntimeError(message) from error
+    return options, driver, actions, wait
     

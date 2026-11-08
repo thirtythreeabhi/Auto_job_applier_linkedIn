@@ -12,8 +12,8 @@ GitHub:     https://github.com/GodsScion/Auto_job_applier_linkedIn
 ------------------------------------------------------------------------------
 Provider-agnostic AI layer built on LangChain + LangGraph.
 
-A single code path serves OpenAI, any OpenAI-compatible endpoint (Ollama,
-LM Studio, DeepSeek, vLLM, and similar) and Google Gemini. Pick the provider,
+A single code path serves native Ollama, OpenAI-compatible endpoints (LM Studio,
+DeepSeek, vLLM, and similar) and Google Gemini. Pick the provider,
 model, key and URL in `config/secrets.py`.
 
 Public interface (used by runAiBot.py):
@@ -36,7 +36,7 @@ from urllib.request import urlopen
 from difflib import SequenceMatcher
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing_extensions import TypedDict
 
 from langchain.chat_models import init_chat_model
@@ -82,7 +82,7 @@ def _resolve_provider(name: Optional[str]) -> str:
     return "openai"
 
 
-def _check_ollama(model_name: str, api_url: str) -> None:
+def _check_ollama(model_name: str, api_url: str) -> str:
     """Fail early with a useful message when the configured local model cannot run."""
     parsed = urlsplit(api_url)
     base = urlunsplit((parsed.scheme, parsed.netloc, "", "", "")).rstrip("/")
@@ -102,6 +102,7 @@ def _check_ollama(model_name: str, api_url: str) -> None:
             f"Configured Ollama model '{model_name}' is not installed at {base}. "
             f"Available models: {available}. Install it with `ollama pull {model_name}`."
         )
+    return base
 
 
 def _msg_text(message) -> str:
@@ -137,7 +138,8 @@ class AIClient:
         self.answer_graph = _build_answer_graph(model, self)
 
 
-def create_ai_client(model_name=None, provider=None, api_url=None, api_key=None, force=False) -> Optional[AIClient]:
+def create_ai_client(model_name=None, provider=None, api_url=None, api_key=None, force=False,
+                     required=False) -> Optional[AIClient]:
     '''
     Build the chat model from `config/secrets.py`.
     Returns an `AIClient`, or `None` if AI is turned off or setup fails.
@@ -157,14 +159,23 @@ def create_ai_client(model_name=None, provider=None, api_url=None, api_key=None,
         if temperature is not None:
             kwargs["temperature"] = temperature
 
-        if provider == "google_genai":
+        if str(provider_name).strip().lower() == "ollama":
+            base_url = (api_url if api_url is not None else getattr(cfg, "local_ai_api_url", "") or "").strip()
+            base_url = _check_ollama(model_name, base_url)
+            from langchain_ollama import ChatOllama
+            model = ChatOllama(
+                model=model_name,
+                base_url=base_url,
+                num_ctx=(getattr(cfg, "local_ai_ollama_num_ctx", 8192)),
+                keep_alive=(getattr(cfg, "local_ai_ollama_keep_alive", "5m") or "5m"),
+                **kwargs,
+            )
+        elif provider == "google_genai":
             if api_key and api_key.lower() != "not-needed":
                 os.environ.setdefault("GOOGLE_API_KEY", api_key)
             model = init_chat_model(model_name, model_provider="google_genai", **kwargs)
         else:
             base_url = (api_url if api_url is not None else getattr(cfg, "llm_api_url", "") or "").strip()
-            if str(provider_name).strip().lower() == "ollama":
-                _check_ollama(model_name, base_url)
             # OpenAI-compatible servers accept any key; use a placeholder when none is given.
             kwargs["api_key"] = api_key or "not-needed"
             if base_url:
@@ -177,6 +188,11 @@ def create_ai_client(model_name=None, provider=None, api_url=None, api_key=None,
         print_lg("-------------------------")
         return AIClient(model, provider_name, model_name)
     except Exception as e:
+        if required:
+            raise RuntimeError(
+                f"Could not start required AI client ({provider_name if 'provider_name' in locals() else provider or 'unknown'}/"
+                f"{model_name or 'unknown'}): {e}"
+            ) from e
         if str(provider_name if 'provider_name' in locals() else provider or '').strip().lower() == "ollama":
             # Local model setup errors must reach the caller; silently disabling the
             # classifier makes an offline model look like a successful run.
@@ -216,6 +232,24 @@ class JobSuitability(BaseModel):
     experience_gap_years: Optional[int] = None
     hard_blockers: list[str] = Field(default_factory=list)
     reason: str = Field(max_length=500, description="Concise rationale, no more than 500 characters")
+
+    @field_validator('confidence', mode='before')
+    @classmethod
+    def normalize_confidence_percentage(cls, value):
+        """Accept model confidence expressed as either a fraction or percent.
+
+        This runs inside Pydantic's structured-output parser, before the
+        ``ge=0`` / ``le=1`` constraints are checked, and also during the final
+        validation of JSON fallback results.
+        """
+        if isinstance(value, str):
+            value = value.strip()
+            if value.endswith('%'):
+                value = value[:-1].strip()
+        confidence = float(value)
+        if 1 < confidence <= 100:
+            confidence /= 100
+        return confidence
 
 
 def _rolling_window(text, limit, head_ratio=0.62):
@@ -257,8 +291,17 @@ def classify_job_suitability(client, title, company, location, job_description, 
     )
     prompt += ('\n\nOutput constraints: keep the reason to at most 2 short sentences '
                'and 45 words. Return at most 6 concise items in each skills list. '
-               'Do not repeat the job description or candidate context.')
+               'Do not repeat the job description or candidate context. Return every '
+               'schema field; do not omit required fields or invent facts. Use decision '
+               'APPLY, REVIEW, or SKIP; core_skills_match as a boolean; match_score as '
+               'an integer from 0 to 100; confidence as a number from 0 to 1; '
+               'matched_skills, missing_skills, and hard_blockers as string arrays; '
+               'experience_gap_years as an integer or null; and reason as a string. '
+               'For text output, return only one complete JSON object with these exact '
+               'keys: decision, core_skills_match, match_score, confidence, '
+               'matched_skills, missing_skills, experience_gap_years, hard_blockers, reason.')
     result = None
+    raw_response = ''
     trace_ids = []
     metadata = {'run_id': run_id or os.environ.get('BOT_RUN_ID'), 'job_id': job_id,
                 'job_title': title, 'company': company, 'candidate_context': relevant_context}
@@ -271,12 +314,11 @@ def classify_job_suitability(client, title, company, location, job_description, 
             structured = client.model.with_structured_output(JobSuitability)
         started = time.perf_counter()
         value = queued_call(structured.invoke, prompt)
-        raw_response = ''
         if include_raw and isinstance(value, dict) and 'parsed' in value:
+            raw_response = _msg_text(value.get('raw')) if value.get('raw') is not None else ''
             if value.get('parsing_error'):
                 raise value['parsing_error']
             parsed = value.get('parsed')
-            raw_response = _msg_text(value.get('raw')) if value.get('raw') is not None else ''
             result = parsed.model_dump() if hasattr(parsed, 'model_dump') else parsed
         else:
             result = value.model_dump() if hasattr(value, "model_dump") else value
@@ -287,7 +329,8 @@ def classify_job_suitability(client, title, company, location, job_description, 
             parsed_output=result, latency_ms=(time.perf_counter() - started) * 1000,
             retry_info={'attempt': 1, 'mode': 'structured_output'}, **metadata))
     except Exception as structured_error:
-        trace_ids.append(record_prompt('job suitability', prompt, model=client.model_name,
+        trace_ids.append(record_prompt('job suitability', prompt, response=raw_response,
+            model=client.model_name,
             provider=client.provider, error=structured_error,
             latency_ms=(time.perf_counter() - started) * 1000 if 'started' in locals() else None,
             retry_info={'attempt': 1, 'mode': 'structured_output'}, **metadata))
@@ -329,11 +372,6 @@ def classify_job_suitability(client, title, company, location, job_description, 
             final = fail_closed('INVALID_RESPONSE')
             _finalize_classifier_traces(trace_ids, final, job_id, metadata['run_id'])
             return final
-        # Some local models express confidence on a 0–100 scale despite the
-        # schema requesting 0–1. Normalize that common variant before validation.
-        confidence = float(result.get('confidence', 0))
-        if 1 < confidence <= 100:
-            result['confidence'] = confidence / 100
         validated = JobSuitability.model_validate(result).model_dump()
         validated['model_decision'] = validated['decision']
         _finalize_classifier_traces(trace_ids, validated, job_id, metadata['run_id'])

@@ -28,6 +28,8 @@ Each field is a dict:
                        options" section so the default view stays simple,
       "ai":            (optional) True -> the field only matters when "Use AI" is
                        on, so the UI disables it while AI is turned off,
+      "local_ai":      (optional) True -> the field follows the independent
+                       local AI enable switch,
       "models_by_provider": (optional) suggestions for the model field, keyed by
                        AI provider; the UI shows them as a dropdown but still
                        accepts any typed-in model name,
@@ -62,7 +64,7 @@ AI_MODELS = {
 
 
 def _f(section, config_module, key, label, ftype, help,
-       options=None, advanced=False, ai=False, models_by_provider=None):
+       options=None, advanced=False, ai=False, local_ai=False, models_by_provider=None):
     field = {
         "section": section,
         "config_module": config_module,
@@ -77,6 +79,8 @@ def _f(section, config_module, key, label, ftype, help,
         field["advanced"] = True
     if ai:
         field["ai"] = True
+    if local_ai:
+        field["local_ai"] = True
     if models_by_provider is not None:
         field["models_by_provider"] = models_by_provider
     return field
@@ -96,7 +100,7 @@ SCHEMA = [
             _f("Account", "secrets", "password", "LinkedIn password", "password",
                "Your LinkedIn password. Stored only on this computer in user_config.json (never uploaded anywhere). Optional - leave blank to log in manually."),
             _f("Account", "secrets", "use_AI", "Use AI", "bool",
-               "Master switch for AI help (tailoring answers, resumes and cover letters). Turn this on only if you have a paid API key or a local AI model running. While it's off, all the AI settings below are disabled."),
+               "Enable the legacy AI client for older AI-assisted features. The local AI model below has its own independent switch."),
             _f("Account", "secrets", "ai_provider", "AI provider", "select",
                "Which AI service to use. Pick 'openai' for OpenAI or any OpenAI-compatible service (including local ones like Ollama or LM Studio), 'deepseek' for DeepSeek, or 'gemini' for Google Gemini.",
                options=["openai", "deepseek", "gemini"], ai=True),
@@ -110,6 +114,21 @@ SCHEMA = [
             _f("Account", "secrets", "llm_api_url", "AI API URL", "text",
                "The address of your AI service. Examples: https://api.openai.com/v1/ , http://localhost:1234/v1/ , https://api.deepseek.com . Keep the trailing slash. You may not need this for Gemini.",
                ai=True, advanced=True),
+            _f("Account", "secrets", "local_ai_enabled", "Enable local AI model", "bool",
+               "Use the separately configured local or OpenAI-compatible model for job suitability decisions and application answer drafts.", local_ai=True),
+            _f("Account", "secrets", "local_ai_provider", "Local AI provider", "select",
+               "Choose Ollama, Gemini, or another OpenAI-compatible endpoint. Ollama checks that the configured model is installed.",
+               options=["ollama", "openai", "gemini"], local_ai=True),
+            _f("Account", "secrets", "local_ai_model", "Local AI model", "text",
+               "Choose an installed Ollama model or enter its exact name. For other providers, enter the model identifier they expect.", local_ai=True),
+            _f("Account", "secrets", "local_ai_api_url", "Local AI API URL", "text",
+               "Ollama defaults to http://localhost:11434/v1/. For Gemini this URL is ignored.", local_ai=True, advanced=True),
+            _f("Account", "secrets", "local_ai_api_key", "Local AI API key", "password",
+               "Use not-needed for local Ollama. Stored locally in user_config.json.", local_ai=True, advanced=True),
+            _f("Account", "secrets", "local_ai_ollama_num_ctx", "Ollama context size", "number",
+               "Context window in tokens for Ollama requests. Larger values use more memory; default 8192.", local_ai=True, advanced=True),
+            _f("Account", "secrets", "local_ai_ollama_keep_alive", "Ollama keep model loaded", "text",
+               "How long Ollama keeps the model in memory after a request, such as 5m, 1h, 0 (unload), or -1 (keep loaded).", local_ai=True, advanced=True),
             _f("Account", "settings", "showAiErrorAlerts", "Show AI error alerts", "bool",
                "Pop up an alert if there's a problem connecting to the AI service.",
                ai=True, advanced=True),
