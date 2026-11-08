@@ -23,9 +23,12 @@ else:
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
     # from selenium.webdriver.chrome.service import Service
-import os, shutil, subprocess, sys
+import os, re, shutil, subprocess, sys
+from pathlib import Path
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.selenium_manager import SeleniumManager
 from modules.helpers import find_default_profile_directory, critical_error_log, logger, print_lg
 from selenium.common.exceptions import SessionNotCreatedException
 
@@ -37,6 +40,45 @@ def _adhoc_sign(path: str) -> None:
     except Exception as e:
         # Not fatal, plenty of Macs run unsigned binaries fine. Say what to look for if it isn't one.
         logger.warning("Couldn't ad-hoc re-sign the Chrome driver (%s). If Chrome dies with 'Status code was: -9', install the Xcode command line tools: xcode-select --install", type(e).__name__)
+
+
+def _prepare_guest_profile(profile_dir: str) -> None:
+    """Remove stale Chrome session markers without touching an active profile."""
+    profile = Path(profile_dir)
+    if not profile.exists():
+        return
+    # Chrome records the primary process PID in this symlink. Refuse to touch the
+    # directory if any live process explicitly owns it.
+    for proc in Path('/proc').glob('[0-9]*/cmdline'):
+        try:
+            command = proc.read_bytes().replace(b'\0', b' ').decode(errors='ignore')
+        except OSError:
+            continue
+        if f'--user-data-dir={profile_dir}' in command or f'--user-data-dir="{profile_dir}"' in command:
+            return
+    for name in ('SingletonLock', 'SingletonCookie', 'SingletonSocket', 'DevToolsActivePort'):
+        marker = profile / name
+        try:
+            if marker.is_symlink() or marker.is_file():
+                marker.unlink()
+        except OSError as error:
+            logger.warning("Could not clear stale Chrome profile marker %s (%s)", marker, error)
+
+
+def _managed_system_chromedriver() -> tuple[str, str]:
+    """Resolve a driver matching the installed Chrome, ignoring stale PATH drivers."""
+    manager = SeleniumManager()
+    detected = manager.binary_paths(['--browser', 'chrome'])
+    browser_path = detected['browser_path']
+    version_text = subprocess.check_output([browser_path, '--version'], text=True, timeout=10)
+    match = re.search(r'(\d+\.\d+\.\d+\.\d+)', version_text)
+    if not match:
+        raise RuntimeError(f"Could not determine Chrome version from: {version_text.strip()}")
+    resolved = manager.binary_paths([
+        '--browser', 'chrome', '--browser-path', browser_path,
+        '--browser-version', match.group(1),
+    ])
+    return resolved['driver_path'], browser_path
 
 
 def get_managed_driver_path() -> str | None:
@@ -91,7 +133,9 @@ def createChromeSession(isRetry: bool = False):
         options.add_argument(f"--user-data-dir={profile_dir}")
     else:
         print_lg("Logging in with a guest profile, Web history will not be saved!")
-        options.add_argument(f"--user-data-dir={get_default_temp_profile()}")
+        guest_profile = get_default_temp_profile()
+        _prepare_guest_profile(guest_profile)
+        options.add_argument(f"--user-data-dir={guest_profile}")
     if auto_manage_driver:
         print_lg("Setting up the matching Chrome driver... This may take some time (this happens each run when auto_manage_driver is enabled).")
         driver_path = get_managed_driver_path()
@@ -99,7 +143,9 @@ def createChromeSession(isRetry: bool = False):
     else:
         # ponytail: warning only, no stealth patching here. Set auto_manage_driver = True if LinkedIn starts blocking.
         logger.warning("auto_manage_driver is False, so we're using plain Selenium with NO anti-detection at all. LinkedIn may flag or block this session, set auto_manage_driver = True in config/settings.py if that happens.")
-        driver = webdriver.Chrome(options=options) #, service=Service(executable_path="C:\\Program Files\\Google\\Chrome\\chromedriver-win64\\chromedriver.exe"))
+        driver_path, browser_path = _managed_system_chromedriver()
+        options.binary_location = browser_path
+        driver = webdriver.Chrome(service=Service(executable_path=driver_path), options=options)
     driver.maximize_window()
     wait = WebDriverWait(driver, 5)
     actions = ActionChains(driver)

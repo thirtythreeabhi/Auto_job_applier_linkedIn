@@ -30,6 +30,9 @@ import os
 import json
 import re
 import time
+from urllib.error import URLError
+from urllib.parse import urlsplit, urlunsplit
+from urllib.request import urlopen
 from difflib import SequenceMatcher
 from typing import Optional
 
@@ -77,6 +80,28 @@ def _resolve_provider(name: Optional[str]) -> str:
     if n in ("gemini", "google", "google_genai", "google-genai"):
         return "google_genai"
     return "openai"
+
+
+def _check_ollama(model_name: str, api_url: str) -> None:
+    """Fail early with a useful message when the configured local model cannot run."""
+    parsed = urlsplit(api_url)
+    base = urlunsplit((parsed.scheme, parsed.netloc, "", "", "")).rstrip("/")
+    if not base:
+        raise RuntimeError("Ollama URL is empty. Set local_ai_api_url in the AI settings.")
+    try:
+        with urlopen(base + "/api/tags", timeout=3) as response:
+            models = json.loads(response.read().decode("utf-8")).get("models", [])
+    except (OSError, ValueError, URLError) as error:
+        raise RuntimeError(
+            f"Ollama is not reachable at {base}. Start Ollama (`ollama serve`) and retry."
+        ) from error
+    names = {str(item.get("name", item.get("model", ""))) for item in models}
+    if model_name not in names:
+        available = ", ".join(sorted(names)) or "none"
+        raise RuntimeError(
+            f"Configured Ollama model '{model_name}' is not installed at {base}. "
+            f"Available models: {available}. Install it with `ollama pull {model_name}`."
+        )
 
 
 def _msg_text(message) -> str:
@@ -138,6 +163,8 @@ def create_ai_client(model_name=None, provider=None, api_url=None, api_key=None,
             model = init_chat_model(model_name, model_provider="google_genai", **kwargs)
         else:
             base_url = (api_url if api_url is not None else getattr(cfg, "llm_api_url", "") or "").strip()
+            if str(provider_name).strip().lower() == "ollama":
+                _check_ollama(model_name, base_url)
             # OpenAI-compatible servers accept any key; use a placeholder when none is given.
             kwargs["api_key"] = api_key or "not-needed"
             if base_url:
@@ -150,6 +177,10 @@ def create_ai_client(model_name=None, provider=None, api_url=None, api_key=None,
         print_lg("-------------------------")
         return AIClient(model, provider_name, model_name)
     except Exception as e:
+        if str(provider_name if 'provider_name' in locals() else provider or '').strip().lower() == "ollama":
+            # Local model setup errors must reach the caller; silently disabling the
+            # classifier makes an offline model look like a successful run.
+            raise
         _ai_error_alert(
             "Could not start the AI client. Check your provider, model name, API key and URL in config/secrets.py.",
             e,
@@ -298,6 +329,11 @@ def classify_job_suitability(client, title, company, location, job_description, 
             final = fail_closed('INVALID_RESPONSE')
             _finalize_classifier_traces(trace_ids, final, job_id, metadata['run_id'])
             return final
+        # Some local models express confidence on a 0–100 scale despite the
+        # schema requesting 0–1. Normalize that common variant before validation.
+        confidence = float(result.get('confidence', 0))
+        if 1 < confidence <= 100:
+            result['confidence'] = confidence / 100
         validated = JobSuitability.model_validate(result).model_dump()
         validated['model_decision'] = validated['decision']
         _finalize_classifier_traces(trace_ids, validated, job_id, metadata['run_id'])
