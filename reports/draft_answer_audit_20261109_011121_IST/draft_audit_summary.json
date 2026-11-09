@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-11-09T01:11:21.610896+05:30",
+  "timezone": "Asia/Kolkata",
+  "read_only": true,
+  "source_counts": {
+    "audit_attempt_records": 744,
+    "answer_traces": 137,
+    "all_ai_traces": 3309,
+    "attempt_diagnostic_events": 51
+  },
+  "counts": {
+    "attempts_with_problematic_field": 15,
+    "attempts_with_unsupported_or_contradictory_field": 1,
+    "attempts_with_malformed_or_type_mismatch_field": 14,
+    "attempts_requiring_manual_review": 193,
+    "answer_trace_records": 137,
+    "field_rows": 3122,
+    "draft_review_rows": 193,
+    "high_risk_rows": 2
+  },
+  "scope_notes": [
+    "All local sources read-only; no LinkedIn/browser/automation.",
+    "Current live artifact counts can differ from prior generated coverage report.",
+    "Validator acceptance, Selenium args, DOM values and browser validation mostly not captured.",
+    "User reports manual React rating edit; separate from automation."
+  ],
+  "files": [
+    "draft_answer_audit.md",
+    "draft_answer_audit.csv",
+    "draft_field_level_audit.csv",
+    "qwen_prompt_response_audit.csv",
+    "high_risk_drafts.csv",
+    "missing_evidence_report.md",
+    "draft_audit_summary.json"
+  ],
+  "prompt_findings": {
+    "answer_traces_with_legacy_guessing_instruction": 136,
+    "answer_traces_with_evidence_and_human_review_instruction": 1,
+    "concrete_raw_parsed_mismatch_examples": {
+      "machine_learning_related_raw_zero_parsed_one": 3,
+      "ci_cd_raw_zero_parsed_one": 2,
+      "ecommerce_range_normalized_to_less_than_one_year": 2
+    },
+    "note": "Trace-level examples may be retries for one question; consult qwen_prompt_response_audit.csv."
+  }
+}

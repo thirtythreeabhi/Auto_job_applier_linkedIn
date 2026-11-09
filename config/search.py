@@ -17,9 +17,27 @@ version:    26.01.20.5.08
 
 ###################################################### LINKEDIN SEARCH PREFERENCES ######################################################
 
-# These Sentences are Searched in LinkedIn
-# Enter your search terms inside '[ ]' with quotes ' "searching title" ' for each search followed by comma ', ' Eg: ["Software Engineer", "Software Developer", "Selenium Developer"]
-search_terms = ["Software Engineer", "Software Developer", "Python Developer", "Selenium Developer", "React Developer", "Java Developer", "Front End Developer", "Full Stack Developer", "Web Developer", "Nodejs Developer"]
+# Titles are discovery queries, not final eligibility criteria. The suitability
+# classifier evaluates each posting against the candidate's demonstrated skills.
+JOB_TITLE_GROUPS = {
+    "backend": [
+        "Junior Backend Engineer", "Backend Engineer", "Backend Software Engineer",
+        "Software Engineer I", "SDE-1", "Associate Software Engineer",
+        "Python Backend Developer", "Node.js Backend Developer", "API Engineer",
+        "Integration Engineer", "API Developer", "Backend Developer",
+    ],
+    "ai_engineering": [
+        "Applied AI Engineer", "AI Engineer", "LLM Engineer", "Generative AI Engineer",
+        "AI Application Engineer", "AI Integration Engineer", "LLM Application Developer",
+        "AI Automation Engineer", "RAG Engineer", "Agentic AI Engineer",
+    ],
+    "product_engineering": [
+        "Full Stack Engineer", "Full Stack Developer", "Product Engineer",
+        "Software Development Engineer", "Founding Engineer", "Application Developer",
+        "Technical Integration Engineer",
+    ],
+}
+search_terms = [title for titles in JOB_TITLE_GROUPS.values() for title in titles]
 
 # Search location, this will be filled in "City, state, or zip code" search box. If left empty as "", tool will not fill it.
 search_location = "United States"               # Some valid examples: "", "United States", "India", "Chicago, Illinois, United States", "90001, Los Angeles, California, United States", "Bengaluru, Karnataka, India", etc.
@@ -91,7 +109,7 @@ about_company_bad_words = ["Crossover"]       # (dynamic multiple search) or lea
 about_company_good_words = []      # (dynamic multiple search) or leave empty as []. Ex: ["Robert Half", "Dice"]
 
 # Avoid applying to these companies if they have these bad words in their 'Job Description' section...  (In development)
-bad_words = ["US Citizen","USA Citizen","No C2C", "No Corp2Corp", ".NET", "Embedded Programming", "PHP", "Ruby", "CNC"]                     # (dynamic multiple search) or leave empty as []. Case Insensitive. Ex: ["word_1", "phrase 1", "word word", "polygraph", "US Citizenship", "Security Clearance"]
+bad_words = ["US Citizen","USA Citizen","No C2C", "No Corp2Corp", "Embedded Programming", "CNC"]                     # (dynamic multiple search) or leave empty as []. Case Insensitive. Ex: ["word_1", "phrase 1", "word word", "polygraph", "US Citizenship", "Security Clearance"]
 
 # Do you have an active Security Clearance? (True for Yes and False for No)
 # Skip jobs whose description says visa sponsorship is NOT available?

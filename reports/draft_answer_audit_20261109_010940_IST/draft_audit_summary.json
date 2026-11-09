@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-11-09T01:09:40.406043+05:30",
+  "timezone": "Asia/Kolkata",
+  "read_only": true,
+  "source_counts": {
+    "audit_attempt_records": 744,
+    "answer_traces": 137,
+    "all_ai_traces": 3288,
+    "attempt_diagnostic_events": 51
+  },
+  "counts": {
+    "attempts_with_problematic_field": 18,
+    "attempts_with_unsupported_or_contradictory_field": 1,
+    "attempts_with_malformed_or_type_mismatch_field": 17,
+    "attempts_requiring_manual_review": 193,
+    "answer_trace_records": 137,
+    "field_rows": 3122,
+    "draft_review_rows": 195,
+    "high_risk_rows": 2
+  },
+  "scope_notes": [
+    "All local sources read-only; no LinkedIn/browser/automation.",
+    "Current live artifact counts can differ from prior generated coverage report.",
+    "Validator acceptance, Selenium args, DOM values and browser validation mostly not captured.",
+    "User reports manual React rating edit; separate from automation."
+  ],
+  "files": [
+    "draft_answer_audit.md",
+    "draft_answer_audit.csv",
+    "draft_field_level_audit.csv",
+    "qwen_prompt_response_audit.csv",
+    "high_risk_drafts.csv",
+    "missing_evidence_report.md",
+    "draft_audit_summary.json"
+  ]
+}

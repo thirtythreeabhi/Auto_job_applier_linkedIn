@@ -1,0 +1,1134 @@
+﻿job_id,run_id,attempt_id,start_timestamp,end_timestamp,last_completed_phase,failure_phase,field_label,exception_class,last_operation,outcome,draft_saved,submit_clicked,submission_confirmed,application_status,failure_reason,dialog_cleanup_evidence,diagnostic_event_count,diagnostic_events,source_provenance,submit_action_attempted
+4484917376,unknown,c637ea1e541f4485ab1d82fd1a217c8e,2026-11-02T20:20:33.523799+00:00,2026-11-02T20:20:40.305631+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of experience you have with Gen AI?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c637ea1e541f4485ab1d82fd1a217c8e""]",false
+4482591700,unknown,aad3267cf3a74173bb986b3011030f01,2026-11-02T20:20:43.064168+00:00,,unknown,unknown,unknown,unknown,unknown,in_progress_unresolved,false,unknown,unknown,in_progress,unknown,unknown,0,[],"[""application_field_audit.json:applications attempt_id=aad3267cf3a74173bb986b3011030f01""]",unknown
+4484917376,unknown,98982775c93545f28f7207da5637d066,2026-11-02T20:23:31.212848+00:00,2026-11-02T20:23:39.032819+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of experience you have with Gen AI?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=98982775c93545f28f7207da5637d066""]",false
+4482591700,unknown,ce845de61b0e4b508fbfa0522fdd88d7,2026-11-02T20:23:41.615423+00:00,2026-11-02T20:23:45.136389+00:00,unknown,unknown,"In one sentence, mention one complex product feature you owned from development to production.",unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,"Could not verify the entered answer for: In one sentence, mention one complex product feature you owned from development to production..",unknown,0,[],"[""application_field_audit.json:applications attempt_id=ce845de61b0e4b508fbfa0522fdd88d7""]",unknown
+4482591700,unknown,3fba43913e494dfe8fe9d0e45e163fa6,2026-11-02T20:24:25.054514+00:00,2026-11-02T20:24:30.765600+00:00,unknown,unknown,"In one sentence, mention one complex product feature you owned from development to production.",unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,"Could not verify the entered answer for: In one sentence, mention one complex product feature you owned from development to production..",unknown,0,[],"[""application_field_audit.json:applications attempt_id=3fba43913e494dfe8fe9d0e45e163fa6""]",unknown
+4462844687,unknown,f29375a80961404baeafbea67d7290cf,2026-11-02T20:24:43.727033+00:00,2026-11-02T20:24:46.429095+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: What is your expected salary in USD?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f29375a80961404baeafbea67d7290cf""]",false
+4479131093,unknown,1b1fbbdf10b943e1b98cfe2d534f52fa,2026-11-02T20:25:15.411520+00:00,2026-11-02T20:25:20.498957+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of Experience with Python or JAVA?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=1b1fbbdf10b943e1b98cfe2d534f52fa""]",false
+4481681721,unknown,8f6eddf81895409099551390aeacf6cf,2026-11-02T20:25:21.840538+00:00,2026-11-02T20:25:25.018687+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of experience working with higly scalable projects?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=8f6eddf81895409099551390aeacf6cf""]",false
+4482998351,unknown,3f8f52350da84e599d1f535433f98067,2026-11-02T20:25:30.250935+00:00,,unknown,unknown,unknown,unknown,unknown,in_progress_unresolved,false,unknown,unknown,in_progress,unknown,unknown,0,[],"[""application_field_audit.json:applications attempt_id=3f8f52350da84e599d1f535433f98067""]",unknown
+4479664955,unknown,23498a751679401397dfd2cd0268d096,2026-11-02T20:27:48.244159+00:00,2026-11-02T20:28:00.642320+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=23498a751679401397dfd2cd0268d096""]",unknown
+4483431283,unknown,76d52f5d971e4e21bee3e4bd3ab69efc,2026-11-02T20:33:34.286563+00:00,2026-11-02T20:33:37.410415+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: Preferred Name/Alias*.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=76d52f5d971e4e21bee3e4bd3ab69efc""]",false
+4478408915,unknown,63fbd8366bbc49dca57a5df70e307c47,2026-11-02T20:34:29.569136+00:00,2026-11-02T20:34:36.274570+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: Describe a specific AI-powered feature you built? (Max 300 characters).,unknown,0,[],"[""application_field_audit.json:applications attempt_id=63fbd8366bbc49dca57a5df70e307c47""]",false
+4484364449,unknown,831f7b258fe049e8a056055f59ec5ac1,2026-11-02T20:35:02.041269+00:00,2026-11-02T20:35:06.649736+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: What is your current country of residence?*.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=831f7b258fe049e8a056055f59ec5ac1""]",false
+4467466987,unknown,907a5e8696594b55a124a4557888fc07,2026-11-02T20:35:08.427893+00:00,2026-11-02T20:35:12.350035+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of relevant work experience do you have?*.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=907a5e8696594b55a124a4557888fc07""]",false
+4471296500,unknown,c208b84a34174565940f293abfd38c72,2026-11-02T20:35:51.606852+00:00,2026-11-02T20:35:57.059713+00:00,unknown,unknown,Summary,unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,Could not verify the entered answer for: Summary.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c208b84a34174565940f293abfd38c72""]",unknown
+4469596520,unknown,d1259a0333aa4f4d913d05b1b459a17a,2026-11-02T20:36:23.773975+00:00,2026-11-02T20:36:28.779307+00:00,unknown,unknown,Summary,unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,Could not verify the entered answer for: Summary.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d1259a0333aa4f4d913d05b1b459a17a""]",unknown
+4479339903,unknown,ddad5e025eee412e9dd14df9b4917d5e,2026-11-02T20:36:32.313063+00:00,2026-11-02T20:36:45.650545+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,The form did not advance: This field is required; This field is required; This field is required,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ddad5e025eee412e9dd14df9b4917d5e""]",unknown
+4461209565,unknown,80316b003e844e279b619c7c970eab5c,2026-11-02T20:37:24.534172+00:00,2026-11-02T20:37:27.312206+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: What is your current location?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=80316b003e844e279b619c7c970eab5c""]",false
+4484073044,unknown,4ef491f4e1f943d9805aff68b7b08130,2026-11-02T20:37:29.129910+00:00,2026-11-02T20:37:34.520672+00:00,unknown,unknown,Summary,unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,Could not verify the entered answer for: Summary.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=4ef491f4e1f943d9805aff68b7b08130""]",unknown
+4480774815,unknown,53c2fa3a6cfa45a8890f1a4d0bcfaadc,2026-11-02T20:37:59.007567+00:00,2026-11-02T20:38:11.567251+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=53c2fa3a6cfa45a8890f1a4d0bcfaadc""]",unknown
+4414752650,unknown,66aabf21ca4244d5ab648969e9135fb8,2026-11-02T20:38:38.795848+00:00,2026-11-02T20:38:54.999295+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,The form did not advance: (1 required); This field is required; This field is required,unknown,0,[],"[""application_field_audit.json:applications attempt_id=66aabf21ca4244d5ab648969e9135fb8""]",unknown
+4477667520,unknown,fd6313c67c6c40b89586c3ec8bb4170b,2026-11-02T20:38:56.303149+00:00,2026-11-02T20:38:59.110815+00:00,unknown,unknown,How many years of work experience do you have with Python (Programming Language)?,unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,Could not verify the entered answer for: How many years of work experience do you have with Python (Programming Language)?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=fd6313c67c6c40b89586c3ec8bb4170b""]",unknown
+4467464995,unknown,f906cce38ed54906b0658ed8c06b7887,2026-11-02T20:39:00.921428+00:00,2026-11-02T20:39:04.372889+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of relevant work experience do you have?*.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f906cce38ed54906b0658ed8c06b7887""]",false
+4436446517,unknown,e75b36bfbeb44a088107dc5f15c39b99,2026-11-02T20:39:05.667318+00:00,2026-11-02T20:39:09.686106+00:00,unknown,unknown,Summary,unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,Could not verify the entered answer for: Summary.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=e75b36bfbeb44a088107dc5f15c39b99""]",unknown
+4484370793,unknown,a8824ff030f74e92aeaad3aac5b5974d,2026-11-02T20:39:48.187100+00:00,2026-11-02T20:40:00.724814+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=a8824ff030f74e92aeaad3aac5b5974d""]",unknown
+4476699604,unknown,333429307b9f4d4db2b3e6ce8daa987b,2026-11-02T20:41:18.801231+00:00,2026-11-02T20:41:33.634165+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,The form did not advance: This field is required,unknown,0,[],"[""application_field_audit.json:applications attempt_id=333429307b9f4d4db2b3e6ce8daa987b""]",unknown
+4478036422,unknown,f44b97ab80e54be8bc496e3bf18da4aa,2026-11-02T20:41:35.375259+00:00,2026-11-02T20:41:38.646731+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of work experience do you have with MongoDB?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f44b97ab80e54be8bc496e3bf18da4aa""]",false
+4483210126,unknown,90c226ee8ae949748501cddf92f4967f,2026-11-02T20:41:42.446793+00:00,2026-11-02T20:41:45.077815+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of work experience do you have with SQL Server Integration Services (SSIS)?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=90c226ee8ae949748501cddf92f4967f""]",false
+4473618489,unknown,4329a63dd33c4f04b8ada32bc8f4a53c,2026-11-02T20:41:48.288725+00:00,2026-11-02T20:42:00.608581+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=4329a63dd33c4f04b8ada32bc8f4a53c""]",unknown
+4443121392,unknown,68cef7a1bc2b44228906323eddce8d92,2026-11-02T20:42:39.258019+00:00,2026-11-02T20:42:42.625610+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No unambiguous option for required question: Undergraduate Institution Name*.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=68cef7a1bc2b44228906323eddce8d92""]",false
+4483546784,unknown,79493d1065634d0c94d45f20d0370b80,2026-11-02T20:42:46.052077+00:00,2026-11-02T20:42:49.170796+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of Engineering experience do you currently have?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=79493d1065634d0c94d45f20d0370b80""]",false
+4481041576,unknown,88c2610967e44efe88d86ad5e58f8881,2026-11-02T20:42:51.009062+00:00,2026-11-02T20:42:54.266411+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of work experience do you have with AngularJS?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=88c2610967e44efe88d86ad5e58f8881""]",false
+4482574784,unknown,0c58e684be544272ac0d1462fb5fcc7f,2026-11-02T20:45:32.696167+00:00,2026-11-02T20:45:35.823608+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How Many Years of work experience do you have in your chosen engineering field*.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0c58e684be544272ac0d1462fb5fcc7f""]",false
+4477216230,unknown,add3bb46a5f44d418707ffac4993bd9c,2026-11-02T20:47:01.521039+00:00,2026-11-02T20:47:13.973790+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=add3bb46a5f44d418707ffac4993bd9c""]",unknown
+4484324524,unknown,c3fcd986fde54b438d964b2a7f7c7385,2026-11-02T20:47:57.460822+00:00,2026-11-02T20:48:00.714545+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How much experience do you have with AI Development?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c3fcd986fde54b438d964b2a7f7c7385""]",false
+4484390765,unknown,86253f1c0960430292d8d2ef65a58692,2026-11-02T20:48:05.473707+00:00,2026-11-02T20:48:08.552540+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: How many years of relevant experience do you have ?*.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=86253f1c0960430292d8d2ef65a58692""]",false
+4474677656,unknown,0b5cb17556604861b7a86adee8f64dcf,2026-11-02T20:48:38.516528+00:00,2026-11-02T20:48:44.235937+00:00,unknown,unknown,unknown,unknown,unknown,incomplete_form_unresolved,false,false,false,skip,No verified answer for required question: Do you have knowledge on GenAI?.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0b5cb17556604861b7a86adee8f64dcf""]",false
+4480440583,unknown,c294e8e9516a40279a99a9e047b1e7b5,2026-11-02T20:48:45.545337+00:00,2026-11-02T20:48:57.628841+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=c294e8e9516a40279a99a9e047b1e7b5""]",unknown
+4478408915,unknown,320f7c08a45942d2bc71e3f0baa57826,2026-11-02T20:50:02.902074+00:00,2026-11-02T20:50:08.657506+00:00,unknown,unknown,Describe a specific AI-powered feature you built? (Max 300 characters),unknown,unknown,incomplete_form_unresolved,false,unknown,false,skip,Could not verify the entered answer for: Describe a specific AI-powered feature you built? (Max 300 characters).,unknown,0,[],"[""application_field_audit.json:applications attempt_id=320f7c08a45942d2bc71e3f0baa57826""]",unknown
+4484364449,unknown,77b0787e900c4c7ea8a3ae71de397f26,2026-11-02T20:50:10.015794+00:00,2026-11-02T20:50:30.496948+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,The application dialog could not be closed; stop and inspect the browser.,true,0,[],"[""application_field_audit.json:applications attempt_id=77b0787e900c4c7ea8a3ae71de397f26""]",unknown
+4484324524,unknown,9b44b0852529416db7016c9119194593,2026-11-02T20:52:59.319323+00:00,2026-11-02T20:53:02.193972+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many projects have you completed while working in AI Development?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9b44b0852529416db7016c9119194593""]",false
+4479984032,unknown,c6945b0e325648079ecc4751fc40d46f,2026-11-02T20:53:03.567158+00:00,2026-11-02T20:53:08.402250+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Share the most impressive thing that you have built or achieved. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c6945b0e325648079ecc4751fc40d46f""]",false
+4478036422,unknown,a276dac49233473587ccc0af473ac175,2026-11-02T20:53:09.703534+00:00,2026-11-02T20:53:13.221851+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with Java?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=a276dac49233473587ccc0af473ac175""]",false
+4484333014,unknown,ca5167d0ca534bc5b5448289ec57305a,2026-11-02T20:53:16.503581+00:00,2026-11-02T20:53:28.821144+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=ca5167d0ca534bc5b5448289ec57305a""]",unknown
+4461209565,unknown,3615bed099324a699e1c381a945b1df8,2026-11-02T20:54:49.207428+00:00,2026-11-02T20:54:54.409806+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=3615bed099324a699e1c381a945b1df8""]",unknown
+4458367240,unknown,54ceb2bedc4f4dbaad07fcc363643dd5,2026-11-02T20:55:30.452859+00:00,2026-11-02T20:55:36.020376+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=54ceb2bedc4f4dbaad07fcc363643dd5""]",unknown
+4477675100,unknown,469bf3d91e894678ae1736e0e83f4a5c,2026-11-02T20:57:25.961001+00:00,2026-11-02T20:57:31.244304+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=469bf3d91e894678ae1736e0e83f4a5c""]",unknown
+4485704953,unknown,52a8d0b497f04e139cd1b930ad1d115a,2026-11-02T20:58:41.402526+00:00,2026-11-02T20:58:54.906361+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required; This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=52a8d0b497f04e139cd1b930ad1d115a""]",false
+4478976575,unknown,c4a48042c0594555bebf8a635b153efd,2026-11-02T20:58:56.646037+00:00,2026-11-02T20:59:09.000872+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=c4a48042c0594555bebf8a635b153efd""]",unknown
+4475549009,unknown,8eb50da2533a4a51a17d352d9b932c90,2026-11-02T21:03:20.024120+00:00,2026-11-02T21:03:23.425026+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: mainframe exp ?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=8eb50da2533a4a51a17d352d9b932c90""]",false
+4351986715,unknown,28b3f675524e44539589a2b97d6604f6,2026-11-02T21:03:24.715549+00:00,2026-11-02T21:03:28.801956+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: What is your current availability to start?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=28b3f675524e44539589a2b97d6604f6""]",false
+4480037909,unknown,92f15f2729394d06b0afc0d2a1c2b988,2026-11-02T21:03:31.419106+00:00,2026-11-02T21:03:35.478977+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: What is your notice period / availability to join?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=92f15f2729394d06b0afc0d2a1c2b988""]",false
+4483222547,unknown,f05a9109ea41408b9158299700f8c173,2026-11-02T21:03:36.820028+00:00,2026-11-02T21:03:41.617763+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Select Your Preferred Work Location Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f05a9109ea41408b9158299700f8c173""]",false
+4486158309,unknown,23da09be067049778201e1413b455ba0,2026-11-02T21:03:42.878532+00:00,2026-11-02T21:03:54.970080+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=23da09be067049778201e1413b455ba0""]",unknown
+4480931906,unknown,74d2cb1223934ece97c44338e7fbb00f,2026-11-02T21:03:57.819112+00:00,2026-11-02T21:04:00.581019+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with Google Cloud Platform (GCP)?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=74d2cb1223934ece97c44338e7fbb00f""]",false
+4474262210,unknown,705456fb9e9e48ab8087790a2c69136f,2026-11-02T21:04:01.830523+00:00,2026-11-02T21:04:05.138969+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with .NET Framework?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=705456fb9e9e48ab8087790a2c69136f""]",false
+4483248558,unknown,82567521399044aa9e5e96895750183c,2026-11-02T21:04:06.393292+00:00,2026-11-02T21:04:09.312762+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Tell us about your experience with 3PL.. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=82567521399044aa9e5e96895750183c""]",false
+4452221794,unknown,afb8814ed1c44107bba0541cf1ca6f60,2026-11-02T21:04:10.996132+00:00,2026-11-02T21:04:27.006498+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=afb8814ed1c44107bba0541cf1ca6f60""]",false
+4482289223,unknown,72aeccaa0afd4b559cd75054b6265879,2026-11-02T21:04:28.329220+00:00,2026-11-02T21:04:31.895886+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Have you completed the following level of education: Bachelor's Degree? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=72aeccaa0afd4b559cd75054b6265879""]",false
+4485449432,unknown,ccf672bca9954d3aa8e7da27e924ad51,2026-11-02T21:04:33.300687+00:00,2026-11-02T21:04:45.427497+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=ccf672bca9954d3aa8e7da27e924ad51""]",unknown
+4475675907,unknown,9d6cc51fcebd42a1959e77864aa60508,2026-11-02T21:04:48.384501+00:00,2026-11-02T21:04:51.452855+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you currently based in or willing to work from Gurugram? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9d6cc51fcebd42a1959e77864aa60508""]",false
+4478287671,unknown,47e71902343e4553a1029fd3f5f3b699,2026-11-02T21:04:53.229915+00:00,2026-11-02T21:04:56.207861+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of professional experience do you have in full stack application development using C# and ASP.NET/.NET Core?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=47e71902343e4553a1029fd3f5f3b699""]",false
+4481681103,unknown,7ea4084a10ef4108897b87ef8bf7464f,2026-11-02T21:04:57.496385+00:00,2026-11-02T21:05:00.459454+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: What is your C.CTC ?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=7ea4084a10ef4108897b87ef8bf7464f""]",false
+4483268843,unknown,e6e0d676cdc348efa2b6c9464c489725,2026-11-02T21:05:01.776233+00:00,2026-11-02T21:05:04.708168+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of experience do you have working on the backend?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=e6e0d676cdc348efa2b6c9464c489725""]",false
+4484171345,unknown,092bc90b7bb64c3c92d355528549279d,2026-11-02T21:05:07.573005+00:00,2026-11-02T21:05:19.693214+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=092bc90b7bb64c3c92d355528549279d""]",unknown
+4483850309,unknown,a7d04116855a432099d0079e5f5e12fe,2026-11-02T21:05:22.773014+00:00,2026-11-02T21:05:25.833830+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of professional development experience do you have?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=a7d04116855a432099d0079e5f5e12fe""]",false
+4484825005,unknown,abcb471203644fbfb454c15440f0abe5,2026-11-02T21:05:27.072737+00:00,2026-11-02T21:05:32.624097+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Skill Set. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=abcb471203644fbfb454c15440f0abe5""]",false
+4482287610,unknown,b8378ab744d44a06aa593c0fce346b27,2026-11-02T21:05:34.321897+00:00,2026-11-02T21:05:37.410112+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with .NET Framework?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b8378ab744d44a06aa593c0fce346b27""]",false
+4484860402,unknown,39b34b1d30cd439a9417755002f3cb11,2026-11-02T21:05:39.124014+00:00,2026-11-02T21:05:42.297665+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of Relevant experience as Data Structures and Algorithms (DSA)?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=39b34b1d30cd439a9417755002f3cb11""]",false
+4448412434,unknown,a84a8309d0c04592b2250ec4cf95920d,2026-11-02T21:05:45.454123+00:00,2026-11-02T21:05:48.662904+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you an immediate joiner within 7-12 days? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=a84a8309d0c04592b2250ec4cf95920d""]",false
+4474249435,unknown,34b05365371548f8941874e80129b12a,2026-11-02T21:05:49.931837+00:00,2026-11-02T21:06:02.210137+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=34b05365371548f8941874e80129b12a""]",unknown
+4485462296,unknown,115f4aa9a31840ff915e5185a14c472d,2026-11-02T21:06:04.782364+00:00,2026-11-02T21:06:07.986726+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with TypeScript?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=115f4aa9a31840ff915e5185a14c472d""]",false
+4472174036,unknown,04410688e5d948e7ae4fa6fa7921c8cd,2026-11-02T21:06:09.692554+00:00,2026-11-02T21:06:12.924069+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: What is your CTC(in LPA)?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=04410688e5d948e7ae4fa6fa7921c8cd""]",false
+4485273970,unknown,0b1958e1cdc44a01a5227000f145da72,2026-11-02T21:06:14.796079+00:00,2026-11-02T21:06:19.118397+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How did you hear about this job?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0b1958e1cdc44a01a5227000f145da72""]",false
+4482628579,unknown,ed1a73ca63654158a6e09d802b3d7bae,2026-11-02T21:06:22.385965+00:00,2026-11-02T21:06:26.143077+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of software development experience do you have?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ed1a73ca63654158a6e09d802b3d7bae""]",false
+4484825924,unknown,306dbb3a7dfb4f709a9b2e9e38333843,2026-11-02T21:06:27.451461+00:00,2026-11-02T21:06:31.733904+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Experience in Years. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=306dbb3a7dfb4f709a9b2e9e38333843""]",false
+4484832133,unknown,f4e62f4691374618965d31f1bcdc5202,2026-11-02T21:06:34.684433+00:00,2026-11-02T21:06:37.913547+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: .Are you comfortable for Rohini, North Delhi Job Location ? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=f4e62f4691374618965d31f1bcdc5202""]",false
+4486147862,unknown,729d226385a540ba9cd3fb2fedb6ddb7,2026-11-02T21:06:39.259538+00:00,2026-11-02T21:06:42.414302+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of professional software development experience do you have?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=729d226385a540ba9cd3fb2fedb6ddb7""]",false
+4483025456,unknown,07b5fd989c7f4bd7aab2aa2de3316166,2026-11-02T21:06:43.646573+00:00,2026-11-02T21:06:47.869807+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of professional work experience do you have with FastAPI?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=07b5fd989c7f4bd7aab2aa2de3316166""]",false
+4482960246,unknown,728b8e2e9c0143aea110d563e2737163,2026-11-02T21:06:49.234283+00:00,2026-11-02T21:06:52.652393+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of software development experience do you have?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=728b8e2e9c0143aea110d563e2737163""]",false
+4475728662,unknown,325d697d64084184915ad999250d3a38,2026-11-02T21:06:53.893605+00:00,2026-11-02T21:06:57.309396+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: What is the distance between your HOME and our office in Lajpat Nagar (in Kilometres) ?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=325d697d64084184915ad999250d3a38""]",false
+4481447650,unknown,34daf4bd2c734cd9a1af919834b875ad,2026-11-02T21:06:58.992667+00:00,2026-11-02T21:07:09.625712+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,Could not select a LinkedIn location for New Delhi. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=34daf4bd2c734cd9a1af919834b875ad""]",false
+4485470371,unknown,e65466947b0148448d05a4e07922aa36,2026-11-02T21:07:10.881209+00:00,2026-11-02T21:07:17.816848+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Do you have at least 4 years of experience in Dot Net?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=e65466947b0148448d05a4e07922aa36""]",false
+4482289223,unknown,8fc64f6dbda04e9a83b5ff15abf5cea9,2026-11-02T21:07:59.460076+00:00,2026-11-02T21:08:01.142927+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x641dff5485ea <unknown>
+#1 0x641dfee62869 <unknown>
+#2 0x641dfee69a00 <unknown>
+#3 0x641dfee6c30b <unknown>
+#4 0x641dfee6c3b3 <unknown>
+#5 0x641dfeeb5500 <unknown>
+#6 0x641dfeeadb27 <unknown>
+#7 0x641dfef07d4e <unknown>
+#8 0x641dfeeac29b <unknown>
+#9 0x641dfeead0a1 <unknown>
+#10 0x641dff50afec <unknown>
+#11 0x641dff5097f5 <unknown>
+#12 0x641dff4f4785 <unknown>
+#13 0x641dff50a45a <unknown>
+#14 0x641dff4dcd99 <unknown>
+#15 0x641dff532b18 <unknown>
+#16 0x641dff532cb5 <unknown>
+#17 0x641dff546f73 <unknown>
+#18 0x702420aa3dfa <unknown>
+#19 0x702420b375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=8fc64f6dbda04e9a83b5ff15abf5cea9""]",unknown
+4475675907,unknown,550207aac8e6467a9bd3140af6400f89,2026-11-02T21:08:03.615118+00:00,2026-11-02T21:08:06.361532+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x641dff5485ea <unknown>
+#1 0x641dfee62869 <unknown>
+#2 0x641dfee69a00 <unknown>
+#3 0x641dfee6c30b <unknown>
+#4 0x641dfee6c3b3 <unknown>
+#5 0x641dfeeb5500 <unknown>
+#6 0x641dfeeadb27 <unknown>
+#7 0x641dfef07d4e <unknown>
+#8 0x641dfeeac29b <unknown>
+#9 0x641dfeead0a1 <unknown>
+#10 0x641dff50afec <unknown>
+#11 0x641dff5097f5 <unknown>
+#12 0x641dff4f4785 <unknown>
+#13 0x641dff50a45a <unknown>
+#14 0x641dff4dcd99 <unknown>
+#15 0x641dff532b18 <unknown>
+#16 0x641dff532cb5 <unknown>
+#17 0x641dff546f73 <unknown>
+#18 0x702420aa3dfa <unknown>
+#19 0x702420b375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=550207aac8e6467a9bd3140af6400f89""]",unknown
+4483850309,unknown,bac2c311d3e6427695df92381a1636cc,2026-11-02T21:08:35.595823+00:00,2026-11-02T21:08:39.554023+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required question: Can you describe your hands-on experience with Python, React, and Django?. Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=bac2c311d3e6427695df92381a1636cc""]",false
+4482960246,unknown,827cb5425812417ab1e035e35a9a08c1,2026-11-02T21:08:47.243904+00:00,2026-11-02T21:08:59.542202+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=827cb5425812417ab1e035e35a9a08c1""]",unknown
+4462518610,unknown,8409c27f06ea48d3954311b1a83d984c,2026-11-02T21:09:03.635548+00:00,2026-11-02T21:09:15.757714+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=8409c27f06ea48d3954311b1a83d984c""]",unknown
+4482586451,unknown,79b0d42703664c70ae93458e621c11f9,2026-11-02T21:09:18.167903+00:00,2026-11-02T21:09:20.844761+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with Spring Boot?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=79b0d42703664c70ae93458e621c11f9""]",false
+4456168845,unknown,af3ef6b4e42d42679e295233cf3a42d6,2026-11-02T21:09:22.135290+00:00,2026-11-02T21:09:26.005686+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=af3ef6b4e42d42679e295233cf3a42d6""]",unknown
+4483268843,unknown,ca59c4913f60418bb8e6241cb5516631,2026-11-02T21:11:01.513034+00:00,2026-11-02T21:11:05.412990+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of experience do you have shipping a new product or working at a Seed or Series A /B startup?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ca59c4913f60418bb8e6241cb5516631""]",false
+4484439653,unknown,fefa2ca9a61b410b8759664b3e460f5b,2026-11-02T21:11:16.125510+00:00,2026-11-02T21:11:18.882624+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of Frontend Experience you have?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=fefa2ca9a61b410b8759664b3e460f5b""]",false
+4479817870,unknown,b8229e84baa24341a0d97a0c959265b7,2026-11-02T21:11:20.161953+00:00,2026-11-02T21:11:23.516677+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with Java?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b8229e84baa24341a0d97a0c959265b7""]",false
+4485472054,unknown,b7da2104f45644d78c517f2c5f8e94d9,2026-11-02T21:11:24.798253+00:00,2026-11-02T21:11:27.564347+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Total years of backend development experience?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b7da2104f45644d78c517f2c5f8e94d9""]",false
+4482628579,unknown,dc082363ad314bb19f5ba43812615ca2,2026-11-02T21:11:28.844794+00:00,2026-11-02T21:11:32.186025+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of core AI experience do you have?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=dc082363ad314bb19f5ba43812615ca2""]",false
+4462165599,unknown,a929a1829aac4753a01a0580cf61a814,2026-11-02T21:11:35.048396+00:00,2026-11-02T21:11:40.251535+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How did you hear about this job?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=a929a1829aac4753a01a0580cf61a814""]",false
+4484320081,unknown,295243a78b7e475390e0739c9404de02,2026-11-02T21:11:41.904986+00:00,2026-11-02T21:11:53.980549+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=295243a78b7e475390e0739c9404de02""]",unknown
+4476016331,unknown,158b1f63a0e64ebea006310d2a5f7a7a,2026-11-02T21:12:45.439116+00:00,2026-11-02T21:12:48.944828+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: Please respond truthfully. How many years of professional experience do you have with .NET MAUI or accepted alternatives such as React Native, Flutter, Swift or Android Studio? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=158b1f63a0e64ebea006310d2a5f7a7a""]",false
+4475551730,unknown,efc1d04c4cca4e49a35ccacfdda7541c,2026-11-02T21:13:15.094140+00:00,2026-11-02T21:13:17.895806+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with NoSQL?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=efc1d04c4cca4e49a35ccacfdda7541c""]",false
+4483543000,unknown,3a36d4556215497d909ac1fac955b63c,2026-11-02T21:13:19.762610+00:00,2026-11-02T21:13:25.770969+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: What is your Notice Period? (preferably - immediate joiners). Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=3a36d4556215497d909ac1fac955b63c""]",false
+4446442220,unknown,310c9adebae74e188f036e0333ba84ae,2026-11-02T21:13:27.099017+00:00,2026-11-02T21:13:39.643412+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=310c9adebae74e188f036e0333ba84ae""]",unknown
+4425104015,unknown,5b0270765f5b41219b7d60be9fe28871,2026-11-02T21:14:31.758557+00:00,2026-11-02T21:14:36.065945+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: I agree to the processing of my personal data by BaseLinker sp. z o.o. for future recruitment purposes*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=5b0270765f5b41219b7d60be9fe28871""]",false
+4474063517,unknown,b2614771de11486a85a053d0e6b934fd,2026-11-02T21:14:37.516669+00:00,2026-11-02T21:14:40.588532+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you willing to come to office ? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b2614771de11486a85a053d0e6b934fd""]",false
+4486157617,unknown,fcc312841d7b4a7db8316feaeec1e7a4,2026-11-02T21:14:41.850452+00:00,2026-11-02T21:14:44.537984+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with REST APIs?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=fcc312841d7b4a7db8316feaeec1e7a4""]",false
+4486166131,unknown,1558c4de94b14ede83fc67d21edd78ee,2026-11-02T21:14:45.786690+00:00,2026-11-02T21:14:48.507497+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with REST APIs?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=1558c4de94b14ede83fc67d21edd78ee""]",false
+4484824519,unknown,28c3f2e4f194477fadc871fbbdcf3d72,2026-11-02T21:14:49.888911+00:00,2026-11-02T21:14:52.640313+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with JavaScript?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=28c3f2e4f194477fadc871fbbdcf3d72""]",false
+4483902293,unknown,3682ca7bff1146d5a8e3045d11b76242,2026-11-02T21:14:53.951910+00:00,2026-11-02T21:14:56.799471+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required question: How many years of experience you have with machine learning frameworks such as TensorFlow, PyTorch, or scikit-learn?. Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=3682ca7bff1146d5a8e3045d11b76242""]",false
+4475549009,unknown,d1306da1c9ab4da683d810311df5064c,2026-11-02T21:25:24.990865+00:00,2026-11-02T21:25:37.419741+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=d1306da1c9ab4da683d810311df5064c""]",unknown
+4483222547,unknown,b2c2221978e045d6a1a74d72d890f681,2026-11-02T21:25:46.169394+00:00,2026-11-02T21:25:50.983621+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Select Your Preferred Work Location Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b2c2221978e045d6a1a74d72d890f681""]",false
+4479817870,unknown,dbbf1ab6e11d440586d3bfab772b353e,2026-11-02T21:26:02.000398+00:00,2026-11-02T21:26:05.050561+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with Spring Boot?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=dbbf1ab6e11d440586d3bfab772b353e""]",false
+4480931906,unknown,df0ae36ba61947378550fa46070b18b1,2026-11-02T21:37:28.726505+00:00,2026-11-02T21:37:31.659238+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with Core Java?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=df0ae36ba61947378550fa46070b18b1""]",false
+4474262210,unknown,5c80e26f58ff4f418502c2522c3db7a1,2026-11-02T21:37:33.446103+00:00,2026-11-02T21:37:36.477553+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: This role requires you to work in US hours (5PM - 2AM IST) and follows a hybrid work model. Are you comfortable with this setup? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=5c80e26f58ff4f418502c2522c3db7a1""]",false
+4483248558,unknown,942aad565f9d48548cf2fd214193db67,2026-11-02T21:37:37.844296+00:00,2026-11-02T21:37:40.799261+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Tell us about your B2B  E-commerce experience.. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=942aad565f9d48548cf2fd214193db67""]",false
+4478287671,unknown,5d7d9d6b43204ed08018631d2f9294d7,2026-11-02T21:37:42.596949+00:00,2026-11-02T21:37:45.599602+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: Do you have hands-on experience developing production applications using ASP.NET Core, C#, Web API and Entity Framework? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=5d7d9d6b43204ed08018631d2f9294d7""]",false
+4483268843,unknown,4c66802eef684e0e9e5df9793ee52dfc,2026-11-02T21:37:46.927773+00:00,2026-11-02T21:37:50.805687+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=4c66802eef684e0e9e5df9793ee52dfc""]",unknown
+4482287610,unknown,fda6fe207e714c01a369ff3689d53030,2026-11-02T21:37:55.058971+00:00,2026-11-02T21:38:07.386732+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=fda6fe207e714c01a369ff3689d53030""]",unknown
+4484825005,unknown,c5dee86b90ce4f7a885235eccd768106,2026-11-02T21:38:31.625678+00:00,2026-11-02T21:38:37.746266+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: Highest Qualification Held*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c5dee86b90ce4f7a885235eccd768106""]",false
+4483850309,unknown,259442259a8a410c8fb6142dc1cd8df2,2026-11-02T21:38:40.799647+00:00,2026-11-02T21:38:44.357125+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required question: Have you built or integrated any NLP or workflow automation solutions? If yes, describe briefly?. Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=259442259a8a410c8fb6142dc1cd8df2""]",false
+4484860402,unknown,bfc9de1398804c108a5975061f7e2ac2,2026-11-02T21:38:45.683546+00:00,2026-11-02T21:38:48.583009+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of Relevant experience as  Java Full Stack Development.?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bfc9de1398804c108a5975061f7e2ac2""]",false
+4448412434,unknown,d2716a770f3844548c46b81e91da2f20,2026-11-02T21:38:52.149211+00:00,2026-11-02T21:38:54.602447+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x5ce46d89e5ea <unknown>
+#1 0x5ce46d1b8869 <unknown>
+#2 0x5ce46d1bfa00 <unknown>
+#3 0x5ce46d1c230b <unknown>
+#4 0x5ce46d1c23b3 <unknown>
+#5 0x5ce46d20b500 <unknown>
+#6 0x5ce46d203b27 <unknown>
+#7 0x5ce46d25dd4e <unknown>
+#8 0x5ce46d20229b <unknown>
+#9 0x5ce46d2030a1 <unknown>
+#10 0x5ce46d860fec <unknown>
+#11 0x5ce46d85f7f5 <unknown>
+#12 0x5ce46d84a785 <unknown>
+#13 0x5ce46d86045a <unknown>
+#14 0x5ce46d832d99 <unknown>
+#15 0x5ce46d888b18 <unknown>
+#16 0x5ce46d888cb5 <unknown>
+#17 0x5ce46d89cf73 <unknown>
+#18 0x7f111aea3dfa <unknown>
+#19 0x7f111af375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=d2716a770f3844548c46b81e91da2f20""]",unknown
+4485462296,unknown,2d066f283c14498b83d441382477e59f,2026-11-02T21:38:57.464512+00:00,2026-11-02T21:39:01.788202+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with RAG?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=2d066f283c14498b83d441382477e59f""]",false
+4485470371,unknown,ce2367223a2441d98eccf1c7bc741014,2026-11-02T21:39:16.423158+00:00,2026-11-02T21:39:21.712045+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Are you available to join  immediately ?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ce2367223a2441d98eccf1c7bc741014""]",false
+4482586451,unknown,b58fdf5f94f1402a89db826cf6ac441c,2026-11-02T21:39:23.165071+00:00,2026-11-02T21:39:26.780340+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with Microservices?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b58fdf5f94f1402a89db826cf6ac441c""]",false
+4482628579,unknown,3e12953b24d9405099548ff33286db3f,2026-11-02T21:39:28.614037+00:00,2026-11-02T21:39:31.538985+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required question: What annual fixed compensation do you expect? (Enter the full number, for eg., 1200000). Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=3e12953b24d9405099548ff33286db3f""]",false
+4476016331,unknown,37ffd72979fa479e8fc61d90cf1cd297,2026-11-02T21:39:32.834687+00:00,2026-11-02T21:39:37.150296+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No unambiguous option for required choice: Please respond truthfully. How many years of professional experience do you have with .NET MAUI or accepted alternatives such as React Native, Flutter, Swift or Android Studio? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=37ffd72979fa479e8fc61d90cf1cd297""]",false
+4479817870,unknown,8059b4d44a1441feb4ba3da53f3ed4da,2026-11-02T21:39:38.936280+00:00,2026-11-02T21:39:42.176876+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of work experience do you have with Microservices?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=8059b4d44a1441feb4ba3da53f3ed4da""]",false
+4485472054,unknown,da26d275b5a84aea9a994b3ee0f3f33e,2026-11-02T21:39:43.493021+00:00,2026-11-02T21:39:46.830387+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Have you used both Python/Django and Node.js/Express.js in production? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=da26d275b5a84aea9a994b3ee0f3f33e""]",false
+4475728662,unknown,ecd6ef68ab7d443e96e5ffa7af3040a6,2026-11-02T21:39:48.125587+00:00,2026-11-02T21:39:49.204944+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: element click intercepted: Element <a class=""djelwp djelwo djetz djea25 djehn3 djelhn djeli6 djelwt djelwr djelwq djeazt djej02 djej2c djeia6"" aria-disabled=""false"" href=""https://www.linkedin.com/jobs/view/4475728662/?companyName=Louder&amp;refId=%2BeEBFfBshQKOcD2YFOBVfg%3D%3D&amp;trackingId=8Gsg9ELnayXReCeTOmeMpg%3D%3D&amp;applicantTrackingSystemName=LinkedIn"" componentkey=""jdp-continue-button-4475728662"">...</a> is not clickable at point (879, 335). Other element would receive the click: <div data-testid=""typeahead-results-overlay"" aria-hidden=""true"" class=""djemai""></div>
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+#0 0x5ce46d89e5ea <unknown>
+#1 0x5ce46d1b8869 <unknown>
+#2 0x5ce46d2161c3 <unknown>
+#3 0x5ce46d2142a2 <unknown>
+#4 0x5ce46d211c9c <unknown>
+#5 0x5ce46d210d77 <unknown>
+#6 0x5ce46d2041e2 <unknown>
+#7 0x5ce46d203b27 <unknown>
+#8 0x5ce46d25dd4e <unknown>
+#9 0x5ce46d20229b <unknown>
+#10 0x5ce46d2030a1 <unknown>
+#11 0x5ce46d860fec <unknown>
+#12 0x5ce46d85f7f5 <unknown>
+#13 0x5ce46d84a785 <unknown>
+#14 0x5ce46d86045a <unknown>
+#15 0x5ce46d832d99 <unknown>
+#16 0x5ce46d888b18 <unknown>
+#17 0x5ce46d888cb5 <unknown>
+#18 0x5ce46d89cf73 <unknown>
+#19 0x7f111aea3dfa <unknown>
+#20 0x7f111af375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=ecd6ef68ab7d443e96e5ffa7af3040a6""]",unknown
+4484439653,unknown,0a002bae5c094db4ad1c52d686279712,2026-11-02T21:39:51.899002+00:00,2026-11-02T21:40:00.584791+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,The application dialog could not be closed; stop and inspect the browser.,true,0,[],"[""application_field_audit.json:applications attempt_id=0a002bae5c094db4ad1c52d686279712""]",unknown
+4451003055,unknown,6488a19fa64f46358abf1d682b1e4643,2026-11-02T21:40:42.198014+00:00,2026-11-02T21:40:54.317046+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6488a19fa64f46358abf1d682b1e4643""]",false
+4484340048,unknown,8092675e769344c1979795f03c8cfca8,2026-11-02T21:40:55.682076+00:00,2026-11-02T21:41:07.862829+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=8092675e769344c1979795f03c8cfca8""]",false
+4478872365,unknown,057b2c5544b64e2aad993c7bf1d5d37f,2026-11-02T21:41:13.729612+00:00,2026-11-02T21:41:25.894443+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=057b2c5544b64e2aad993c7bf1d5d37f""]",false
+4467466987,unknown,2a1dbe7cef9647a895536aab7873181a,2026-11-02T21:41:30.680993+00:00,2026-11-02T21:41:42.847630+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=2a1dbe7cef9647a895536aab7873181a""]",false
+4484901982,unknown,c31f0b72076c4a9d80f64d07a5381855,2026-11-02T21:41:52.264703+00:00,2026-11-02T21:42:04.428122+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c31f0b72076c4a9d80f64d07a5381855""]",false
+4467464995,unknown,fda16108cc964a0db7ad8f74026bc6c6,2026-11-02T21:42:06.272173+00:00,2026-11-02T21:42:18.467048+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=fda16108cc964a0db7ad8f74026bc6c6""]",false
+4481947815,unknown,2d2dbd25484045b88b87e8cafa1bf173,2026-11-02T21:42:19.893506+00:00,2026-11-02T21:42:32.080467+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=2d2dbd25484045b88b87e8cafa1bf173""]",false
+4466471733,unknown,7cf97f24e6524bba9da2536fa3b938e0,2026-11-02T21:42:33.499111+00:00,2026-11-02T21:42:45.695760+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=7cf97f24e6524bba9da2536fa3b938e0""]",false
+4486147862,unknown,e94ef2eb8a784160bc4fe727d8c686da,2026-11-03T04:32:32.798747+00:00,2026-11-03T04:32:50.400783+00:00,unknown,unknown,unknown,unknown,unknown,submitting_unconfirmed,false,unknown,false,submitting,Submission is being attempted; confirmation is pending.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=e94ef2eb8a784160bc4fe727d8c686da""]",true
+4468509675,unknown,b202c39f2ff84b41bf7859f1115284a9,2026-11-03T04:47:10.629407+00:00,2026-11-03T04:47:22.885931+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b202c39f2ff84b41bf7859f1115284a9""]",false
+4485146105,unknown,6aea3868cbe3453ea7888d47ec4b2c2f,2026-11-03T04:47:43.993348+00:00,2026-11-03T04:47:54.412543+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: How many years of hands-on experience do you have with Next.js and React?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6aea3868cbe3453ea7888d47ec4b2c2f""]",false
+4484925897,unknown,e1cbac3ea7654fe295a6cfd0cd8f3ee0,2026-11-03T05:17:56.066469+00:00,2026-11-03T05:18:10.391932+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=e1cbac3ea7654fe295a6cfd0cd8f3ee0""]",unknown
+4481390619,unknown,5a68dea58e23428ea967a9a394c92b11,2026-11-03T05:28:08.625230+00:00,2026-11-03T05:28:22.790074+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=5a68dea58e23428ea967a9a394c92b11""]",unknown
+4480758639,unknown,68e55873060b4da4a8a7837e2a8e4488,2026-11-03T05:39:54.064645+00:00,2026-11-03T05:40:03.458862+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: What is your primary area of expertise? *. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=68e55873060b4da4a8a7837e2a8e4488""]",false
+4484832133,unknown,f6c09a5ad2a047fe954b6a0c340931f6,2026-11-03T05:47:54.501605+00:00,2026-11-03T05:48:03.594101+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x64e8ec3e75ea <unknown>
+#1 0x64e8ebd01869 <unknown>
+#2 0x64e8ebd16c01 <unknown>
+#3 0x64e8ebd153f1 <unknown>
+#4 0x64e8ebd094e9 <unknown>
+#5 0x64e8ebd07743 <unknown>
+#6 0x64e8ebd0b30b <unknown>
+#7 0x64e8ebd0b3b3 <unknown>
+#8 0x64e8ebd54500 <unknown>
+#9 0x64e8ebd4cb27 <unknown>
+#10 0x64e8ebda6d4e <unknown>
+#11 0x64e8ebd4b29b <unknown>
+#12 0x64e8ebd4c0a1 <unknown>
+#13 0x64e8ec3a9fec <unknown>
+#14 0x64e8ec3a87f5 <unknown>
+#15 0x64e8ec393785 <unknown>
+#16 0x64e8ec3a945a <unknown>
+#17 0x64e8ec37bd99 <unknown>
+#18 0x64e8ec3d1b18 <unknown>
+#19 0x64e8ec3d1cb5 <unknown>
+#20 0x64e8ec3e5f73 <unknown>
+#21 0x76c7e4ca3dfa <unknown>
+#22 0x76c7e4d375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=f6c09a5ad2a047fe954b6a0c340931f6""]",unknown
+4476299185,unknown,675c93dcc2aa4347a91127fdd11954a5,2026-11-03T05:48:46.412542+00:00,2026-11-03T05:49:01.031440+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=675c93dcc2aa4347a91127fdd11954a5""]",unknown
+4486022347,unknown,3c044608b9e54630b7452c917fc6d906,2026-11-03T05:56:48.108777+00:00,2026-11-03T05:56:58.138717+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x64e8ec3e75ea <unknown>
+#1 0x64e8ebd01869 <unknown>
+#2 0x64e8ebd08a00 <unknown>
+#3 0x64e8ebd0b30b <unknown>
+#4 0x64e8ebd0b3b3 <unknown>
+#5 0x64e8ebd54500 <unknown>
+#6 0x64e8ebd4cb27 <unknown>
+#7 0x64e8ebda6d4e <unknown>
+#8 0x64e8ebd4b29b <unknown>
+#9 0x64e8ebd4c0a1 <unknown>
+#10 0x64e8ec3a9fec <unknown>
+#11 0x64e8ec3a87f5 <unknown>
+#12 0x64e8ec393785 <unknown>
+#13 0x64e8ec3a945a <unknown>
+#14 0x64e8ec37bd99 <unknown>
+#15 0x64e8ec3d1b18 <unknown>
+#16 0x64e8ec3d1cb5 <unknown>
+#17 0x64e8ec3e5f73 <unknown>
+#18 0x76c7e4ca3dfa <unknown>
+#19 0x76c7e4d375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=3c044608b9e54630b7452c917fc6d906""]",unknown
+4465042194,unknown,845cc0e8b67a4ffeb93efb352e49dc07,2026-11-03T05:57:05.340095+00:00,2026-11-03T05:57:17.438310+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=845cc0e8b67a4ffeb93efb352e49dc07""]",false
+4483854491,unknown,792a8f44b9fd4c23bcbb3d4648310582,2026-11-03T05:58:16.223932+00:00,2026-11-03T05:58:39.801133+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Select Your Preferred Work Location Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=792a8f44b9fd4c23bcbb3d4648310582""]",false
+4483858421,unknown,9fb9b66b1b114a129d308a1193e45460,2026-11-03T05:58:45.100503+00:00,2026-11-03T05:59:02.535767+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x64e8ec3e75ea <unknown>
+#1 0x64e8ebd01869 <unknown>
+#2 0x64e8ebd08a00 <unknown>
+#3 0x64e8ebd0b61c <unknown>
+#4 0x64e8ebda7e18 <unknown>
+#5 0x64e8ebda6d4e <unknown>
+#6 0x64e8ebd4b29b <unknown>
+#7 0x64e8ebd4c0a1 <unknown>
+#8 0x64e8ec3a9fec <unknown>
+#9 0x64e8ec3a87f5 <unknown>
+#10 0x64e8ec393785 <unknown>
+#11 0x64e8ec3a945a <unknown>
+#12 0x64e8ec37bd99 <unknown>
+#13 0x64e8ec3d1b18 <unknown>
+#14 0x64e8ec3d1cb5 <unknown>
+#15 0x64e8ec3e5f73 <unknown>
+#16 0x76c7e4ca3dfa <unknown>
+#17 0x76c7e4d375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=9fb9b66b1b114a129d308a1193e45460""]",unknown
+4446580522,unknown,34d0d957da1b46d1adff20c58413d701,2026-11-03T05:59:11.325006+00:00,2026-11-03T05:59:36.264880+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Do you have a Valid Indian Passport ?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=34d0d957da1b46d1adff20c58413d701""]",false
+4425104015,unknown,22a856309fde46f6816f35a099c65dcc,2026-11-03T05:59:41.974058+00:00,2026-11-03T05:59:56.329002+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=22a856309fde46f6816f35a099c65dcc""]",unknown
+4477503301,unknown,3d4213ff7b0d45ed8529bd1fc9d0711b,2026-11-03T06:00:09.431226+00:00,2026-11-03T06:00:23.776232+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=3d4213ff7b0d45ed8529bd1fc9d0711b""]",unknown
+4483615267,unknown,9011638c9daa4c8089d474de70ef5721,2026-11-03T06:04:21.746614+00:00,2026-11-03T06:04:51.255959+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you currently involved in Dotnet development? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9011638c9daa4c8089d474de70ef5721""]",false
+4484361285,unknown,43ff4a7a64b0440e8c682e89cff0eb6a,2026-11-03T06:04:57.518616+00:00,2026-11-03T06:05:22.333712+00:00,unknown,unknown,unknown,unknown,unknown,submission_uncertain,false,unknown,false,uncertain,Submit was attempted but could not be confirmed.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=43ff4a7a64b0440e8c682e89cff0eb6a""]",true
+4486018896,unknown,079fd8be3e2b47dea3150aac575f5e40,2026-11-03T06:17:52.673639+00:00,2026-11-03T06:18:16.698699+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Select Your Preferred Work Location Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=079fd8be3e2b47dea3150aac575f5e40""]",false
+4484643148,unknown,8152fc091abb4340814a61444368b877,2026-11-03T06:18:23.040761+00:00,2026-11-03T06:18:37.154554+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=8152fc091abb4340814a61444368b877""]",unknown
+4484446958,unknown,6b2b8bb1d200487d8c860d8e4c413024,2026-11-03T06:18:42.385083+00:00,2026-11-03T06:19:09.794725+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6b2b8bb1d200487d8c860d8e4c413024""]",false
+4483849701,unknown,431e58835cb642bcbdff5d68d233d5d2,2026-11-03T06:19:14.134920+00:00,2026-11-03T06:19:53.353133+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you comfortable working in a hybrid setting? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=431e58835cb642bcbdff5d68d233d5d2""]",false
+4484516331,unknown,511c904cf315421bafcaa10fe4223ce8,2026-11-03T06:23:29.541000+00:00,2026-11-03T06:23:47.017989+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x5785e79155ea <unknown>
+#1 0x5785e722f869 <unknown>
+#2 0x5785e7236a00 <unknown>
+#3 0x5785e723930b <unknown>
+#4 0x5785e72393b3 <unknown>
+#5 0x5785e7282500 <unknown>
+#6 0x5785e727ab27 <unknown>
+#7 0x5785e72d4d4e <unknown>
+#8 0x5785e727929b <unknown>
+#9 0x5785e727a0a1 <unknown>
+#10 0x5785e78d7fec <unknown>
+#11 0x5785e78d67f5 <unknown>
+#12 0x5785e78c1785 <unknown>
+#13 0x5785e78d745a <unknown>
+#14 0x5785e78a9d99 <unknown>
+#15 0x5785e78ffb18 <unknown>
+#16 0x5785e78ffcb5 <unknown>
+#17 0x5785e7913f73 <unknown>
+#18 0x79642bca3dfa <unknown>
+#19 0x79642bd375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=511c904cf315421bafcaa10fe4223ce8""]",unknown
+4486030166,unknown,7f88290546bb42cd9b6c7df0e7821118,2026-11-03T07:12:16.954800+00:00,2026-11-03T07:12:44.991710+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=7f88290546bb42cd9b6c7df0e7821118""]",unknown
+4481349805,unknown,ddf62fc6e23d4f2a9c9752677b9d53d7,2026-11-03T07:14:18.722651+00:00,,unknown,unknown,unknown,unknown,unknown,in_progress_unresolved,false,unknown,unknown,in_progress,unknown,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ddf62fc6e23d4f2a9c9752677b9d53d7""]",unknown
+4485273970,unknown,5bb67e8763b04c0bbc4078b5dcefe91a,2026-11-03T07:15:58.399571+00:00,2026-11-03T07:16:06.216384+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you legally authorized to work in the country in which the job you are applying for is located for any employer? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=5bb67e8763b04c0bbc4078b5dcefe91a""]",false
+4472174036,unknown,da9e055eb000493d882ffa58f111881e,2026-11-03T07:16:10.710486+00:00,2026-11-03T07:16:19.049322+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you comfortable commuting to this job's location? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=da9e055eb000493d882ffa58f111881e""]",false
+4436494193,unknown,5bac0f14592e422c88ae2f93ada8c9af,2026-11-03T07:16:22.884505+00:00,2026-11-03T07:16:28.507720+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=5bac0f14592e422c88ae2f93ada8c9af""]",unknown
+4481680533,unknown,6e3aceb8258542b89b8724f08ea90749,2026-11-03T07:18:34.286525+00:00,2026-11-03T07:18:43.513850+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you currently residing in Gurgaon or able to relocate to Gurgaon? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6e3aceb8258542b89b8724f08ea90749""]",false
+4486026546,unknown,bf7edb285be24f3495caf564575cc9bf,2026-11-03T07:21:31.144746+00:00,2026-11-03T07:21:37.730127+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Select Your Preferred Work Location Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bf7edb285be24f3495caf564575cc9bf""]",false
+4486031133,unknown,14b34860cc654ba5b283e0ab697520fc,2026-11-03T07:21:41.675313+00:00,2026-11-03T07:21:53.997716+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=14b34860cc654ba5b283e0ab697520fc""]",unknown
+4483634154,unknown,4c8b0d6bb2bf4a92ab72b619d9739e1e,2026-11-03T07:22:49.245050+00:00,2026-11-03T07:23:14.107813+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=4c8b0d6bb2bf4a92ab72b619d9739e1e""]",false
+4446740315,unknown,d9ef742afdf6417ea60d09acb8c18f92,2026-11-03T07:25:25.776425+00:00,2026-11-03T07:25:31.561672+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Do you have a Valid Indian Passport ?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d9ef742afdf6417ea60d09acb8c18f92""]",false
+4478764809,unknown,9300799d0f074ff9a18a335ee916aa3b,2026-11-03T07:25:37.707522+00:00,2026-11-03T07:25:45.844540+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you open for 5 days onsite role in Gurugram? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9300799d0f074ff9a18a335ee916aa3b""]",false
+4446728416,unknown,bd11e0d034a2415b9cfc3041f1317c6f,2026-11-03T07:25:51.312876+00:00,2026-11-03T07:25:56.723155+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Do you have a Valid Indian Passport ?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bd11e0d034a2415b9cfc3041f1317c6f""]",false
+4483025456,unknown,2ab87d84d7c14733a95055de0a8a9161,2026-11-03T07:26:00.696068+00:00,2026-11-03T07:26:05.705376+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: How many months of professional work experience do you have developing code using GitHub CoPilot or Cursor or Claude Code or Google Antigravity or Gemini Code Assist? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=2ab87d84d7c14733a95055de0a8a9161""]",false
+4482949033,unknown,b2077682a97c47cdaa8fdb15f7a7da27,2026-11-03T07:26:09.271261+00:00,2026-11-03T07:26:19.606546+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Have you participated in product requirement discussions with business stakeholders? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b2077682a97c47cdaa8fdb15f7a7da27""]",false
+4484359199,unknown,bc9360eb83514e7ebd509704f2564abf,2026-11-03T07:26:23.573616+00:00,2026-11-03T07:26:27.042917+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Please respond truthfully. How many years of professional experience do you have developing frontend applications using React? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bc9360eb83514e7ebd509704f2564abf""]",false
+4468600176,unknown,67dca75017af4599b4b8f473575981da,2026-11-03T07:26:30.626088+00:00,2026-11-03T07:26:40.095816+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Do you have the right to work in the country you are applying to? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=67dca75017af4599b4b8f473575981da""]",false
+4484359200,unknown,ab183df141e64e2c9b29894a312e1c88,2026-11-03T07:26:44.182913+00:00,2026-11-03T07:26:48.218900+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Please respond truthfully. How many years of professional experience do you have developing frontend applications using React? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ab183df141e64e2c9b29894a312e1c88""]",false
+4486815744,unknown,2a45025c9de64b24bb924f1a28edb5ca,2026-11-03T07:26:52.384367+00:00,2026-11-03T07:26:57.220157+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: Are you willing to undergo a background check, in accordance with local law/regulations? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=2a45025c9de64b24bb924f1a28edb5ca""]",false
+4486831197,unknown,b4fd409ec9064a59891c83d7ed65fed0,2026-11-03T07:27:00.633389+00:00,2026-11-03T07:27:04.240385+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: Are you willing to undergo a background check, in accordance with local law/regulations? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=b4fd409ec9064a59891c83d7ed65fed0""]",false
+4484846085,unknown,e17761df2e0b4500a45c28a688b95090,2026-11-03T07:27:08.009553+00:00,2026-11-03T07:27:11.011109+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: We must fill this position urgently. Can you start immediately? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=e17761df2e0b4500a45c28a688b95090""]",false
+4437276142,unknown,7a3824ca4c9f4e588744721c8c95ca02,2026-11-03T07:27:14.718230+00:00,2026-11-03T07:27:18.496832+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Do you have Mendix Advanced or Expert level certification? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=7a3824ca4c9f4e588744721c8c95ca02""]",false
+4320469700,unknown,4392b164b7dc48a99703014aaa67f6c5,2026-11-03T07:27:50.254937+00:00,2026-11-03T07:28:14.965171+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=4392b164b7dc48a99703014aaa67f6c5""]",false
+4485457966,unknown,7891cf805f9c4079b73666f108b4ac21,2026-11-03T07:29:19.100332+00:00,2026-11-03T07:29:22.602662+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: Do you have 8-15 years of software engineering experience, including hands-on expertise architecting scalable multi-tenant SaaS platforms? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=7891cf805f9c4079b73666f108b4ac21""]",false
+4486018761,unknown,10b6736fe9fb41ff9705fb41b1e6c955,2026-11-03T07:29:26.887019+00:00,2026-11-03T07:29:29.305602+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x630d103e25ea <unknown>
+#1 0x630d0fcfc869 <unknown>
+#2 0x630d0fd03a00 <unknown>
+#3 0x630d0fd0630b <unknown>
+#4 0x630d0fd063b3 <unknown>
+#5 0x630d0fd4f500 <unknown>
+#6 0x630d0fd47b27 <unknown>
+#7 0x630d0fda1d4e <unknown>
+#8 0x630d0fd4629b <unknown>
+#9 0x630d0fd470a1 <unknown>
+#10 0x630d103a4fec <unknown>
+#11 0x630d103a37f5 <unknown>
+#12 0x630d1038e785 <unknown>
+#13 0x630d103a445a <unknown>
+#14 0x630d10376d99 <unknown>
+#15 0x630d103ccb18 <unknown>
+#16 0x630d103cccb5 <unknown>
+#17 0x630d103e0f73 <unknown>
+#18 0x7987754a3dfa <unknown>
+#19 0x7987755375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=10b6736fe9fb41ff9705fb41b1e6c955""]",unknown
+4486834054,unknown,ba0d388e10b447a19d6fdac2306024e5,2026-11-03T07:30:12.203722+00:00,2026-11-03T07:30:18.696517+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: Do you have hands-on experience with Salesforce CPQ development, customization, Product Rules, Price Rules, Discount Schedules, Quote Templates, and approval workflows? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=ba0d388e10b447a19d6fdac2306024e5""]",false
+4477973278,unknown,6dfecdb461e64e848e2db386cc8eb69e,2026-11-03T07:30:23.942548+00:00,2026-11-03T07:30:29.963128+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: Do you have hands-on experience with SAP Business Technology Platform (BTP), including CAP and/or Fiori/UI5? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=6dfecdb461e64e848e2db386cc8eb69e""]",false
+4486011990,unknown,5dbe7aa62ab14b009ecdfa82f9eb8440,2026-11-03T07:30:33.132373+00:00,2026-11-03T07:30:39.701090+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Select Your Preferred Work Location Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=5dbe7aa62ab14b009ecdfa82f9eb8440""]",false
+4486021863,unknown,7af323603a504c7ea77c482cdfbfcecd,2026-11-03T07:30:43.183906+00:00,2026-11-03T07:30:49.265876+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Select Your Preferred Work Location Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=7af323603a504c7ea77c482cdfbfcecd""]",false
+4475798839,unknown,bae6639dddc44413a430129031d67da9,2026-11-03T07:32:21.676425+00:00,2026-11-03T07:32:32.496969+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you currently residing in Gurgaon or able to relocate to Gurgaon independently? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bae6639dddc44413a430129031d67da9""]",false
+4485917167,unknown,24da9e74d11b4ea9b5f045f8e18b673a,2026-11-03T07:32:36.124576+00:00,2026-11-03T07:32:39.817145+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you comfortable commuting to this job's location? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=24da9e74d11b4ea9b5f045f8e18b673a""]",false
+4414077535,unknown,14ccb4502b0f43568deb05ccc11c6aa4,2026-11-03T07:32:44.143243+00:00,2026-11-03T07:33:00.012699+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=14ccb4502b0f43568deb05ccc11c6aa4""]",false
+4475933420,unknown,0703aaffb5254c798039cfee676a6b67,2026-11-03T07:33:03.152429+00:00,2026-11-03T07:33:12.902480+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you currently residing in Gurgaon or able to relocate to Gurgaon independently? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0703aaffb5254c798039cfee676a6b67""]",false
+4483205104,unknown,e0e6faf77f4645429d0bac70f1e4d5c4,2026-11-03T07:34:35.808887+00:00,2026-11-03T07:34:47.935426+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=e0e6faf77f4645429d0bac70f1e4d5c4""]",unknown
+4483208078,unknown,8818b4635a9f4061b97656507db476c2,2026-11-03T07:35:18.442293+00:00,2026-11-03T07:35:31.112143+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=8818b4635a9f4061b97656507db476c2""]",unknown
+4484853870,unknown,b9b67125c9ba4c1a95b03c57ccad626c,2026-11-03T07:36:02.488505+00:00,2026-11-03T07:36:14.836579+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b9b67125c9ba4c1a95b03c57ccad626c""]",false
+4476021186,unknown,a434961b979f4543807f8e8b0c8c40e3,2026-11-03T07:36:18.653746+00:00,2026-11-03T07:36:30.817162+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=a434961b979f4543807f8e8b0c8c40e3""]",false
+4475799379,unknown,3e923b7df1434c96be62dc91501ac847,2026-11-03T07:36:34.272078+00:00,2026-11-03T07:36:46.472992+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=3e923b7df1434c96be62dc91501ac847""]",false
+4471321923,unknown,58ed310984f84801a01b017ef07e6ef1,2026-11-03T07:36:50.445685+00:00,2026-11-03T07:37:02.643209+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=58ed310984f84801a01b017ef07e6ef1""]",false
+4478042562,unknown,8a4d1460756c4a66bdd8bf8d1d37029a,2026-11-03T07:37:06.704675+00:00,2026-11-03T07:37:18.892483+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=8a4d1460756c4a66bdd8bf8d1d37029a""]",false
+4477633779,unknown,f5d61dc4ba95463199434b6ff6f7ee84,2026-11-03T07:37:22.674037+00:00,2026-11-03T07:37:34.841544+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f5d61dc4ba95463199434b6ff6f7ee84""]",false
+4478474922,unknown,4df45c0624c648639bf92105f205a3ab,2026-11-03T07:37:38.830010+00:00,2026-11-03T07:37:50.992793+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=4df45c0624c648639bf92105f205a3ab""]",false
+4479252960,unknown,7b10dac67ae74e679816eb39dd793507,2026-11-03T07:37:54.249232+00:00,2026-11-03T07:38:06.441743+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=7b10dac67ae74e679816eb39dd793507""]",false
+4478093886,unknown,17fad3752f0947a58fbd6e3c03011db6,2026-11-03T07:38:09.650526+00:00,2026-11-03T07:38:21.832326+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=17fad3752f0947a58fbd6e3c03011db6""]",false
+4474063517,unknown,88d58c07573f45d1b5983660868aa22a,2026-11-03T07:38:25.396670+00:00,2026-11-03T07:38:28.793292+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x630d103e25ea <unknown>
+#1 0x630d0fcfc869 <unknown>
+#2 0x630d0fd03a00 <unknown>
+#3 0x630d0fd0630b <unknown>
+#4 0x630d0fd063b3 <unknown>
+#5 0x630d0fd4f500 <unknown>
+#6 0x630d0fd47b27 <unknown>
+#7 0x630d0fda1d4e <unknown>
+#8 0x630d0fd4629b <unknown>
+#9 0x630d0fd470a1 <unknown>
+#10 0x630d103a4fec <unknown>
+#11 0x630d103a37f5 <unknown>
+#12 0x630d1038e785 <unknown>
+#13 0x630d103a445a <unknown>
+#14 0x630d10376d99 <unknown>
+#15 0x630d103ccb18 <unknown>
+#16 0x630d103cccb5 <unknown>
+#17 0x630d103e0f73 <unknown>
+#18 0x7987754a3dfa <unknown>
+#19 0x7987755375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=88d58c07573f45d1b5983660868aa22a""]",unknown
+4478645850,unknown,0438c1d5a97e4a57a3439ccfc2a30f4e,2026-11-03T07:38:35.341952+00:00,2026-11-03T07:38:47.495742+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0438c1d5a97e4a57a3439ccfc2a30f4e""]",false
+4468650199,unknown,db135c719b1149dbabaf44b6a3e03721,2026-11-03T07:38:50.908014+00:00,2026-11-03T07:39:03.105144+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=db135c719b1149dbabaf44b6a3e03721""]",false
+4479410472,unknown,d8ce6b5cc7ea47d38bb655f51e3e21da,2026-11-03T07:39:06.593804+00:00,2026-11-03T07:39:18.776909+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d8ce6b5cc7ea47d38bb655f51e3e21da""]",false
+4481856849,unknown,0c9038c75f7d4bb0a147138d50d05058,2026-11-03T07:39:22.593876+00:00,2026-11-03T07:39:34.799522+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0c9038c75f7d4bb0a147138d50d05058""]",false
+4485301312,unknown,6420363f2767483a9142f45b515388f1,2026-11-03T07:39:38.389263+00:00,2026-11-03T07:39:50.570007+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6420363f2767483a9142f45b515388f1""]",false
+4477972376,unknown,f8444f9eb8e14a39902229386218dcb3,2026-11-03T07:39:54.370408+00:00,2026-11-03T07:40:06.543181+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f8444f9eb8e14a39902229386218dcb3""]",false
+4484081165,unknown,1b57efeab84d42579807cb389cca89ab,2026-11-03T07:40:10.466017+00:00,2026-11-03T07:40:22.645854+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=1b57efeab84d42579807cb389cca89ab""]",false
+4484282504,unknown,e5f7e8188f524940879bf8b436d92084,2026-11-03T07:40:25.882145+00:00,2026-11-03T07:40:38.059642+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=e5f7e8188f524940879bf8b436d92084""]",false
+4475366779,unknown,d769355bebea46a9b6dd00c889c14cbc,2026-11-03T07:40:41.465754+00:00,2026-11-03T07:40:53.647527+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d769355bebea46a9b6dd00c889c14cbc""]",false
+4475534600,unknown,f288cac0a10f4143bc530ac68f7d9c7b,2026-11-03T07:40:56.799468+00:00,2026-11-03T07:41:09.090004+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f288cac0a10f4143bc530ac68f7d9c7b""]",false
+4478790072,unknown,91358e6220914612b33a993d6d788dc4,2026-11-03T07:41:12.411320+00:00,2026-11-03T07:41:24.600774+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=91358e6220914612b33a993d6d788dc4""]",false
+4483213209,unknown,fe50b43e415a42ceb8d2551161291dfb,2026-11-03T07:41:28.531049+00:00,2026-11-03T07:41:40.719634+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=fe50b43e415a42ceb8d2551161291dfb""]",false
+4477978147,unknown,1c5d4d4345984ded8437cc1455101e90,2026-11-03T07:41:46.364232+00:00,2026-11-03T07:41:58.545439+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=1c5d4d4345984ded8437cc1455101e90""]",false
+4486036144,unknown,9e91c62862c34460b9dff2d667aad634,2026-11-03T07:42:02.624612+00:00,2026-11-03T07:42:14.824851+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9e91c62862c34460b9dff2d667aad634""]",false
+4446569862,unknown,efad8cb86f91436da3533242c40630cd,2026-11-03T07:42:18.180632+00:00,2026-11-03T07:42:30.353679+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=efad8cb86f91436da3533242c40630cd""]",false
+4480026440,unknown,fcfc14c8ddab409daaee602db4c0773e,2026-11-03T07:42:34.368852+00:00,2026-11-03T07:42:46.540336+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=fcfc14c8ddab409daaee602db4c0773e""]",false
+4479548091,unknown,c02ccb594eb241b9a23434dce6ce1274,2026-11-03T07:42:50.020050+00:00,2026-11-03T07:43:02.208053+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c02ccb594eb241b9a23434dce6ce1274""]",false
+4477977320,unknown,10800c4835924a7985c9c1c8cf2b250d,2026-11-03T07:43:06.091665+00:00,2026-11-03T07:43:18.272850+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=10800c4835924a7985c9c1c8cf2b250d""]",false
+4476838455,unknown,ec8b5f606f3e40ffb850004489794401,2026-11-03T07:43:22.353541+00:00,2026-11-03T07:43:34.526943+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ec8b5f606f3e40ffb850004489794401""]",false
+4483886096,unknown,3943f9d8a0a74ebf995192562316bc0e,2026-11-03T07:43:37.488823+00:00,2026-11-03T07:43:49.704475+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=3943f9d8a0a74ebf995192562316bc0e""]",false
+4485467531,unknown,2bde8dace039464b8afe4264c9263a71,2026-11-03T07:43:52.985790+00:00,2026-11-03T07:44:05.176447+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=2bde8dace039464b8afe4264c9263a71""]",false
+4483620460,unknown,08cda8b02fc14d569e66e3d35de82a8b,2026-11-03T07:44:08.426581+00:00,2026-11-03T07:44:20.615249+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=08cda8b02fc14d569e66e3d35de82a8b""]",false
+4475551730,unknown,9dbfd482b1c042fcb9490bcd5104f1e0,2026-11-03T07:44:24.664506+00:00,2026-11-03T07:44:32.962908+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required choice: Are you currently in Gurgaon Or wiling to relocate? Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9dbfd482b1c042fcb9490bcd5104f1e0""]",false
+4485334391,unknown,1f33242a51e54760b983f3e40a398d17,2026-11-03T07:44:36.817995+00:00,2026-11-03T07:44:49.001814+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=1f33242a51e54760b983f3e40a398d17""]",false
+4477509015,unknown,42ba595d40d64b989127fd030feaaf0d,2026-11-03T07:44:52.547022+00:00,2026-11-03T07:45:04.721444+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=42ba595d40d64b989127fd030feaaf0d""]",false
+4480780751,unknown,bbb466a8720d48b081b4783c46fc40f1,2026-11-03T07:45:08.951992+00:00,2026-11-03T07:45:21.145526+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bbb466a8720d48b081b4783c46fc40f1""]",false
+4473542968,unknown,b71ed62298bb48bcaeb26f314ebbf2fb,2026-11-03T07:45:26.506937+00:00,2026-11-03T07:45:38.693824+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b71ed62298bb48bcaeb26f314ebbf2fb""]",false
+4475540324,unknown,b677e9c7e8d7445fba8ca14b9137f707,2026-11-03T07:45:42.943505+00:00,2026-11-03T07:45:55.133150+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b677e9c7e8d7445fba8ca14b9137f707""]",false
+4476780269,unknown,d901fb4354f547538f7585e0b257b15f,2026-11-03T07:45:58.432343+00:00,2026-11-03T07:46:10.608896+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d901fb4354f547538f7585e0b257b15f""]",false
+4477974651,unknown,6d9ffcc2eeec401f8d0358663d422c9f,2026-11-03T07:46:14.471991+00:00,2026-11-03T07:46:26.676846+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6d9ffcc2eeec401f8d0358663d422c9f""]",false
+4479524892,unknown,1c49400fe297490e9fe0bc61fd294212,2026-11-03T07:46:30.975343+00:00,2026-11-03T07:46:43.163935+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=1c49400fe297490e9fe0bc61fd294212""]",false
+4478428457,unknown,4ea9475ae2a242bfad73f3f8c3732a08,2026-11-03T07:46:47.289768+00:00,2026-11-03T07:46:59.481172+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=4ea9475ae2a242bfad73f3f8c3732a08""]",false
+4475772138,unknown,9e313bc53c4c484dae9f205b2a6d8ebb,2026-11-03T07:47:03.103508+00:00,2026-11-03T07:47:15.287692+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9e313bc53c4c484dae9f205b2a6d8ebb""]",false
+4477915783,unknown,10b11155e27b40adbdfc94ce9dc8026a,2026-11-03T07:47:18.753636+00:00,2026-11-03T07:47:30.933855+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=10b11155e27b40adbdfc94ce9dc8026a""]",false
+4463920390,unknown,9559b80bb76941dea13791202e5b9619,2026-11-03T07:47:34.871192+00:00,2026-11-03T07:47:47.081325+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9559b80bb76941dea13791202e5b9619""]",false
+4479272527,unknown,c204e1806d734f54a249e788dcdd3eb4,2026-11-03T07:47:50.549033+00:00,2026-11-03T07:48:02.722475+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c204e1806d734f54a249e788dcdd3eb4""]",false
+4478554101,unknown,899d212d682d44c68963937bff6b10d1,2026-11-03T07:48:06.635831+00:00,2026-11-03T07:48:18.827005+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=899d212d682d44c68963937bff6b10d1""]",false
+4485470873,unknown,82a4fa0fd5e04681a1d3cf83a13c7be9,2026-11-03T07:48:22.736904+00:00,2026-11-03T07:48:34.925603+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=82a4fa0fd5e04681a1d3cf83a13c7be9""]",false
+4484641285,unknown,e769779f2f7f4d409e0e4fbae211644a,2026-11-03T07:48:38.666592+00:00,2026-11-03T07:48:50.852233+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=e769779f2f7f4d409e0e4fbae211644a""]",false
+4484644250,unknown,6c6f7753139d4e49aaecd6a5eaf1dc35,2026-11-03T07:49:03.966428+00:00,2026-11-03T07:49:16.367362+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6c6f7753139d4e49aaecd6a5eaf1dc35""]",false
+4486811720,unknown,54489133258e48a3827df9edd0e9e486,2026-11-03T07:49:20.381139+00:00,2026-11-03T07:49:32.566647+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=54489133258e48a3827df9edd0e9e486""]",false
+4484513426,unknown,6bfe33e4220c471a8849bf8af75120af,2026-11-03T07:49:36.615048+00:00,2026-11-03T07:49:48.787602+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6bfe33e4220c471a8849bf8af75120af""]",false
+4478036422,unknown,718e96468d924d3fb1ce128bb8ce7f62,2026-11-03T07:49:55.152394+00:00,2026-11-03T07:50:09.317711+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=718e96468d924d3fb1ce128bb8ce7f62""]",false
+4462844687,unknown,574571bee1844ed8b28d445d219cd9ff,2026-11-03T07:50:13.360742+00:00,2026-11-03T07:50:25.593268+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=574571bee1844ed8b28d445d219cd9ff""]",false
+4436305976,unknown,bce2ff3505db430dac9dc42104b19f5a,2026-11-03T07:50:32.345972+00:00,2026-11-03T07:50:44.515978+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bce2ff3505db430dac9dc42104b19f5a""]",false
+4486042100,unknown,12ec476353c64ad39cff3d3dd6fd61b8,2026-11-03T07:50:48.571969+00:00,2026-11-03T07:51:00.757747+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=12ec476353c64ad39cff3d3dd6fd61b8""]",false
+4486029161,unknown,13dbb1f80c5744e99c61f6bd2e7612e0,2026-11-03T07:51:04.514901+00:00,2026-11-03T07:51:16.687215+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=13dbb1f80c5744e99c61f6bd2e7612e0""]",false
+4480043523,unknown,c075b3b30f1b4543b30aefe7f86b2373,2026-11-03T07:51:22.276363+00:00,2026-11-03T07:51:34.442669+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c075b3b30f1b4543b30aefe7f86b2373""]",false
+4486036040,unknown,4856dcdc93624066b215d2a5dc77e321,2026-11-03T07:51:37.924973+00:00,2026-11-03T07:51:50.107971+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=4856dcdc93624066b215d2a5dc77e321""]",false
+4482574784,unknown,c75d746597904289abfd15dbb92260c6,2026-11-03T07:51:54.138057+00:00,2026-11-03T07:52:06.320565+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c75d746597904289abfd15dbb92260c6""]",false
+4484640462,unknown,c18b603786014cb68e27842d233391c2,2026-11-03T07:52:10.603624+00:00,2026-11-03T07:52:22.778676+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c18b603786014cb68e27842d233391c2""]",false
+4486043040,unknown,2fb3b83184984f6887e1ff6fbd7fe767,2026-11-03T07:52:28.710761+00:00,2026-11-03T07:52:40.890767+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=2fb3b83184984f6887e1ff6fbd7fe767""]",false
+4486033090,unknown,70092779cdae408b9d7aea3504d4667b,2026-11-03T07:52:45.634325+00:00,2026-11-03T07:52:57.815338+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=70092779cdae408b9d7aea3504d4667b""]",false
+4486813897,unknown,d33462dace804b7c9ce8ccc5d86c435b,2026-11-03T07:53:01.298160+00:00,2026-11-03T07:53:13.477854+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d33462dace804b7c9ce8ccc5d86c435b""]",false
+4486030137,unknown,9d1c182869904ea2a05943641ede2e5c,2026-11-03T07:53:19.599451+00:00,2026-11-03T07:53:31.760893+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9d1c182869904ea2a05943641ede2e5c""]",false
+4486015964,unknown,24a46c7925f744ba993c0cec25f3cc6d,2026-11-03T07:53:35.142853+00:00,2026-11-03T07:53:47.316155+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=24a46c7925f744ba993c0cec25f3cc6d""]",false
+4475798196,unknown,0665fa1e672748169b1e297896d30c81,2026-11-03T07:53:51.004681+00:00,2026-11-03T07:54:03.190868+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0665fa1e672748169b1e297896d30c81""]",false
+4469411885,unknown,b99542a03a784867a939c43e61dad5f6,2026-11-03T07:54:07.291692+00:00,2026-11-03T07:54:19.476894+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b99542a03a784867a939c43e61dad5f6""]",false
+4486022897,unknown,6acb3e6aa5c84ca59c94ef44f29c65dc,2026-11-03T07:54:26.775338+00:00,2026-11-03T07:54:38.956181+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6acb3e6aa5c84ca59c94ef44f29c65dc""]",false
+4486006516,unknown,44241aedd63d440baa6671c1941ccead,2026-11-03T07:54:43.776469+00:00,2026-11-03T07:54:55.948284+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=44241aedd63d440baa6671c1941ccead""]",false
+4484628752,unknown,9ea7beb9ab7e4c6faea949776eae3d14,2026-11-03T07:55:00.383699+00:00,2026-11-03T07:55:12.580034+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9ea7beb9ab7e4c6faea949776eae3d14""]",false
+4478381688,unknown,a02686f448b645c190bd871b81e01860,2026-11-03T07:55:16.012110+00:00,2026-11-03T07:55:28.225964+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=a02686f448b645c190bd871b81e01860""]",false
+4485314873,unknown,9d45d66844624122be8d2dce1e3710c7,2026-11-03T07:55:33.895806+00:00,2026-11-03T07:55:46.073332+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9d45d66844624122be8d2dce1e3710c7""]",false
+4486028184,unknown,f2f3531943be48579189b5b2fa830bc6,2026-11-03T07:55:49.535686+00:00,2026-11-03T07:56:01.743414+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f2f3531943be48579189b5b2fa830bc6""]",false
+4484626960,unknown,d281a6de74b5451197575cc8a46b7e7e,2026-11-03T07:56:08.041271+00:00,2026-11-03T07:56:20.235612+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d281a6de74b5451197575cc8a46b7e7e""]",false
+4481458465,unknown,99c0af41bf9c4fd8a81b62f066cd47fa,2026-11-03T07:56:23.734075+00:00,2026-11-03T07:56:35.919978+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=99c0af41bf9c4fd8a81b62f066cd47fa""]",false
+4486806317,unknown,9c371e7f5d8842b49072d6c50f1cb26f,2026-11-03T07:56:39.059189+00:00,2026-11-03T07:56:51.258046+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9c371e7f5d8842b49072d6c50f1cb26f""]",false
+4480607674,unknown,eace820481ce405bbd295e8ea8697da1,2026-11-03T07:56:56.086213+00:00,2026-11-03T07:57:08.277104+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=eace820481ce405bbd295e8ea8697da1""]",false
+4485791743,unknown,18c9196ac4804badafd9834426160686,2026-11-03T07:57:12.035279+00:00,2026-11-03T07:57:24.225631+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=18c9196ac4804badafd9834426160686""]",false
+4483054220,unknown,f450846487e34b37836772ddc2b13460,2026-11-03T07:57:27.279341+00:00,2026-11-03T07:57:39.458811+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f450846487e34b37836772ddc2b13460""]",false
+4483379113,unknown,c5da59e48b754986b7e5f9f7083bd523,2026-11-03T07:57:43.337776+00:00,2026-11-03T07:57:55.537605+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=c5da59e48b754986b7e5f9f7083bd523""]",false
+4484630988,unknown,b578d1dcc3934eb18fac680780e359b5,2026-11-03T07:58:01.313146+00:00,2026-11-03T07:58:13.499336+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b578d1dcc3934eb18fac680780e359b5""]",false
+4461395816,unknown,a07fd7fd985e4b9190e0138e38318ec9,2026-11-03T07:58:18.264061+00:00,2026-11-03T07:58:30.486389+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=a07fd7fd985e4b9190e0138e38318ec9""]",false
+4486839270,unknown,d4752c846052416094a4ca7bd8006c07,2026-11-04T03:41:10.610546+00:00,2026-11-04T03:41:21.474544+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,Could not select a LinkedIn location for New Delhi. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d4752c846052416094a4ca7bd8006c07""]",false
+4462206184,unknown,37afcd74c5874dcc8fbfadc844936dcd,2026-11-04T03:48:28.608251+00:00,2026-11-04T03:48:31.650896+00:00,unknown,unknown,unknown,unknown,unknown,submitting_unconfirmed,false,unknown,false,submitting,Submission is being attempted; confirmation is pending.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=37afcd74c5874dcc8fbfadc844936dcd""]",true
+4477216230,unknown,499c5d211e9646cc89fba78985bd00bf,2026-11-04T05:05:57.301708+00:00,2026-11-04T05:06:09.798716+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=499c5d211e9646cc89fba78985bd00bf""]",unknown
+4482960246,unknown,37ecb225f1c34dcb909897acf7737315,2026-11-04T05:10:15.574179+00:00,2026-11-04T05:10:20.301621+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"No verified answer for required choice: Do you have strong skills in JavaScript, TypeScript, and SQL or NoSQL databases? Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=37ecb225f1c34dcb909897acf7737315""]",false
+4486031133,unknown,62995ab8ce5a4fc894198b2a428010ac,2026-11-04T05:37:32.216661+00:00,2026-11-04T05:37:40.457282+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Select Your Preferred Work Location Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=62995ab8ce5a4fc894198b2a428010ac""]",false
+4477216230,unknown,64e26f54b78b4396830ff5ee8e914ac9,2026-11-04T05:38:32.239614+00:00,2026-11-04T05:38:47.536824+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=64e26f54b78b4396830ff5ee8e914ac9""]",unknown
+4485041958,unknown,0fb984fbed4f4ead90efc0c15334f5ce,2026-11-04T05:38:59.044206+00:00,2026-11-04T05:39:14.525206+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=0fb984fbed4f4ead90efc0c15334f5ce""]",unknown
+4485060299,unknown,97855e55fc0544c29c7bfacac575a5a5,2026-11-04T05:39:23.087210+00:00,2026-11-04T05:39:38.665755+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=97855e55fc0544c29c7bfacac575a5a5""]",unknown
+4479810568,unknown,f3e148606a424822bf2020b0e1675059,2026-11-04T05:40:34.179558+00:00,2026-11-04T05:40:38.703026+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x55685a8b25ea <unknown>
+#1 0x55685a1cc869 <unknown>
+#2 0x55685a1d3a00 <unknown>
+#3 0x55685a1d630b <unknown>
+#4 0x55685a1d63b3 <unknown>
+#5 0x55685a21f500 <unknown>
+#6 0x55685a217b27 <unknown>
+#7 0x55685a271d4e <unknown>
+#8 0x55685a21629b <unknown>
+#9 0x55685a2170a1 <unknown>
+#10 0x55685a874fec <unknown>
+#11 0x55685a8737f5 <unknown>
+#12 0x55685a85e785 <unknown>
+#13 0x55685a87445a <unknown>
+#14 0x55685a846d99 <unknown>
+#15 0x55685a89cb18 <unknown>
+#16 0x55685a89ccb5 <unknown>
+#17 0x55685a8b0f73 <unknown>
+#18 0x7305948a3dfa <unknown>
+#19 0x7305949375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=f3e148606a424822bf2020b0e1675059""]",unknown
+4468523455,unknown,1ba24fd599f14c0d9f3fdd79fb7c43b6,2026-11-04T05:41:23.324952+00:00,2026-11-04T05:41:38.843404+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=1ba24fd599f14c0d9f3fdd79fb7c43b6""]",unknown
+4486895847,unknown,67dfa4f33be9478f80cea2ee2195c491,2026-11-04T05:45:12.719618+00:00,2026-11-04T05:45:28.286783+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=67dfa4f33be9478f80cea2ee2195c491""]",unknown
+4436802556,unknown,952ae9676f8e4c8c8bd8ae07ac992799,2026-11-04T05:45:33.545078+00:00,2026-11-04T05:45:43.318046+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x55685a8b25ea <unknown>
+#1 0x55685a1cc869 <unknown>
+#2 0x55685a1d3a00 <unknown>
+#3 0x55685a1d630b <unknown>
+#4 0x55685a1d63b3 <unknown>
+#5 0x55685a21f500 <unknown>
+#6 0x55685a217b27 <unknown>
+#7 0x55685a271d4e <unknown>
+#8 0x55685a21629b <unknown>
+#9 0x55685a2170a1 <unknown>
+#10 0x55685a874fec <unknown>
+#11 0x55685a8737f5 <unknown>
+#12 0x55685a85e785 <unknown>
+#13 0x55685a87445a <unknown>
+#14 0x55685a846d99 <unknown>
+#15 0x55685a89cb18 <unknown>
+#16 0x55685a89ccb5 <unknown>
+#17 0x55685a8b0f73 <unknown>
+#18 0x7305948a3dfa <unknown>
+#19 0x7305949375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=952ae9676f8e4c8c8bd8ae07ac992799""]",unknown
+4446736293,unknown,b553a24a041d46a493c1486bb7e831ee,2026-11-04T05:46:19.084918+00:00,2026-11-04T05:46:25.840062+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Do you have a Valid Indian Passport ?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b553a24a041d46a493c1486bb7e831ee""]",false
+4485327237,unknown,9824e51543004371aebed6e3eb21974a,2026-11-04T05:48:18.515498+00:00,2026-11-04T05:48:37.618273+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9824e51543004371aebed6e3eb21974a""]",false
+4472313256,unknown,6367962734de4ecd9bf0c579e9e6cf56,2026-11-04T05:51:01.499310+00:00,2026-11-04T05:51:07.956483+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,Unverified application question: Gender*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6367962734de4ecd9bf0c579e9e6cf56""]",false
+4479114414,unknown,8d237ae982ff4bcfbe22bef22c376847,2026-11-04T05:51:30.035083+00:00,2026-11-04T05:51:51.276784+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=8d237ae982ff4bcfbe22bef22c376847""]",false
+4483051424,unknown,2fd03589c9994264a5bd6b303526cccf,2026-11-04T05:54:00.306586+00:00,2026-11-04T05:54:17.819277+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=2fd03589c9994264a5bd6b303526cccf""]",false
+4477827270,unknown,ac23c58b56a94ee084692701a5fdc2dc,2026-11-04T05:54:36.978954+00:00,2026-11-04T05:54:53.829550+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ac23c58b56a94ee084692701a5fdc2dc""]",false
+4486051641,unknown,fcf9be324f5d45938104dcecf32461f6,2026-11-04T05:54:57.207079+00:00,2026-11-04T05:55:04.044067+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x55685a8b25ea <unknown>
+#1 0x55685a1cc869 <unknown>
+#2 0x55685a1d3a00 <unknown>
+#3 0x55685a1d630b <unknown>
+#4 0x55685a1d63b3 <unknown>
+#5 0x55685a21f500 <unknown>
+#6 0x55685a217b27 <unknown>
+#7 0x55685a271d4e <unknown>
+#8 0x55685a21629b <unknown>
+#9 0x55685a2170a1 <unknown>
+#10 0x55685a874fec <unknown>
+#11 0x55685a8737f5 <unknown>
+#12 0x55685a85e785 <unknown>
+#13 0x55685a87445a <unknown>
+#14 0x55685a846d99 <unknown>
+#15 0x55685a89cb18 <unknown>
+#16 0x55685a89ccb5 <unknown>
+#17 0x55685a8b0f73 <unknown>
+#18 0x7305948a3dfa <unknown>
+#19 0x7305949375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=fcf9be324f5d45938104dcecf32461f6""]",unknown
+4482484987,unknown,03fa16cbb8204819b332615d18e41206,2026-11-04T05:55:16.493412+00:00,2026-11-04T05:55:21.200799+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x55685a8b25ea <unknown>
+#1 0x55685a1cc869 <unknown>
+#2 0x55685a1d3a00 <unknown>
+#3 0x55685a1d630b <unknown>
+#4 0x55685a1d63b3 <unknown>
+#5 0x55685a21f500 <unknown>
+#6 0x55685a217b27 <unknown>
+#7 0x55685a271d4e <unknown>
+#8 0x55685a21629b <unknown>
+#9 0x55685a2170a1 <unknown>
+#10 0x55685a874fec <unknown>
+#11 0x55685a8737f5 <unknown>
+#12 0x55685a85e785 <unknown>
+#13 0x55685a87445a <unknown>
+#14 0x55685a846d99 <unknown>
+#15 0x55685a89cb18 <unknown>
+#16 0x55685a89ccb5 <unknown>
+#17 0x55685a8b0f73 <unknown>
+#18 0x7305948a3dfa <unknown>
+#19 0x7305949375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=03fa16cbb8204819b332615d18e41206""]",unknown
+4484005362,unknown,5177e4f976d8493c802239ce0326e562,2026-11-04T05:58:24.227725+00:00,2026-11-04T05:58:29.594892+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: What is your level of proficiency in Eng水平如何?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=5177e4f976d8493c802239ce0326e562""]",false
+4485068155,unknown,d21bfc44cf9a4cdabfb13138fd665d91,2026-11-04T06:04:12.439554+00:00,2026-11-04T06:04:28.018488+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=d21bfc44cf9a4cdabfb13138fd665d91""]",unknown
+4485051804,unknown,761d9fc2267246618cc3683b905ac4b0,2026-11-04T06:04:40.053602+00:00,2026-11-04T06:04:55.733657+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=761d9fc2267246618cc3683b905ac4b0""]",unknown
+4464971349,unknown,9a73c4294b3e4ca682f41801bbbefa10,2026-11-04T06:05:00.502631+00:00,2026-11-04T06:05:09.206674+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: Are you legally entitled to work in the country where this job is located?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=9a73c4294b3e4ca682f41801bbbefa10""]",false
+4477663078,unknown,f4055e2de5544374b9637f8df042bd31,2026-11-04T06:12:08.959485+00:00,2026-11-04T06:12:18.343683+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,"Unverified application question: Will you, now or in the future, require  sponsorship for employment in the  country or jurisdiction where the  position to which you are applying is  located?*. Draft saved on LinkedIn.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=f4055e2de5544374b9637f8df042bd31""]",false
+4484329345,unknown,f27c1f3392db40d9acf4cd9c1f4caec9,2026-11-04T06:16:21.022099+00:00,2026-11-04T06:16:36.563945+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=f27c1f3392db40d9acf4cd9c1f4caec9""]",unknown
+4485065088,unknown,d57b6bfbdfde4acbb894de86c1c7cee4,2026-11-04T06:16:55.190016+00:00,2026-11-04T06:17:10.877697+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=d57b6bfbdfde4acbb894de86c1c7cee4""]",unknown
+4452437581,unknown,25d3d502ed6d41fab9d236823cd3ce2a,2026-11-04T06:17:36.346882+00:00,2026-11-04T06:17:42.353553+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required choice: Notice Period Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=25d3d502ed6d41fab9d236823cd3ce2a""]",false
+4486825677,unknown,46f45bbecb0b490da8d7701d258666f7,2026-11-04T06:17:49.081634+00:00,2026-11-04T06:17:54.369505+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: What is your current salary in LPA? We will cross-check references later in the process.*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=46f45bbecb0b490da8d7701d258666f7""]",false
+4471319619,unknown,007b4f9fd54d43b5bcac289e769cde6a,2026-11-04T06:17:58.571923+00:00,2026-11-04T06:18:15.837691+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=007b4f9fd54d43b5bcac289e769cde6a""]",false
+4486832400,unknown,af388fa92654428890a1b38efe9a237d,2026-11-04T06:18:59.288369+00:00,2026-11-04T06:19:05.247632+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: What is your current salary in LPA? We will cross-check references later in the process.*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=af388fa92654428890a1b38efe9a237d""]",false
+4486830495,unknown,aa1350ec81bf42d8a93ebad9c9a1a91a,2026-11-04T06:19:08.773850+00:00,2026-11-04T06:19:14.117121+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: What is your current salary in LPA? We will cross-check references later in the process.*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=aa1350ec81bf42d8a93ebad9c9a1a91a""]",false
+4486828554,unknown,dfb4af9db19f430eae188a435fddb983,2026-11-04T06:19:37.962155+00:00,2026-11-04T06:19:43.338701+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: What is your current salary in LPA? We will cross-check references later in the process.*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=dfb4af9db19f430eae188a435fddb983""]",false
+4486070238,unknown,032929ac97114c7fbc3509a4e4cd3e0d,2026-11-04T06:19:46.849144+00:00,2026-11-04T06:20:02.565444+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=032929ac97114c7fbc3509a4e4cd3e0d""]",unknown
+4482883621,unknown,bcec7787a76447829679540c37d8ff06,2026-11-04T06:23:26.950624+00:00,2026-11-04T06:23:43.522810+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required; This field is required; This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bcec7787a76447829679540c37d8ff06""]",false
+4482950091,unknown,6383dc430fae459b9c66513a8c42735b,2026-11-04T06:27:08.985624+00:00,2026-11-04T06:27:27.354928+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=6383dc430fae459b9c66513a8c42735b""]",false
+4485289478,unknown,ead9d3bb844849d58dbc264aa923267e,2026-11-04T06:31:50.097494+00:00,2026-11-04T06:31:56.718800+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No verified answer for required question: What is your level of English?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ead9d3bb844849d58dbc264aa923267e""]",false
+4454985812,unknown,f9b1b2301c9640648ef86320bdce6d9f,2026-11-04T06:37:57.496275+00:00,2026-11-04T06:38:14.676929+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=f9b1b2301c9640648ef86320bdce6d9f""]",false
+4480614330,unknown,ab90c219ce144d2abf42632f8924436e,2026-11-04T06:40:09.718934+00:00,2026-11-04T06:40:25.303330+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=ab90c219ce144d2abf42632f8924436e""]",unknown
+4476914382,unknown,8e186b3018de4562b531460568cba7f2,2026-11-04T06:50:01.812396+00:00,2026-11-04T06:50:07.254459+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: Current Salary (LPA)*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=8e186b3018de4562b531460568cba7f2""]",false
+4486506910,unknown,1df7702663e844d58a8229d4584c275d,2026-11-05T03:26:37.571499+00:00,2026-11-05T03:26:53.252301+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=1df7702663e844d58a8229d4584c275d""]",unknown
+4485051804,unknown,710820688af8466c9044f735b36d3760,2026-11-05T03:46:58.319022+00:00,2026-11-05T03:47:13.983558+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=710820688af8466c9044f735b36d3760""]",unknown
+4486970913,unknown,e53a6b23a5a74c27a8f197a3c9a29db0,2026-11-07T07:45:48.682600+00:00,2026-11-07T07:46:10.674324+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=e53a6b23a5a74c27a8f197a3c9a29db0""]",false
+4425104015,unknown,aea40443f0c44c4cae687bbd6ac7660a,2026-11-07T07:46:15.068925+00:00,2026-11-07T07:46:23.464960+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x593c4b4975ea <unknown>
+#1 0x593c4adb1869 <unknown>
+#2 0x593c4adb8a00 <unknown>
+#3 0x593c4adbb30b <unknown>
+#4 0x593c4adbb3b3 <unknown>
+#5 0x593c4ae04500 <unknown>
+#6 0x593c4adfcb27 <unknown>
+#7 0x593c4ae56d4e <unknown>
+#8 0x593c4adfb29b <unknown>
+#9 0x593c4adfc0a1 <unknown>
+#10 0x593c4b459fec <unknown>
+#11 0x593c4b4587f5 <unknown>
+#12 0x593c4b443785 <unknown>
+#13 0x593c4b45945a <unknown>
+#14 0x593c4b42bd99 <unknown>
+#15 0x593c4b481b18 <unknown>
+#16 0x593c4b481cb5 <unknown>
+#17 0x593c4b495f73 <unknown>
+#18 0x7337d5aa3dfa <unknown>
+#19 0x7337d5b375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=aea40443f0c44c4cae687bbd6ac7660a""]",unknown
+4484659889,unknown,9beb9e4d33b84ab9bda25af73f1f5857,2026-11-07T07:52:28.711932+00:00,2026-11-07T07:52:44.385055+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=9beb9e4d33b84ab9bda25af73f1f5857""]",unknown
+4471326476,unknown,442abcbd1a76427085b4a2f0051b23df,2026-11-07T07:58:04.200764+00:00,2026-11-07T07:58:23.174704+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=442abcbd1a76427085b4a2f0051b23df""]",unknown
+4471326476,unknown,bd2f1b86ff674b388766b5e7347d101e,2026-11-07T08:01:07.841130+00:00,2026-11-07T08:01:20.093287+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=bd2f1b86ff674b388766b5e7347d101e""]",false
+4484786437,unknown,5161673347bd4417973aa06809dee901,2026-11-07T08:01:25.901525+00:00,2026-11-07T08:01:41.619970+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=5161673347bd4417973aa06809dee901""]",unknown
+4486367925,unknown,d3f24650017a4267a08e7bed5a35bd37,2026-11-07T08:06:04.087015+00:00,2026-11-07T08:06:16.475958+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d3f24650017a4267a08e7bed5a35bd37""]",false
+4425104015,unknown,6ae6d80e00ed4afa9317522d545b37d9,2026-11-07T08:18:54.247252+00:00,2026-11-07T08:19:04.775439+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x57a1662195ea <unknown>
+#1 0x57a165b33869 <unknown>
+#2 0x57a165b3aa00 <unknown>
+#3 0x57a165b3d30b <unknown>
+#4 0x57a165b3d3b3 <unknown>
+#5 0x57a165b86500 <unknown>
+#6 0x57a165b7eb27 <unknown>
+#7 0x57a165bd8d4e <unknown>
+#8 0x57a165b7d29b <unknown>
+#9 0x57a165b7e0a1 <unknown>
+#10 0x57a1661dbfec <unknown>
+#11 0x57a1661da7f5 <unknown>
+#12 0x57a1661c5785 <unknown>
+#13 0x57a1661db45a <unknown>
+#14 0x57a1661add99 <unknown>
+#15 0x57a166203b18 <unknown>
+#16 0x57a166203cb5 <unknown>
+#17 0x57a166217f73 <unknown>
+#18 0x7bc8b60a3dfa <unknown>
+#19 0x7bc8b61375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=6ae6d80e00ed4afa9317522d545b37d9""]",unknown
+4478976575,unknown,b1040f88563c4651ad21ea2c951fac08,2026-11-08T13:25:36.329709+00:00,2026-11-08T13:25:51.823190+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=b1040f88563c4651ad21ea2c951fac08""]",unknown
+4352122689,unknown,0faced527c6c47109eb81f8f3247c361,2026-11-08T13:25:59.640694+00:00,2026-11-08T13:26:07.855587+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: What is your current availability to start?*. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0faced527c6c47109eb81f8f3247c361""]",false
+4484439653,unknown,44bfbe0984bc4e39aa2c6102400211df,2026-11-08T13:26:46.075907+00:00,2026-11-08T13:26:54.162106+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x61d72a0d35ea <unknown>
+#1 0x61d7299ed869 <unknown>
+#2 0x61d7299f4a00 <unknown>
+#3 0x61d7299f730b <unknown>
+#4 0x61d7299f73b3 <unknown>
+#5 0x61d729a40500 <unknown>
+#6 0x61d729a38b27 <unknown>
+#7 0x61d729a92d4e <unknown>
+#8 0x61d729a3729b <unknown>
+#9 0x61d729a380a1 <unknown>
+#10 0x61d72a095fec <unknown>
+#11 0x61d72a0947f5 <unknown>
+#12 0x61d72a07f785 <unknown>
+#13 0x61d72a09545a <unknown>
+#14 0x61d72a067d99 <unknown>
+#15 0x61d72a0bdb18 <unknown>
+#16 0x61d72a0bdcb5 <unknown>
+#17 0x61d72a0d1f73 <unknown>
+#18 0x7ed962ca3dfa <unknown>
+#19 0x7ed962d375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=44bfbe0984bc4e39aa2c6102400211df""]",unknown
+4478976575,unknown,1059a15db7d44440bd57b27230508e8b,2026-11-08T13:30:54.079097+00:00,2026-11-08T13:30:55.279918+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: element click intercepted: Element <button class=""gvylw7 gvylw6 gvyt0 gvya26 gvyhn4 gvylho gvyli7 gvylxb gvylw9 gvylw8 gvyazu gvyj03 gvyj2d gvyia7"" type=""button"" componentkey=""a7be46b4-797e-411a-8368-a7ee76b2fef1"" aria-label=""Easy Apply to this job"">...</button> is not clickable at point (894, 335). Other element would receive the click: <div class=""gvylcf gvylcw gvyldd gvyldu gvyayy gvyiu3 gvyj1s gvyj08 gvyj1j gvyiyn gvyia7 gvyl4o"">...</div>
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+#0 0x62ea389095ea <unknown>
+#1 0x62ea38223869 <unknown>
+#2 0x62ea382811c3 <unknown>
+#3 0x62ea3827f2a2 <unknown>
+#4 0x62ea3827cc9c <unknown>
+#5 0x62ea3827bd77 <unknown>
+#6 0x62ea3826f1e2 <unknown>
+#7 0x62ea3826eb27 <unknown>
+#8 0x62ea382c8d4e <unknown>
+#9 0x62ea3826d29b <unknown>
+#10 0x62ea3826e0a1 <unknown>
+#11 0x62ea388cbfec <unknown>
+#12 0x62ea388ca7f5 <unknown>
+#13 0x62ea388b5785 <unknown>
+#14 0x62ea388cb45a <unknown>
+#15 0x62ea3889dd99 <unknown>
+#16 0x62ea388f3b18 <unknown>
+#17 0x62ea388f3cb5 <unknown>
+#18 0x62ea38907f73 <unknown>
+#19 0x7f3fe84a3dfa <unknown>
+#20 0x7f3fe85375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=1059a15db7d44440bd57b27230508e8b""]",unknown
+4488142626,unknown,30c8b571ff864a4abded0e7680261a12,2026-11-08T13:31:16.668749+00:00,2026-11-08T13:31:28.885543+00:00,unknown,unknown,unknown,unknown,unknown,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=30c8b571ff864a4abded0e7680261a12""]",false
+4488455705,unknown,53b951b29f0048579eaf85b82538a9dc,2026-11-08T13:31:35.929276+00:00,2026-11-08T13:32:07.152006+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x62ea389095ea <unknown>
+#1 0x62ea38223869 <unknown>
+#2 0x62ea3822aa00 <unknown>
+#3 0x62ea3822d30b <unknown>
+#4 0x62ea3822d3b3 <unknown>
+#5 0x62ea38276500 <unknown>
+#6 0x62ea3826eb27 <unknown>
+#7 0x62ea382c8d4e <unknown>
+#8 0x62ea3826d29b <unknown>
+#9 0x62ea3826e0a1 <unknown>
+#10 0x62ea388cbfec <unknown>
+#11 0x62ea388ca7f5 <unknown>
+#12 0x62ea388b5785 <unknown>
+#13 0x62ea388cb45a <unknown>
+#14 0x62ea3889dd99 <unknown>
+#15 0x62ea388f3b18 <unknown>
+#16 0x62ea388f3cb5 <unknown>
+#17 0x62ea38907f73 <unknown>
+#18 0x7f3fe84a3dfa <unknown>
+#19 0x7f3fe85375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=53b951b29f0048579eaf85b82538a9dc""]",unknown
+4425000547,unknown,0ce2069ab3de4cfba6660235486f36a5,2026-11-08T13:33:21.526702+00:00,2026-11-08T13:33:34.126132+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: element click intercepted: Element <button class=""gvylw7 gvylw6 gvyt0 gvya26 gvyhn4 gvylho gvyli7 gvylxc gvylw9 gvylw8 gvyazu gvyj03 gvyj2d gvyhwr"" type=""button"" componentkey=""58cdf7db-828c-4919-af79-152c7ed8a6c3"">...</button> is not clickable at point (1282, 540). Other element would receive the click: <dialog class=""gvyl69 gvyl68 gvyilz gvylb8 gvylcp gvylc6 gvyldn gvybtc gvyt0 gvyhn4 gvyj15 gvyk5y gvyifv gvyl7b gvyl7s gvyl7o gvyk7h gvyhzn gvyl7n"" data-testid=""dialog"" open="""">...</dialog>
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+#0 0x62ea389095ea <unknown>
+#1 0x62ea38223869 <unknown>
+#2 0x62ea382811c3 <unknown>
+#3 0x62ea3827f2a2 <unknown>
+#4 0x62ea3827cc9c <unknown>
+#5 0x62ea3827bd77 <unknown>
+#6 0x62ea3826f5d5 <unknown>
+#7 0x62ea3826eb27 <unknown>
+#8 0x62ea382c8d4e <unknown>
+#9 0x62ea3826d29b <unknown>
+#10 0x62ea3826e0a1 <unknown>
+#11 0x62ea388cbfec <unknown>
+#12 0x62ea388ca7f5 <unknown>
+#13 0x62ea388b5785 <unknown>
+#14 0x62ea388cb45a <unknown>
+#15 0x62ea3889dd99 <unknown>
+#16 0x62ea388f3b18 <unknown>
+#17 0x62ea388f3cb5 <unknown>
+#18 0x62ea38907f73 <unknown>
+#19 0x7f3fe84a3dfa <unknown>
+#20 0x7f3fe85375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=0ce2069ab3de4cfba6660235486f36a5""]",unknown
+4449225014,unknown,854b16a062914ac28c62b7508e0115f0,2026-11-08T13:34:14.958478+00:00,2026-11-08T13:34:28.353976+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x62ea389095ea <unknown>
+#1 0x62ea38223869 <unknown>
+#2 0x62ea3822aa00 <unknown>
+#3 0x62ea3822d30b <unknown>
+#4 0x62ea3822d3b3 <unknown>
+#5 0x62ea38276500 <unknown>
+#6 0x62ea3826eb27 <unknown>
+#7 0x62ea382c8d4e <unknown>
+#8 0x62ea3826d29b <unknown>
+#9 0x62ea3826e0a1 <unknown>
+#10 0x62ea388cbfec <unknown>
+#11 0x62ea388ca7f5 <unknown>
+#12 0x62ea388b5785 <unknown>
+#13 0x62ea388cb45a <unknown>
+#14 0x62ea3889dd99 <unknown>
+#15 0x62ea388f3b18 <unknown>
+#16 0x62ea388f3cb5 <unknown>
+#17 0x62ea38907f73 <unknown>
+#18 0x7f3fe84a3dfa <unknown>
+#19 0x7f3fe85375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=854b16a062914ac28c62b7508e0115f0""]",unknown
+4484439653,unknown,ab04202230a24817a1c390c34fe05559,2026-11-08T13:45:39.071881+00:00,2026-11-08T13:45:50.466435+00:00,unknown,unknown,unknown,unknown,unknown,submission_uncertain,false,unknown,false,uncertain,Submit was attempted but could not be confirmed.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=ab04202230a24817a1c390c34fe05559""]",true
+4484659889,unknown,28fb54fcc74649779a9b054135c6ff1d,2026-11-08T16:29:22.372885+00:00,2026-11-08T16:29:34.791887+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x61c7d4d115ea <unknown>
+#1 0x61c7d462b869 <unknown>
+#2 0x61c7d4632a00 <unknown>
+#3 0x61c7d463530b <unknown>
+#4 0x61c7d46353b3 <unknown>
+#5 0x61c7d467e500 <unknown>
+#6 0x61c7d4676b27 <unknown>
+#7 0x61c7d46d0d4e <unknown>
+#8 0x61c7d467529b <unknown>
+#9 0x61c7d46760a1 <unknown>
+#10 0x61c7d4cd3fec <unknown>
+#11 0x61c7d4cd27f5 <unknown>
+#12 0x61c7d4cbd785 <unknown>
+#13 0x61c7d4cd345a <unknown>
+#14 0x61c7d4ca5d99 <unknown>
+#15 0x61c7d4cfbb18 <unknown>
+#16 0x61c7d4cfbcb5 <unknown>
+#17 0x61c7d4d0ff73 <unknown>
+#18 0x7455f80a3dfa <unknown>
+#19 0x7455f81375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=28fb54fcc74649779a9b054135c6ff1d""]",unknown
+4484659889,unknown,66111bdb97324cd5bbf23e05ff0d0eb1,2026-11-08T16:31:11.870424+00:00,2026-11-08T16:31:17.629396+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x582ffb3e75ea <unknown>
+#1 0x582ffad01869 <unknown>
+#2 0x582ffad08a00 <unknown>
+#3 0x582ffad0b30b <unknown>
+#4 0x582ffad0b3b3 <unknown>
+#5 0x582ffad54500 <unknown>
+#6 0x582ffad4cb27 <unknown>
+#7 0x582ffada6d4e <unknown>
+#8 0x582ffad4b29b <unknown>
+#9 0x582ffad4c0a1 <unknown>
+#10 0x582ffb3a9fec <unknown>
+#11 0x582ffb3a87f5 <unknown>
+#12 0x582ffb393785 <unknown>
+#13 0x582ffb3a945a <unknown>
+#14 0x582ffb37bd99 <unknown>
+#15 0x582ffb3d1b18 <unknown>
+#16 0x582ffb3d1cb5 <unknown>
+#17 0x582ffb3e5f73 <unknown>
+#18 0x73e880aa3dfa <unknown>
+#19 0x73e880b375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=66111bdb97324cd5bbf23e05ff0d0eb1""]",unknown
+4483451035,unknown,9d632cc32c1a423d9b225e19bf90e7b2,2026-11-08T16:32:00.718852+00:00,2026-11-08T16:32:07.035681+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x582ffb3e75ea <unknown>
+#1 0x582ffad01869 <unknown>
+#2 0x582ffad08a00 <unknown>
+#3 0x582ffad0b30b <unknown>
+#4 0x582ffad0b3b3 <unknown>
+#5 0x582ffad54500 <unknown>
+#6 0x582ffad4cb27 <unknown>
+#7 0x582ffada6d4e <unknown>
+#8 0x582ffad4b29b <unknown>
+#9 0x582ffad4c0a1 <unknown>
+#10 0x582ffb3a9fec <unknown>
+#11 0x582ffb3a87f5 <unknown>
+#12 0x582ffb393785 <unknown>
+#13 0x582ffb3a945a <unknown>
+#14 0x582ffb37bd99 <unknown>
+#15 0x582ffb3d1b18 <unknown>
+#16 0x582ffb3d1cb5 <unknown>
+#17 0x582ffb3e5f73 <unknown>
+#18 0x73e880aa3dfa <unknown>
+#19 0x73e880b375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=9d632cc32c1a423d9b225e19bf90e7b2""]",unknown
+4486209745,unknown,8762a5c2c4ba48b880d70bb3bfc30383,2026-11-08T16:32:20.068835+00:00,2026-11-08T16:32:26.642616+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,Cannot verify the prefilled answer: Which location are you applying for?. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=8762a5c2c4ba48b880d70bb3bfc30383""]",false
+4487653211,unknown,c0333dac084744e59313df1085d541fd,2026-11-08T16:32:42.280555+00:00,2026-11-08T16:32:58.060554+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=c0333dac084744e59313df1085d541fd""]",unknown
+4479664955,unknown,f2383bd3ca114f9ea4f821e9c70629ae,2026-11-08T16:33:53.581816+00:00,2026-11-08T16:34:09.026392+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=f2383bd3ca114f9ea4f821e9c70629ae""]",unknown
+4488455705,unknown,f20d80cf37d243a982250dd1452ee9a9,2026-11-08T16:35:57.843077+00:00,2026-11-08T16:36:17.889331+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x582ffb3e75ea <unknown>
+#1 0x582ffad01869 <unknown>
+#2 0x582ffad08a00 <unknown>
+#3 0x582ffad0b30b <unknown>
+#4 0x582ffad0b3b3 <unknown>
+#5 0x582ffad54500 <unknown>
+#6 0x582ffad4cb27 <unknown>
+#7 0x582ffada6d4e <unknown>
+#8 0x582ffad4b29b <unknown>
+#9 0x582ffad4c0a1 <unknown>
+#10 0x582ffb3a9fec <unknown>
+#11 0x582ffb3a87f5 <unknown>
+#12 0x582ffb393785 <unknown>
+#13 0x582ffb3a945a <unknown>
+#14 0x582ffb37bd99 <unknown>
+#15 0x582ffb3d1b18 <unknown>
+#16 0x582ffb3d1cb5 <unknown>
+#17 0x582ffb3e5f73 <unknown>
+#18 0x73e880aa3dfa <unknown>
+#19 0x73e880b375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=f20d80cf37d243a982250dd1452ee9a9""]",unknown
+4485068155,unknown,688c4d443764496da895528359342ee7,2026-11-08T16:36:24.522144+00:00,2026-11-08T16:36:40.317774+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=688c4d443764496da895528359342ee7""]",unknown
+4488149500,unknown,aef089abe9224c21870666aa4e8a435b,2026-11-08T16:38:35.847686+00:00,2026-11-08T16:38:43.504620+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x582ffb3e75ea <unknown>
+#1 0x582ffad01869 <unknown>
+#2 0x582ffad08a00 <unknown>
+#3 0x582ffad0b30b <unknown>
+#4 0x582ffad0b3b3 <unknown>
+#5 0x582ffad54500 <unknown>
+#6 0x582ffad4cb27 <unknown>
+#7 0x582ffada6d4e <unknown>
+#8 0x582ffad4b29b <unknown>
+#9 0x582ffad4c0a1 <unknown>
+#10 0x582ffb3a9fec <unknown>
+#11 0x582ffb3a87f5 <unknown>
+#12 0x582ffb393785 <unknown>
+#13 0x582ffb3a945a <unknown>
+#14 0x582ffb37bd99 <unknown>
+#15 0x582ffb3d1b18 <unknown>
+#16 0x582ffb3d1cb5 <unknown>
+#17 0x582ffb3e5f73 <unknown>
+#18 0x73e880aa3dfa <unknown>
+#19 0x73e880b375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=aef089abe9224c21870666aa4e8a435b""]",unknown
+4485065088,unknown,6c2276ff5a084bbaa7f38daf4cde4b2e,2026-11-08T16:38:49.144533+00:00,2026-11-08T16:39:04.869611+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=6c2276ff5a084bbaa7f38daf4cde4b2e""]",unknown
+4485051804,unknown,aa473987a1e544358ff6f8401f063243,2026-11-08T16:39:09.667592+00:00,2026-11-08T16:39:25.225720+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=aa473987a1e544358ff6f8401f063243""]",unknown
+4483652208,unknown,af11c2438116473fa6839112269c1765,2026-11-08T16:40:07.201270+00:00,2026-11-08T16:40:26.504056+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=af11c2438116473fa6839112269c1765""]",false
+4486767446,unknown,a0622cbb31be4047b585e04e730ddc28,2026-11-08T16:46:59.131452+00:00,2026-11-08T16:47:40.346481+00:00,unknown,unknown,unknown,unknown,unknown,submission_uncertain,false,true,false,uncertain,"Submit was clicked, but the application status could not be confirmed. Check Applied jobs before retrying.",unknown,0,[],"[""application_field_audit.json:applications attempt_id=a0622cbb31be4047b585e04e730ddc28""]",true
+4487790309,unknown,29c5d15d47d14d9a9f8163bcb401a7b2,2026-11-08T16:57:03.706083+00:00,2026-11-08T16:57:19.398309+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=29c5d15d47d14d9a9f8163bcb401a7b2""]",unknown
+4485439451,unknown,94a44bd2aa83443a808a51ce770b494f,2026-11-08T16:58:22.459644+00:00,2026-11-08T16:58:38.160738+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=94a44bd2aa83443a808a51ce770b494f""]",unknown
+4484815938,unknown,133c3a3e9a7744bf9654fa7f0c1a4116,2026-11-08T16:58:50.927277+00:00,2026-11-08T16:59:00.451467+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x649076eb05ea <unknown>
+#1 0x6490767ca869 <unknown>
+#2 0x6490767d1a00 <unknown>
+#3 0x6490767d430b <unknown>
+#4 0x6490767d43b3 <unknown>
+#5 0x64907681d500 <unknown>
+#6 0x649076815b27 <unknown>
+#7 0x64907686fd4e <unknown>
+#8 0x64907681429b <unknown>
+#9 0x6490768150a1 <unknown>
+#10 0x649076e72fec <unknown>
+#11 0x649076e717f5 <unknown>
+#12 0x649076e5c785 <unknown>
+#13 0x649076e7245a <unknown>
+#14 0x649076e44d99 <unknown>
+#15 0x649076e9ab18 <unknown>
+#16 0x649076e9acb5 <unknown>
+#17 0x649076eaef73 <unknown>
+#18 0x706bb0ea3dfa <unknown>
+#19 0x706bb0f375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=133c3a3e9a7744bf9654fa7f0c1a4116""]",unknown
+4476844140,unknown,b2c84a62f28b451e81b403d5874bb347,2026-11-08T16:59:10.774395+00:00,2026-11-08T16:59:31.617786+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=b2c84a62f28b451e81b403d5874bb347""]",false
+4486343694,unknown,8010ea4fac6e43de88ef13a8a94794c7,2026-11-08T17:03:33.191933+00:00,2026-11-08T17:03:40.858731+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: stale element reference: stale element not found in the current frame
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#staleelementreferenceexception
+Stacktrace:
+#0 0x649076eb05ea <unknown>
+#1 0x6490767ca869 <unknown>
+#2 0x6490767d1a00 <unknown>
+#3 0x6490767d430b <unknown>
+#4 0x6490767d43b3 <unknown>
+#5 0x64907681d500 <unknown>
+#6 0x649076815b27 <unknown>
+#7 0x64907686fd4e <unknown>
+#8 0x64907681429b <unknown>
+#9 0x6490768150a1 <unknown>
+#10 0x649076e72fec <unknown>
+#11 0x649076e717f5 <unknown>
+#12 0x649076e5c785 <unknown>
+#13 0x649076e7245a <unknown>
+#14 0x649076e44d99 <unknown>
+#15 0x649076e9ab18 <unknown>
+#16 0x649076e9acb5 <unknown>
+#17 0x649076eaef73 <unknown>
+#18 0x706bb0ea3dfa <unknown>
+#19 0x706bb0f375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=8010ea4fac6e43de88ef13a8a94794c7""]",unknown
+4479535383,unknown,0b8872bdb6f84dceb5c4530c75337cb6,2026-11-08T17:06:53.917004+00:00,2026-11-08T17:07:17.631997+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=0b8872bdb6f84dceb5c4530c75337cb6""]",false
+4479893840,unknown,96888ea88ecd48bfbda6c02d267bba4b,2026-11-08T17:09:12.057872+00:00,2026-11-08T17:09:20.034090+00:00,unknown,APPLICATION,unknown,unknown,unknown,application_error,false,unknown,false,error,Could not save or close the incomplete application.,true,0,[],"[""application_field_audit.json:applications attempt_id=96888ea88ecd48bfbda6c02d267bba4b""]",unknown
+4481667588,56e97999edb547ca991bb7555e54fedd,54faf79bb2264df796582ac9ebf358b5,2026-11-08T18:01:20.561838+00:00,2026-11-08T18:01:38.677117+00:00,DRAFT_SAVED,FILLING_FIELDS,Highest Qualification Held*,CannotCompleteApplication,select verified option for application field,draft_saved_incomplete,true,false,false,skip,No unambiguous option for required question: Highest Qualification Held*. Draft saved on LinkedIn.,unknown,2,"[{""timestamp"": ""2026-11-08T18:01:22.799598+00:00"", ""phase"": ""FILLING_FIELDS"", ""field_label"": null, ""exception_class"": ""StaleElementReferenceException"", ""last_operation"": ""wait for matching city suggestion"", ""source"": ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:3""}, {""timestamp"": ""2026-11-08T18:01:37.771193+00:00"", ""phase"": ""FILLING_FIELDS"", ""field_label"": ""Highest Qualification Held*"", ""exception_class"": ""CannotCompleteApplication"", ""last_operation"": ""select verified option for application field"", ""source"": ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:4""}]","[""application_field_audit.json:applications attempt_id=54faf79bb2264df796582ac9ebf358b5"", ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:3"", ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:4""]",false
+4479856745,56e97999edb547ca991bb7555e54fedd,89411baaee6a472386930c073a998145,2026-11-08T18:02:36.080172+00:00,2026-11-08T18:03:01.453924+00:00,unknown,CLEANING_UP,unknown,ApplicationCleanupIncomplete,verify application modal closure,application_error,false,unknown,false,error,The form did not advance.,true,4,"[{""timestamp"": ""2026-11-08T18:02:55.823298+00:00"", ""phase"": ""ADVANCING_FORM"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""wait for form page transition"", ""source"": ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:6""}, {""timestamp"": ""2026-11-08T18:02:55.871037+00:00"", ""phase"": ""ADVANCING_FORM"", ""field_label"": null, ""exception_class"": ""CannotCompleteApplication"", ""last_operation"": ""wait for form page transition"", ""source"": ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:7""}, {""timestamp"": ""2026-11-08T18:03:01.244647+00:00"", ""phase"": ""CLEANING_UP"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""verify application modal closure"", ""source"": ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:8""}, {""timestamp"": ""2026-11-08T18:03:01.297422+00:00"", ""phase"": ""CLEANING_UP"", ""field_label"": null, ""exception_class"": ""ApplicationCleanupIncomplete"", ""last_operation"": ""verify application modal closure"", ""source"": ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:9""}]","[""application_field_audit.json:applications attempt_id=89411baaee6a472386930c073a998145"", ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:6"", ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:7"", ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:8"", ""logs/runs/56e97999edb547ca991bb7555e54fedd/application_attempts.jsonl:9""]",unknown
+4486348390,56ad20c64ee04a9bac3e7aafea8d2aee,5f67ccb810844585be99b75b22c932cb,2026-11-08T18:04:31.788392+00:00,2026-11-08T18:04:44.096515+00:00,unknown,OPENING_JOB,unknown,TimeoutException,wait for selected job Easy Apply control,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,1,"[{""timestamp"": ""2026-11-08T18:04:44.095090+00:00"", ""phase"": ""OPENING_JOB"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""wait for selected job Easy Apply control"", ""source"": ""logs/runs/56ad20c64ee04a9bac3e7aafea8d2aee/application_attempts.jsonl:1""}]","[""application_field_audit.json:applications attempt_id=5f67ccb810844585be99b75b22c932cb"", ""logs/runs/56ad20c64ee04a9bac3e7aafea8d2aee/application_attempts.jsonl:1""]",false
+4485068155,56ad20c64ee04a9bac3e7aafea8d2aee,216a73b0bac74a8dab9966855530b097,2026-11-08T18:05:06.963389+00:00,2026-11-08T18:05:22.554628+00:00,unknown,WAITING_FOR_MODAL,unknown,TimeoutException,wait for application modal and page indicator,application_error,false,unknown,false,error,"Message: 
+",unknown,1,"[{""timestamp"": ""2026-11-08T18:05:22.478798+00:00"", ""phase"": ""WAITING_FOR_MODAL"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""wait for application modal and page indicator"", ""source"": ""logs/runs/56ad20c64ee04a9bac3e7aafea8d2aee/application_attempts.jsonl:2""}]","[""application_field_audit.json:applications attempt_id=216a73b0bac74a8dab9966855530b097"", ""logs/runs/56ad20c64ee04a9bac3e7aafea8d2aee/application_attempts.jsonl:2""]",unknown
+4480551329,58e4b4b1eb3d4ecd95e4c366dd6f14a8,61ee5c1b0b774e2b946a443810688946,2026-11-08T18:07:24.706413+00:00,2026-11-08T18:07:36.932173+00:00,unknown,OPENING_JOB,unknown,TimeoutException,wait for selected job Easy Apply control,easy_apply_selector_failure,false,false,false,skip,Easy Apply control not found for the selected job after waiting; the panel may still be loading or LinkedIn changed its markup.,unknown,1,"[{""timestamp"": ""2026-11-08T18:07:36.930519+00:00"", ""phase"": ""OPENING_JOB"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""wait for selected job Easy Apply control"", ""source"": ""logs/runs/58e4b4b1eb3d4ecd95e4c366dd6f14a8/application_attempts.jsonl:1""}]","[""application_field_audit.json:applications attempt_id=61ee5c1b0b774e2b946a443810688946"", ""logs/runs/58e4b4b1eb3d4ecd95e4c366dd6f14a8/application_attempts.jsonl:1""]",false
+4485065088,91be1d670b9c47dda8c9a14a2dab7bea,2224ff8b2314475a9f1cdcb599131a19,2026-11-08T18:10:28.093303+00:00,2026-11-08T18:10:43.860229+00:00,unknown,WAITING_FOR_MODAL,unknown,TimeoutException,wait for application modal and page indicator,application_error,false,unknown,false,error,"Message: 
+",unknown,1,"[{""timestamp"": ""2026-11-08T18:10:43.797147+00:00"", ""phase"": ""WAITING_FOR_MODAL"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""wait for application modal and page indicator"", ""source"": ""logs/runs/91be1d670b9c47dda8c9a14a2dab7bea/application_attempts.jsonl:1""}]","[""application_field_audit.json:applications attempt_id=2224ff8b2314475a9f1cdcb599131a19"", ""logs/runs/91be1d670b9c47dda8c9a14a2dab7bea/application_attempts.jsonl:1""]",unknown
+4478269846,d2d576b6c17543f0bc3c87c714294ea5,c5b5d0625f5d44f0a9efefdfaf3b8749,2026-11-08T18:15:59.381649+00:00,2026-11-08T18:16:18.463708+00:00,DRAFT_SAVED,ADVANCING_FORM,unknown,CannotCompleteApplication,wait for form page transition,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,2,"[{""timestamp"": ""2026-11-08T18:16:17.519087+00:00"", ""phase"": ""ADVANCING_FORM"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""wait for form page transition"", ""source"": ""logs/runs/d2d576b6c17543f0bc3c87c714294ea5/application_attempts.jsonl:1""}, {""timestamp"": ""2026-11-08T18:16:17.560651+00:00"", ""phase"": ""ADVANCING_FORM"", ""field_label"": null, ""exception_class"": ""CannotCompleteApplication"", ""last_operation"": ""wait for form page transition"", ""source"": ""logs/runs/d2d576b6c17543f0bc3c87c714294ea5/application_attempts.jsonl:2""}]","[""application_field_audit.json:applications attempt_id=c5b5d0625f5d44f0a9efefdfaf3b8749"", ""logs/runs/d2d576b6c17543f0bc3c87c714294ea5/application_attempts.jsonl:1"", ""logs/runs/d2d576b6c17543f0bc3c87c714294ea5/application_attempts.jsonl:2""]",false
+4477377445,d2d576b6c17543f0bc3c87c714294ea5,896f4a1913b04d03a541c0d8024bb0e9,2026-11-08T18:21:43.900544+00:00,2026-11-08T18:21:46.891699+00:00,unknown,FILLING_FIELDS,unknown,ElementClickInterceptedException,collect city typeahead fields,application_error,false,unknown,false,error,"Message: element click intercepted: Element <input class=""gvyl2y gvyl2x gvyt2 gvygoj gvygos gvygo0 gvylg0 gvylhs gvyia7 gvyvg gvyz8 gvy40 gvy9s gvyafe gvyaj6 gvyaoy gvyatq gvylce gvylcv gvyldb gvylds gvyhqr gvyia7 gvya29 gvyj1i gvybtq gvybtz gvybt7 gvyl4o"" id=""_r_2du_"" data-testid=""typeahead-input"" autocomplete=""off"" dir=""auto"" placeholder=""Enter city or location"" aria-autocomplete=""list"" value=""New Delhi, Delhi, India""> is not clickable at point (919, 600). Other element would receive the click: <dialog class=""gvyl69 gvyl68 gvyilz gvylb8 gvylcp gvylc6 gvyldn gvybtc gvyt0 gvyhn4 gvyj15 gvyk5y gvyifv gvyl7b gvyl7s gvyl7o gvyk7h gvyhzn gvyl7n"" data-testid=""dialog"" open="""">...</dialog>
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+#0 0x5d02722665ea <unknown>
+#1 0x5d0271b80869 <unknown>
+#2 0x5d0271bde1c3 <unknown>
+#3 0x5d0271bdc2a2 <unknown>
+#4 0x5d0271bd9c9c <unknown>
+#5 0x5d0271bd8d77 <unknown>
+#6 0x5d0271bcc1e2 <unknown>
+#7 0x5d0271bcbb27 <unknown>
+#8 0x5d0271c25d4e <unknown>
+#9 0x5d0271bca29b <unknown>
+#10 0x5d0271bcb0a1 <unknown>
+#11 0x5d0272228fec <unknown>
+#12 0x5d02722277f5 <unknown>
+#13 0x5d0272212785 <unknown>
+#14 0x5d027222845a <unknown>
+#15 0x5d02721fad99 <unknown>
+#16 0x5d0272250b18 <unknown>
+#17 0x5d0272250cb5 <unknown>
+#18 0x5d0272264f73 <unknown>
+#19 0x726404aa3dfa <unknown>
+#20 0x726404b375cc <unknown>
+",unknown,1,"[{""timestamp"": ""2026-11-08T18:21:46.757062+00:00"", ""phase"": ""FILLING_FIELDS"", ""field_label"": null, ""exception_class"": ""ElementClickInterceptedException"", ""last_operation"": ""collect city typeahead fields"", ""source"": ""logs/runs/d2d576b6c17543f0bc3c87c714294ea5/application_attempts.jsonl:3""}]","[""application_field_audit.json:applications attempt_id=896f4a1913b04d03a541c0d8024bb0e9"", ""logs/runs/d2d576b6c17543f0bc3c87c714294ea5/application_attempts.jsonl:3""]",unknown
+4486060459,8cd4643ff66241ac8040ade43ab8178b,5d288af523d149869f2a9f6c3ccb69dd,2026-11-08T18:28:52.298023+00:00,2026-11-08T18:29:08.028051+00:00,unknown,WAITING_FOR_MODAL,unknown,TimeoutException,wait for application modal and page indicator,application_error,false,unknown,false,error,"Message: 
+",unknown,1,"[{""timestamp"": ""2026-11-08T18:29:08.017005+00:00"", ""phase"": ""WAITING_FOR_MODAL"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""wait for application modal and page indicator"", ""source"": ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:1""}]","[""application_field_audit.json:applications attempt_id=5d288af523d149869f2a9f6c3ccb69dd"", ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:1""]",unknown
+4485456697,8cd4643ff66241ac8040ade43ab8178b,5f0e5d65446142f6b93273e0d88a7caf,2026-11-08T18:31:42.257319+00:00,2026-11-08T18:32:37.134180+00:00,unknown,CLEANING_UP,unknown,ApplicationCleanupIncomplete,verify application modal closure,application_error,false,unknown,false,error,The form did not advance.,true,4,"[{""timestamp"": ""2026-11-08T18:32:31.337528+00:00"", ""phase"": ""ADVANCING_FORM"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""wait for form page transition"", ""source"": ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:3""}, {""timestamp"": ""2026-11-08T18:32:31.387171+00:00"", ""phase"": ""ADVANCING_FORM"", ""field_label"": null, ""exception_class"": ""CannotCompleteApplication"", ""last_operation"": ""wait for form page transition"", ""source"": ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:4""}, {""timestamp"": ""2026-11-08T18:32:37.006360+00:00"", ""phase"": ""CLEANING_UP"", ""field_label"": null, ""exception_class"": ""TimeoutException"", ""last_operation"": ""verify application modal closure"", ""source"": ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:5""}, {""timestamp"": ""2026-11-08T18:32:37.088752+00:00"", ""phase"": ""CLEANING_UP"", ""field_label"": null, ""exception_class"": ""ApplicationCleanupIncomplete"", ""last_operation"": ""verify application modal closure"", ""source"": ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:6""}]","[""application_field_audit.json:applications attempt_id=5f0e5d65446142f6b93273e0d88a7caf"", ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:3"", ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:4"", ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:5"", ""logs/runs/8cd4643ff66241ac8040ade43ab8178b/application_attempts.jsonl:6""]",unknown
+4486825915,77eb3e8fdae04a1dabca53f1e6bda825,26befb5b91a440559e2a812256c0ba0d,2026-11-08T18:38:31.424634+00:00,2026-11-08T18:38:47.922530+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=26befb5b91a440559e2a812256c0ba0d"", ""logs/runs/77eb3e8fdae04a1dabca53f1e6bda825/application_attempts.jsonl:1"", ""logs/runs/77eb3e8fdae04a1dabca53f1e6bda825/application_attempts.jsonl:2""]",false
+4441278581,77eb3e8fdae04a1dabca53f1e6bda825,a31306a229684f2a83ff1829a7511aff,2026-11-08T18:39:50.613283+00:00,2026-11-08T18:40:06.573609+00:00,unknown,unknown,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=a31306a229684f2a83ff1829a7511aff"", ""logs/runs/77eb3e8fdae04a1dabca53f1e6bda825/application_attempts.jsonl:3""]",unknown
+4485329863,72ef06801bcf4f28ac9ce7f60bba303a,d513f18eec73478fb2660fac7b0ddfc0,2026-11-08T18:42:38.568582+00:00,2026-11-08T18:42:58.544750+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=d513f18eec73478fb2660fac7b0ddfc0"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:1"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:2""]",false
+4484364449,72ef06801bcf4f28ac9ce7f60bba303a,5165d97426d24548ab37ce7215843cb9,2026-11-08T18:45:27.104077+00:00,2026-11-08T18:45:33.170336+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,Could not clear the existing LinkedIn location before entering a new one. Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=5165d97426d24548ab37ce7215843cb9"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:4"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:5""]",false
+4487377475,72ef06801bcf4f28ac9ce7f60bba303a,ffe442ec374e47a49deeedd438b32af4,2026-11-08T18:45:46.708383+00:00,2026-11-08T18:46:02.264517+00:00,unknown,unknown,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=ffe442ec374e47a49deeedd438b32af4"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:6""]",unknown
+4485592376,72ef06801bcf4f28ac9ce7f60bba303a,90559fcd0bc74d0ab5bf8622491c81d2,2026-11-08T18:48:59.712574+00:00,2026-11-08T18:49:49.136952+00:00,DRAFT_SAVED,unknown,unknown,unknown,unknown,draft_saved_incomplete,true,false,false,skip,The form did not advance: This field is required; This field is required Draft saved on LinkedIn.,unknown,0,[],"[""application_field_audit.json:applications attempt_id=90559fcd0bc74d0ab5bf8622491c81d2"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:10"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:11""]",false
+4481549659,72ef06801bcf4f28ac9ce7f60bba303a,489fd2af4fc54d84bb6f80f84f08db5e,2026-11-08T18:49:54.126471+00:00,2026-11-08T18:50:09.927695+00:00,unknown,unknown,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=489fd2af4fc54d84bb6f80f84f08db5e"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:12""]",unknown
+4486338419,72ef06801bcf4f28ac9ce7f60bba303a,13a55c1bf3034a64aebd74264c727fad,2026-11-08T18:55:01.431777+00:00,2026-11-08T18:55:02.712217+00:00,unknown,unknown,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: element click intercepted: Element <button class=""gvylw7 gvylw6 gvyt0 gvya26 gvyhn4 gvylho gvyli7 gvylxb gvylw9 gvylw8 gvyazu gvyj03 gvyj2d gvyia7"" type=""button"" componentkey=""7ca82bbe-4220-4480-85d5-f81f97d5456c"" aria-label=""Easy Apply to this job"">...</button> is not clickable at point (894, 424). Other element would receive the click: <div data-testid=""typeahead-results-overlay"" aria-hidden=""true"" class=""gvyl6v""></div>
+  (Session info: chrome=155.0.8059.84); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#elementclickinterceptedexception
+Stacktrace:
+#0 0x5b897cfd35ea <unknown>
+#1 0x5b897c8ed869 <unknown>
+#2 0x5b897c94b1c3 <unknown>
+#3 0x5b897c9492a2 <unknown>
+#4 0x5b897c946c9c <unknown>
+#5 0x5b897c945d77 <unknown>
+#6 0x5b897c9391e2 <unknown>
+#7 0x5b897c938b27 <unknown>
+#8 0x5b897c992d4e <unknown>
+#9 0x5b897c93729b <unknown>
+#10 0x5b897c9380a1 <unknown>
+#11 0x5b897cf95fec <unknown>
+#12 0x5b897cf947f5 <unknown>
+#13 0x5b897cf7f785 <unknown>
+#14 0x5b897cf9545a <unknown>
+#15 0x5b897cf67d99 <unknown>
+#16 0x5b897cfbdb18 <unknown>
+#17 0x5b897cfbdcb5 <unknown>
+#18 0x5b897cfd1f73 <unknown>
+#19 0x7743c26a3dfa <unknown>
+#20 0x7743c27375cc <unknown>
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=13a55c1bf3034a64aebd74264c727fad"", ""logs/runs/72ef06801bcf4f28ac9ce7f60bba303a/application_attempts.jsonl:13""]",unknown
+4478125060,e85104e342ce4c6dad8ab09014da3457,d99fe4bc1f2e4481b2a0bd17577818bc,2026-11-08T18:56:34.864145+00:00,2026-11-08T18:56:50.634375+00:00,unknown,unknown,unknown,unknown,unknown,application_error,false,unknown,false,error,"Message: 
+",unknown,0,[],"[""application_field_audit.json:applications attempt_id=d99fe4bc1f2e4481b2a0bd17577818bc"", ""logs/runs/e85104e342ce4c6dad8ab09014da3457/application_attempts.jsonl:2""]",unknown
+4483652208,2daf48a966704640a9d78283c9a98549,unknown,2026-11-08T16:40:13.360727+00:00,2026-11-08T16:40:13.360727+00:00,unknown,AI_ANSWER_GENERATION,unknown,unknown,AI application answer generation,AI_answer_generation_error,unknown,unknown,unknown,unknown,Server disconnected without sending a response.,,,,"["".ai_traces.sqlite3:ai_traces trace_id=77374d96-22d2-43a5-9942-5ff187f1b484""]",unknown
+4483652208,2daf48a966704640a9d78283c9a98549,unknown,2026-11-08T16:40:14.380045+00:00,2026-11-08T16:40:14.380045+00:00,unknown,AI_ANSWER_GENERATION,unknown,unknown,AI application answer generation,AI_answer_generation_error,unknown,unknown,unknown,unknown,[Errno 111] Connection refused,,,,"["".ai_traces.sqlite3:ai_traces trace_id=8f9815f0-7594-4404-a0f3-ef660165601b""]",unknown
+4486060459,72ef06801bcf4f28ac9ce7f60bba303a,unknown,2026-11-08T18:44:44.515448+00:00,2026-11-08T18:44:44.515448+00:00,unknown,AI_ANSWER_GENERATION,unknown,unknown,AI application answer generation,AI_answer_generation_error,unknown,unknown,unknown,unknown,Server disconnected without sending a response.,,,,"["".ai_traces.sqlite3:ai_traces trace_id=e3d4c26e-704b-4684-9b56-cc4293fd73a6""]",unknown
+4486060459,72ef06801bcf4f28ac9ce7f60bba303a,unknown,2026-11-08T18:44:45.385703+00:00,2026-11-08T18:44:45.385703+00:00,unknown,AI_ANSWER_GENERATION,unknown,unknown,AI application answer generation,AI_answer_generation_error,unknown,unknown,unknown,unknown,[Errno 111] Connection refused,,,,"["".ai_traces.sqlite3:ai_traces trace_id=13224074-dcee-4ff4-aceb-ac66f6c8e388""]",unknown
+4486060459,72ef06801bcf4f28ac9ce7f60bba303a,unknown,2026-11-08T18:44:46.641361+00:00,2026-11-08T18:44:46.641361+00:00,unknown,AI_ANSWER_GENERATION,unknown,unknown,AI application answer generation,AI_answer_generation_error,unknown,unknown,unknown,unknown,[Errno 111] Connection refused,,,,"["".ai_traces.sqlite3:ai_traces trace_id=4dc82db3-ddde-471d-9359-29e6841de711""]",unknown

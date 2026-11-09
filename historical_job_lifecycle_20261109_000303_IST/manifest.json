@@ -1,0 +1,11 @@
+{
+  "jobs.csv": 1590,
+  "attempts.csv": 736,
+  "job_application_failures.csv": 379,
+  "job_rejections.csv": 947,
+  "confirmed_submissions.csv": 107,
+  "decision_attempt_linkage.csv": 171,
+  "source_snapshot_applications": 736,
+  "source_snapshot_unique_attempt_ids": 736,
+  "output_directory": "historical_job_lifecycle_20261109_000303_IST"
+}

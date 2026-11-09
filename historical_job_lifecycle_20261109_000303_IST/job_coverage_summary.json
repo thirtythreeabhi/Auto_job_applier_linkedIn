@@ -1,0 +1,400 @@
+{
+  "generated_at": "2026-11-09T00:31:33.989831+05:30",
+  "timezone": "Asia/Kolkata",
+  "read_only": true,
+  "source_inventory": {
+    "application_field_audit.json": {
+      "applications": 736,
+      "suitability_decisions": 5965,
+      "distinct_attempt_ids": 736
+    },
+    ".ai_traces.sqlite3": {
+      "traces": 2663,
+      "trace_events": 5914,
+      "categories": {
+        "job suitability": 314,
+        "application answer": 136,
+        "job suitability (text fallback)": 20,
+        "deterministic job decision": 2193
+      }
+    },
+    ".ai_prompt_log.jsonl": {
+      "records": 1831,
+      "categories": {
+        "job suitability": 1329,
+        "job suitability (text fallback)": 76,
+        "application answer": 367,
+        "LinkedIn comment draft": 4,
+        "skill extraction": 6,
+        "skill extraction (text fallback)": 3,
+        "LinkedIn feed relevance and comment": 46
+      }
+    },
+    "application_attempt_logs": {
+      "diagnostic_events": 42,
+      "files": 10
+    },
+    "run_logs": {
+      "results": 35,
+      "event_records": 1048,
+      "worker_logs": 35
+    }
+  },
+  "job_metrics": {
+    "unique_job_ids_observed": 1590,
+    "unique_jobs_discovered_total": "unavailable: no complete discovery/search-result ledger with job IDs",
+    "AI_evaluated": 791,
+    "AI_APPLY_ever": 164,
+    "AI_REVIEW_ever": 552,
+    "AI_SKIP_ever": 174,
+    "latest_nonAI_skip_with_known_provenance": 988,
+    "latest_true_eligibility_filter_rejections": 567,
+    "latest_history_protection_skips": 421,
+    "ever_deterministic_filter_rejected": 1027,
+    "application_attempt_started": 640,
+    "opened_job_directly_observed": 16,
+    "opened_job_unknown": 1574,
+    "easy_apply_found_directly_observed": 277,
+    "application_modal_opened": 274,
+    "form_interaction": 268,
+    "draft_saved": 114,
+    "draft_save_or_dialog_cleanup_evidence": 124,
+    "dialog_cleanup_evidence": 13,
+    "submit_clicked": 11,
+    "confirmed_submissions": 107,
+    "confirmed_per_attempted_jobs_rate": 0.1672,
+    "submission_uncertain": 3,
+    "latest_application_status_by_job": {
+      "skip": 454,
+      "submitted": 107,
+      "error": 73,
+      "submitting": 2,
+      "uncertain": 3,
+      "in_progress": 1,
+      "unknown": 950
+    },
+    "submit_clicked_direct_evidence": 11,
+    "submit_action_attempted_direct_evidence": 15,
+    "corrected_lifecycle_classification_counts": {
+      "application_attempted_outcome_unknown": 27,
+      "application_started_incomplete_or_error": 67,
+      "confirmed_submitted": 107,
+      "draft_saved_incomplete": 108,
+      "submission_pending_unconfirmed": 2,
+      "submission_uncertain": 3,
+      "easy_apply_unavailable": 236,
+      "easy_apply_selector_failure": 90,
+      "AI_rejected_no_application_attempt": 382,
+      "deterministic_eligibility_rejection": 547,
+      "blocked_by_application_history_or_duplicate_protection": 18,
+      "decision_provenance_unknown": 2,
+      "not_evaluated_or_state_unknown": 1
+    },
+    "direct_event_flag_counts": {
+      "ever_evaluated_by_AI": 791,
+      "ever_recommended_APPLY": 164,
+      "ever_recommended_REVIEW": 552,
+      "ever_recommended_SKIP": 174,
+      "ever_opened_job": 16,
+      "ever_found_easy_apply": 277,
+      "ever_opened_application_modal": 274,
+      "ever_interacted_with_form": 268,
+      "ever_saved_draft": 114,
+      "ever_submit_action_attempted": 15,
+      "ever_submit_clicked": 11,
+      "ever_confirmed_submitted": 107,
+      "ever_submission_uncertain": 3
+    }
+  },
+  "attempt_metrics": {
+    "unique_attempts_started": 736,
+    "attempts_with_form_interaction": 256,
+    "draft_saves": 139,
+    "failed_attempts": 366,
+    "easy_apply_unavailable_attempts": 243,
+    "easy_apply_selector_failures": 95,
+    "application_attempts_other_skip": 7,
+    "completed_form_attempts": 109,
+    "uncertain_submissions": 3,
+    "submitting_unconfirmed": 2,
+    "confirmed_submissions": 107,
+    "confirmed_per_started_attempt_rate": 0.1454,
+    "confirmed_per_form_interaction_attempt_rate": 0.418,
+    "attempt_ids_missing": 0,
+    "audit_attempt_ids_distinct": 736,
+    "diagnostic_events": 22,
+    "diagnostic_events_with_attempt_id": 22,
+    "unique_attempt_ids": 736,
+    "submit_action_attempted_direct": 15,
+    "submit_clicked_direct": 11,
+    "confirmed_but_no_separate_click_event": 97,
+    "explicit_draft_saves": 139,
+    "attempt_ids_in_attempts_csv": 736
+  },
+  "application_audit_statuses": {
+    "skip": 518,
+    "in_progress": 3,
+    "submitted": 107,
+    "error": 101,
+    "review": 2,
+    "submitting": 2,
+    "uncertain": 3
+  },
+  "latest_deterministic_sources_job_counts": {
+    "PREVIOUS_ATTEMPT": 348,
+    "ALREADY_SUBMITTED": 61,
+    "DUPLICATE_ROLE": 12,
+    "DESCRIPTION_FILTER": 147,
+    "UNKNOWN_PROVENANCE": 3,
+    "SENIORITY_FILTER": 331,
+    "COMPANY_DESCRIPTION_FILTER": 53,
+    "LOCATION_FILTER": 31,
+    "ROLE_FILTER": 5
+  },
+  "reconciliation_previous_categories": {
+    "D_AI_APPLY_no_application_started": {
+      "previous_job_count": 21,
+      "previous_source_label_counts": {
+        "AI": 21
+      },
+      "current_latest_provenance_counts": {
+        "AI_classifier": 17,
+        "deterministic_filter:PREVIOUS_ATTEMPT": 4
+      },
+      "with_any_audit_attempt": 21,
+      "with_explicit_draft_save": 15,
+      "with_confirmed_submission": 0,
+      "with_uncertain_submission": 0,
+      "with_submitting_state": 0,
+      "without_audit_attempt": 0
+    },
+    "C_rejected_by_deterministic_filter": {
+      "previous_job_count": 874,
+      "previous_source_label_counts": {
+        "deterministic": 340,
+        "unknown": 384,
+        "audit/application state": 150
+      },
+      "current_latest_provenance_counts": {
+        "deterministic_filter:PREVIOUS_ATTEMPT": 329,
+        "deterministic_filter:SENIORITY_FILTER": 326,
+        "deterministic_filter:DUPLICATE_ROLE": 11,
+        "deterministic_filter:DESCRIPTION_FILTER": 110,
+        "deterministic_filter:LOCATION_FILTER": 30,
+        "deterministic_filter:COMPANY_DESCRIPTION_FILTER": 51,
+        "unknown": 2,
+        "deterministic_filter:ALREADY_SUBMITTED": 10,
+        "deterministic_filter:ROLE_FILTER": 5
+      },
+      "with_any_audit_attempt": 333,
+      "with_explicit_draft_save": 63,
+      "with_confirmed_submission": 0,
+      "with_uncertain_submission": 0,
+      "with_submitting_state": 0,
+      "without_audit_attempt": 541
+    },
+    "E_application_started_incomplete_or_uncertain": {
+      "previous_job_count": 77,
+      "previous_source_label_counts": {
+        "audit/application state": 24,
+        "deterministic": 6,
+        "AI": 47
+      },
+      "current_latest_provenance_counts": {
+        "unknown": 11,
+        "deterministic_filter:SENIORITY_FILTER": 5,
+        "deterministic_filter:PREVIOUS_ATTEMPT": 13,
+        "AI_classifier": 37,
+        "deterministic_filter:DESCRIPTION_FILTER": 8,
+        "deterministic_filter:ALREADY_SUBMITTED": 3
+      },
+      "with_any_audit_attempt": 77,
+      "with_explicit_draft_save": 12,
+      "with_confirmed_submission": 0,
+      "with_uncertain_submission": 3,
+      "with_submitting_state": 2,
+      "without_audit_attempt": 0
+    }
+  },
+  "candidate_question_bottlenecks": {
+    "Technical experience": {
+      "distinct_jobs": 44,
+      "distinct_attempt_ids": 55,
+      "question_occurrences": 56,
+      "question_labels": {
+        "How many years of experience you have with Gen AI?": 2,
+        "How many years of Experience with Python or JAVA?": 1,
+        "How many years of relevant work experience do you have?*": 2,
+        "How many years of work experience do you have with Python (Programming Language)?": 2,
+        "How many years of work experience do you have with MongoDB?": 1,
+        "How many years of work experience do you have with SQL Server Integration Services (SSIS)?": 1,
+        "How many years of Engineering experience do you currently have?": 1,
+        "How many years of work experience do you have with AngularJS?": 1,
+        "How Many Years of work experience do you have in your chosen engineering field*": 1,
+        "How much experience do you have with AI Development?": 1,
+        "How many years of relevant experience do you have ?*": 1,
+        "Do you have knowledge on GenAI?": 1,
+        "How many years of work experience do you have with Java?": 2,
+        "mainframe exp ?": 1,
+        "How many years of work experience do you have with Google Cloud Platform (GCP)?": 1,
+        "How many years of work experience do you have with .NET Framework?": 2,
+        "Tell us about your experience with 3PL": 1,
+        "How many years of professional experience do you have in full stack application development using C# and ASP.NET/.NET Core?": 1,
+        "How many years of experience do you have working on the backend?": 1,
+        "How many years of professional development experience do you have?": 1,
+        "Skill Set": 1,
+        "How many years of Relevant experience as Data Structures and Algorithms (DSA)?": 1,
+        "How many years of work experience do you have with TypeScript?": 1,
+        "How many years of software development experience do you have?": 2,
+        "Experience in Years": 1,
+        "How many years of professional software development experience do you have?": 1,
+        "How many years of professional work experience do you have with FastAPI?": 1,
+        "Do you have at least 4 years of experience in Dot Net?": 1,
+        "How many years of work experience do you have with Spring Boot?": 2,
+        "How many years of experience do you have shipping a new product or working at a Seed or Series A /B startup?": 1,
+        "How many years of Frontend Experience you have?": 1,
+        "Total years of backend development experience?": 1,
+        "How many years of core AI experience do you have?": 1,
+        "How many years of work experience do you have with NoSQL?": 1,
+        "How many years of work experience do you have with REST APIs?": 2,
+        "How many years of work experience do you have with JavaScript?": 1,
+        "How many years of experience you have with machine learning frameworks such as TensorFlow, PyTorch, or scikit-learn?": 1,
+        "How many years of work experience do you have with Core Java?": 1,
+        "Tell us about your B2B  E-commerce experience": 1,
+        "How many years of Relevant experience as  Java Full Stack Development.?": 1,
+        "How many years of work experience do you have with RAG?": 1,
+        "How many years of work experience do you have with Microservices?": 2,
+        "Please respond truthfully. How many years of professional experience do you have with .NET MAUI or accepted alternatives such as React Native, Flutter, Swift or Android Studio? Draft saved on LinkedIn": 1,
+        "How many years of hands-on experience do you have with Next.js and React?": 1,
+        "What is your primary area of expertise? *": 1,
+        "Please respond truthfully. How many years of professional experience do you have developing frontend applications using React? Draft saved on LinkedIn": 2
+      }
+    },
+    "Written project descriptions": {
+      "distinct_jobs": 10,
+      "distinct_attempt_ids": 13,
+      "question_occurrences": 20,
+      "question_labels": {
+        "In one sentence, mention one complex product feature you owned from development to production.": 4,
+        "How many years of experience working with higly scalable projects?": 1,
+        "Describe a specific AI-powered feature you built? (Max 300 characters)": 3,
+        "Summary": 8,
+        "How many projects have you completed while working in AI Development?": 1,
+        "Share the most impressive thing that you have built or achieved": 1,
+        "Can you describe your hands-on experience with Python, React, and Django?": 1,
+        "Have you built or integrated any NLP or workflow automation solutions? If yes, describe briefly?": 1
+      }
+    },
+    "Compensation": {
+      "distinct_jobs": 9,
+      "distinct_attempt_ids": 9,
+      "question_occurrences": 9,
+      "question_labels": {
+        "What is your expected salary in USD?": 1,
+        "What is your C.CTC ?": 1,
+        "What is your CTC(in LPA)?": 1,
+        "What annual fixed compensation do you expect? (Enter the full number, for eg., 1200000)": 1,
+        "What is your current salary in LPA? We will cross-check references later in the process.*": 4,
+        "Current Salary (LPA)*": 1
+      }
+    },
+    "Candidate identity and education": {
+      "distinct_jobs": 4,
+      "distinct_attempt_ids": 4,
+      "question_occurrences": 5,
+      "question_labels": {
+        "Preferred Name/Alias*": 1,
+        "Undergraduate Institution Name*": 1,
+        "Highest Qualification Held*": 3
+      }
+    },
+    "Location and relocation": {
+      "distinct_jobs": 10,
+      "distinct_attempt_ids": 10,
+      "question_occurrences": 10,
+      "question_labels": {
+        "What is your current country of residence?*": 1,
+        "What is your current location?": 1,
+        "What is the distance between your HOME and our office in Lajpat Nagar (in Kilometres) ?": 1,
+        "Select Your Preferred Work Location Draft saved on LinkedIn": 7
+      }
+    },
+    "Other/unclassified": {
+      "distinct_jobs": 17,
+      "distinct_attempt_ids": 17,
+      "question_occurrences": 17,
+      "question_labels": {
+        "Required field label not captured": 13,
+        "How did you hear about this job?": 2,
+        "What is your level of proficiency in Eng水平如何?*": 1,
+        "What is your level of English?*": 1
+      }
+    },
+    "Notice period and availability": {
+      "distinct_jobs": 6,
+      "distinct_attempt_ids": 6,
+      "question_occurrences": 6,
+      "question_labels": {
+        "What is your current availability to start?*": 2,
+        "What is your notice period / availability to join?*": 1,
+        "What is your Notice Period? (preferably - immediate joiners)": 1,
+        "Are you available to join  immediately ?": 1,
+        "Notice Period Draft saved on LinkedIn": 1
+      }
+    },
+    "Legal and employment attestations": {
+      "distinct_jobs": 6,
+      "distinct_attempt_ids": 6,
+      "question_occurrences": 6,
+      "question_labels": {
+        "I agree to the processing of my personal data by BaseLinker sp. z o.o. for future recruitment purposes*": 1,
+        "Do you have a Valid Indian Passport ?*": 4,
+        "Are you legally entitled to work in the country where this job is located?*": 1
+      }
+    }
+  },
+  "limitations": [
+    "Unique observed LinkedIn IDs are a lower bound; no complete discovery/search-results ledger was found.",
+    "Attempt IDs exist on all snapshot application audit rows; status aggregation is per attempt ID, not inferred from job-level state.",
+    "Historical audit rows do not consistently carry run_id; unknown run association is left unknown.",
+    "Opened-job evidence is unknown unless a diagnostic current_url directly contains the exact LinkedIn job URL.",
+    "No Submit click is inferred from APPLY, status=submitting, or final-review state.",
+    "No application modal/form event is inferred from a job decision or Easy Apply search filter.",
+    "Draft save is counted only from explicit “Draft saved on LinkedIn” evidence."
+  ],
+  "revision_note": "Targeted review revision: lifecycle flags, click evidence semantics, corrected mutually exclusive classification, and decision-attempt linkage.",
+  "decision_attempt_gate_investigation": {
+    "jobs_with_latest_AI_REVIEW_or_SKIP_no_APPLY_and_audit_attempt": 156,
+    "attempts_for_those_jobs": 171,
+    "attempts_after_latest_AI_decision": 142,
+    "distinct_jobs_with_attempt_after_decision": 142,
+    "attempts_at_or_before_latest_AI_decision": 29,
+    "attempts_with_unknown_timing": 0,
+    "confirmed_submissions_after_REVIEW_or_SKIP": 23,
+    "confirmed_after_REVIEW": 13,
+    "confirmed_after_SKIP": 10,
+    "seconds_delta_min": 0.007585,
+    "seconds_delta_max": 0.023348,
+    "seconds_delta_mean": 0.0125735,
+    "postdecision_statuses": {
+      "submitted": 23,
+      "skip": 107,
+      "error": 10,
+      "in_progress": 1,
+      "uncertain": 1
+    },
+    "postdecision_decision_and_status": {
+      "REVIEW|submitted": 13,
+      "REVIEW|skip": 73,
+      "SKIP|skip": 34,
+      "REVIEW|error": 8,
+      "SKIP|submitted": 10,
+      "SKIP|in_progress": 1,
+      "REVIEW|uncertain": 1,
+      "SKIP|error": 2
+    },
+    "attempts_with_shared_decision_attempt_run_id": 0,
+    "trace_records_in_decision_attempt_intervals": 0,
+    "prompt_records_in_decision_attempt_intervals": 0
+  }
+}

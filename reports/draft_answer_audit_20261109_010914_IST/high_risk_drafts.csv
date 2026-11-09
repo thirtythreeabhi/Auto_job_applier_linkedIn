@@ -1,0 +1,3 @@
+job_id,attempt_id,run_id,job_title,company,started_at,finished_at,status,saved_draft_evidence,field_count,classification_summary,risk,manual_review_required,source
+4485592376,90559fcd0bc74d0ab5bf8622491c81d2,72ef06801bcf4f28ac9ce7f60bba303a,Full Stack Engineer,Alternative Path,2026-11-08T18:48:59.712574+00:00,2026-11-08T18:49:49.136952+00:00,skip,yes,19,TYPE_MISMATCH; UNVERIFIABLE,HIGH,yes,application_field_audit.json
+4479298221,3cab5d5ed5f540ab82bcbb3a7115bbe4,e85104e342ce4c6dad8ab09014da3457,"Engineer II, QA",Anaplan,2026-11-08T18:58:05.239960+00:00,2026-11-08T18:58:49.765910+00:00,submitted,not directly established,24,TYPE_MISMATCH; UNVERIFIABLE,CRITICAL,yes,application_field_audit.json
