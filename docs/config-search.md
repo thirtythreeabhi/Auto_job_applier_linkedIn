@@ -7,7 +7,7 @@ the **Search** and **Filters** tabs of the control panel.
 
 | Setting | What it is |
 |---|---|
-| `search_terms` | A list of LinkedIn discovery queries across backend, applied AI/LLM, and product engineering. Titles find postings; the suitability classifier evaluates the actual work against demonstrated skills. |
+| `search_terms` | A list of LinkedIn discovery queries across backend, applied AI/LLM, AI-native, and product engineering roles. The configured groups include titles such as Applied AI Engineer, AI Product Engineer, Agentic AI Engineer/Developer, Forward Deployed Engineer, AI Solutions Engineer, LLMOps Engineer, AI Evaluation Engineer, and MCP/AI Tooling Engineer. Titles find postings; the suitability classifier evaluates the actual work against demonstrated skills. |
 | `search_location` | Goes into the "City, state, or zip code" box. `""` leaves it unfilled. Examples: `"United States"`, `"Chicago, Illinois, United States"`, `"90001, Los Angeles, California, United States"`, `"Bengaluru, Karnataka, India"` |
 | `switch_number` | How many applications to make on one search term before moving to the next. Any number greater than 0, no quotes |
 | `randomize_search_order` | `True` or `False`. Shuffles the order of `search_terms` |

@@ -24,7 +24,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from modules.application_audit import ApplicationAudit, role_key, record_suitability_decision
 from modules import application_diagnostics, run_diagnostics
 from modules import diagnostic_execution
-from modules.application_answers import (AnswerValidationError, answer_prompt_metadata,
+from modules.application_answers import (AnswerValidationError, _experience_subject, answer_prompt_metadata,
                                          parse_proposal, validate_proposal)
 from modules.helpers import buffer
 
@@ -607,6 +607,10 @@ def _is_skill_duration_question(label):
     question = re.sub(r'\s+', ' ', str(label or '')).strip()
     if not _AI_SKILL_DURATION_QUESTION.search(question):
         return False
+    # A named skill after "work experience do you have with ..." makes this
+    # a skill-specific duration, even though the wording contains "work experience".
+    if _experience_subject(question):
+        return True
     # A requested total tenure is a profile fact; only estimate a named skill's duration.
     return not re.search(r'\b(?:total|overall|professional|work)\s+(?:years?\s+of\s+)?experience\b', question, re.I)
 
@@ -905,6 +909,13 @@ def _mark_rejected_ai_answer(audit):
         audit.ai_answer_rejected = True
 
 
+def _record_rejected_ai_question(registry, audit, label):
+    """Surface an answer rejected by validation in the control panel's unresolved list."""
+    _mark_rejected_ai_answer(audit)
+    if registry is not None:
+        registry.record_missing(label or 'Unlabelled required field')
+
+
 def _cleanup_unverified_automation_values(driver, audit):
     """Restore only bot-mutated values that lack both factual and DOM validation."""
     pending = [item for item in getattr(audit, 'automation_answer_values', [])
@@ -1062,7 +1073,6 @@ def _field_descriptor(modal, field):
 
 def _answer_metadata(descriptor, required, options=None):
     label = descriptor.get('label') or ''
-    q = label.casefold()
     def bound(key):
         value = descriptor.get(key)
         try:
@@ -1077,7 +1087,7 @@ def _answer_metadata(descriptor, required, options=None):
         'pattern': descriptor.get('pattern') or None,
         'options': list(options or []),
         'numeric': bool(descriptor.get('type') == 'number' or _question_expects_numeric_answer(label)),
-        'experience_years': bool('years of experience' in q and 'total years of experience' not in q),
+        'experience_years': _is_skill_duration_question(label),
     }
 
 
@@ -1397,7 +1407,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 field.get_attribute('maxlength'), trace_context,
                 answer_metadata, evidence_context=candidate_context)
             if answer_metadata.get('_answer_rejected'):
-                _mark_rejected_ai_answer(audit)
+                _record_rejected_ai_question(registry, audit, label)
                 raise CannotCompleteApplication('The AI skill summary was rejected; no draft answer is safe.')
             if tailored_skills:
                 answer = tailored_skills
@@ -1415,7 +1425,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 field.get_attribute('maxlength'), trace_context,
                 answer_metadata, evidence_context=candidate_context)
             if answer_metadata.get('_answer_rejected'):
-                _mark_rejected_ai_answer(audit)
+                _record_rejected_ai_question(registry, audit, label)
                 raise CannotCompleteApplication('The AI narrative proposal was rejected; no draft answer is safe.')
             if enriched:
                 answer = enriched
@@ -1439,7 +1449,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 about_company, field.get_attribute('maxlength'), trace_context,
                 answer_metadata, evidence_context=candidate_context)
             if answer_metadata.get('_answer_rejected'):
-                _mark_rejected_ai_answer(audit)
+                _record_rejected_ai_question(registry, audit, label)
                 raise CannotCompleteApplication('The AI answer was rejected; no existing draft value is safe to retain.')
             if answer is not None:
                 answer_source = f'AI generated ({ai_model})'
@@ -1625,7 +1635,7 @@ def _fill_fields(driver, modal, profile, questions, email, log, registry=None, a
                 job_description, about_company, trace_context=trace_context,
                 field_metadata=answer_metadata)
             if answer_metadata.get('_answer_rejected'):
-                _mark_rejected_ai_answer(audit)
+                _record_rejected_ai_question(registry, audit, label)
                 raise CannotCompleteApplication('The AI choice was rejected; refusing to retain a draft value.')
             if answer is not None:
                 answer_source = f'AI generated ({ai_model})'
@@ -2168,6 +2178,15 @@ def apply_current_job(driver, profile, questions, email, resume_path, dry_run, l
 def _select_easy_apply(driver, log):
     if parse_qs(urlparse(driver.current_url).query).get('f_AL') == ['true']:
         return
+    # LinkedIn can expose the filter row while the result list is still a skeleton.
+    # Clicking during that transition sometimes leaves the URL unchanged, then the
+    # run aborts after processing an entire search term. Wait for real result cards
+    # before interacting with the filter.
+    try:
+        WebDriverWait(driver, 25, ignored_exceptions=(StaleElementReferenceException,)).until(
+            lambda d: bool(d.find_elements(By.XPATH, CARDS_XPATH)))
+    except TimeoutException as error:
+        raise TimeoutException('LinkedIn job result cards did not finish loading before Easy Apply filter selection.') from error
     try:
         label = WebDriverWait(driver, 15).until(lambda d: next(
             (x for x in d.find_elements(By.XPATH, "//label[normalize-space(.)='Easy Apply']")
@@ -2175,7 +2194,10 @@ def _select_easy_apply(driver, log):
     except TimeoutException as error:
         raise CannotCompleteApplication('LinkedIn did not show the Easy Apply search filter.') from error
     _click(driver, label)
-    WebDriverWait(driver, 15).until(lambda d: parse_qs(urlparse(d.current_url).query).get('f_AL') == ['true'])
+    try:
+        WebDriverWait(driver, 15).until(lambda d: parse_qs(urlparse(d.current_url).query).get('f_AL') == ['true'])
+    except TimeoutException as error:
+        raise TimeoutException('LinkedIn did not confirm the Easy Apply filter after the click.') from error
     log('Easy Apply filter enabled.')
 
 
@@ -2386,9 +2408,9 @@ def run_search(driver, *, profile, questions, email, resume_path, dry_run, limit
         if diagnostics:
             diagnostics.increment('jobs_skipped')
 
-    _select_easy_apply(driver, log)
     if diagnostics:
         diagnostics.begin_stage('search')
+    _select_easy_apply(driver, log)
     try:
         WebDriverWait(driver, 15).until(lambda d: d.find_elements(By.XPATH, CARDS_XPATH))
     except TimeoutException as error:

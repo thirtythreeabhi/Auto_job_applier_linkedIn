@@ -45,6 +45,9 @@ def _number_supported(number: str, evidence: tuple[str, ...], unit: str | None =
 
 def _experience_subject(question: str) -> str:
     patterns = (
+        r'\byears?\s+of\s+(?:(?:professional|work|hands-on)\s+)?experience\s+'
+        r'(?:(?:do you have|have you got|do you possess)\s+)?'
+        r'(?:with|in|using|on)\s+(.+?)(?:\?|$)',
         r'\byears?\s+of\s+(.+?)\s+experience\b',
         r'\bexperience\s+(?:with|in|using|on)\s+(.+?)(?:\?|$)',
         r'\b(?:with|in|using|on)\s+(.+?)\s+(?:experience|for)\b',
@@ -164,15 +167,15 @@ def validate_proposal(raw: str, metadata: dict[str, Any], candidate_context: str
             raise AnswerValidationError('Numeric answer is below the field minimum.')
         if maximum is not None and value > float(maximum):
             raise AnswerValidationError('Numeric answer exceeds the field maximum.')
-        if kind in {'integer', 'count'}:
-            if not evidence or not _number_supported(str(int(value)), evidence, 'projects' if kind == 'count' else None):
-                raise AnswerValidationError('Count answer lacks evidence supporting the exact count.')
-        elif metadata.get('experience_years'):
+        if metadata.get('experience_years'):
             if not evidence or not _number_supported(answer, evidence, 'years?'):
                 raise AnswerValidationError('Experience duration lacks explicit candidate evidence.')
             subject = _experience_subject(question)
             if subject and not _subject_duration_supported(str(int(value)), subject, evidence):
                 raise AnswerValidationError('Experience duration is not supported for the specific skill in the question.')
+        elif kind in {'integer', 'count'}:
+            if not evidence or not _number_supported(str(int(value)), evidence, 'projects' if kind == 'count' else None):
+                raise AnswerValidationError('Count answer lacks evidence supporting the exact count.')
         if metadata.get('rating'):
             target = re.search(r'\bexpertise\s+in\s+([^?*]+)', question, re.I)
             skill = re.sub(r'[^a-z0-9+#.]+', ' ', target.group(1)).strip() if target else ''

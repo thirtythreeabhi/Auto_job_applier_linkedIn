@@ -27,14 +27,19 @@ JOB_TITLE_GROUPS = {
         "Integration Engineer", "API Developer", "Backend Developer",
     ],
     "ai_engineering": [
-        "Applied AI Engineer", "AI Engineer", "LLM Engineer", "Generative AI Engineer",
-        "AI Application Engineer", "AI Integration Engineer", "LLM Application Developer",
-        "AI Automation Engineer", "RAG Engineer", "Agentic AI Engineer",
+        "Applied AI Engineer", "AI Product Engineer", "AI Engineer", "AI Software Engineer",
+        "LLM Engineer", "Generative AI Engineer", "AI Application Engineer",
+        "AI Integration Engineer", "Full Stack AI Engineer", "LLM Application Engineer",
+        "LLM Application Developer", "AI Automation Engineer", "RAG Engineer",
+        "Agentic AI Engineer", "Agentic AI Developer", "AI Agent Developer",
+        "AI Solutions Engineer", "Forward Deployed Engineer", "LLMOps Engineer",
+        "AI Platform Engineer", "AI Evaluation Engineer", "MCP Engineer",
+        "AI Tooling Engineer",
     ],
     "product_engineering": [
         "Full Stack Engineer", "Full Stack Developer", "Product Engineer",
-        "Software Development Engineer", "Founding Engineer", "Application Developer",
-        "Technical Integration Engineer",
+        "Software Development Engineer", "Software Engineer", "Founding Engineer",
+        "Application Developer", "Technical Integration Engineer",
     ],
 }
 search_terms = [title for titles in JOB_TITLE_GROUPS.values() for title in titles]
